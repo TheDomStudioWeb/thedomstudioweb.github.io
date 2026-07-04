@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOM Studio Web | Estructura y Potencia Digital</title>
+    <style>
+        
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Montserrat:wght@300;400;600&family=Playfair+Display:wght@400;700&display=swap');
+        
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&family=Playfair+Display:wght@400;700&display=swap');
+
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #0a0a0a; 
+            color: #ffffff;
+            font-family: 'Montserrat', sans-serif;
+            line-height: 1.6;
+        }
+
+        
+        .hero-section {
+            min-height: 100vh; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            text-align: left;
+            padding: 20px 80px;
+            
+            background: linear-gradient(rgba(10, 10, 10, 0.9), rgba(10, 10, 10, 0.8)), url('tu-imagen-de-fondo.jpg') center/cover;
+        }
+
+        .logo-text {
+            font-family: 'Playfair Display', serif;
+            color: #d4af37; /* Dorado DOM */
+            font-size: 2.5rem;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle-gold {
+            color: #d4af37;
+            font-size: 0.9rem;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-bottom: 40px;
+        }
+
+        .main-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.5rem;
+            max-width: 800px;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        .hero-description {
+            font-size: 1.2rem;
+            color: #cccccc;
+            max-width: 600px;
+            margin-bottom: 50px;
+            font-weight: 300;
+        }
+
+        
+        .cta-button {
+            display: inline-block;
+            padding: 15px 40px;
+            background-color: transparent;
+            color: #d4af37;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            border: 2px solid #d4af37;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .cta-button:hover {
+            background-color: #d4af37;
+            color: #0a0a0a;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+        }
+
+        
+        @media (max-width: 768px) {
+            .main-title { font-size: 2.2rem; }
+            .hero-description { font-size: 1rem; }
+            .logo-text { font-size: 2rem; }
+        }
+ 
+       .logo-container {
+    margin-bottom: 60px;
+        }
+        /* --- SECCIÓN 2: EL PROBLEMA --- */
+        .problem-section {
+            padding: 100px 20px;
+            background-color: #111111; /* Un gris levísimamente más claro que el fondo principal para separar */
+            text-align: center;
+        }
+
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            color: #d4af37;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        .section-subtitle {
+            color: #ffffff;
+            font-size: 1.2rem;
+            font-style: italic;
+            margin-bottom: 60px;
+            font-family: 'Playfair Display', serif;
+        }
+
+/* Solo afecta a las tarjetas de paquetes */
+.package-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.package-card::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    height: 400px;
+    background-image: url('imagenes/tu-logo-isotipo.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    opacity: 0.08;
+    pointer-events: none;
+}
+        
+        .problem-grid {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            max-width: 1100px;
+            margin: 0 auto;
+            flex-wrap: wrap; 
+        }
+
+        .problem-card {
+            background-color: #1a1a1a;
+            padding: 40px 30px;
+            border-radius: 8px;
+            border-left: 3px solid #d4af37; 
+            flex: 1;
+            min-width: 300px; 
+            text-align: left;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: transform 0.3s ease;
+        }
+
+        .problem-card:hover {
+            transform: translateY(-5px); 
+        }
+
+        .problem-card h3 {
+            color: #ffffff;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .problem-card p {
+            color: #cccccc;
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        @media (max-width: 768px) {
+            .section-title { font-size: 2rem; }
+            .problem-section { padding: 60px 20px; }
+        }
+
+        .solutions-section {
+            padding: 100px 20px;
+            background-color: #0a0a0a; 
+            text-align: center;
+        }
+
+        .solutions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+            margin-top: 50px;
+        }
+
+        .package-card {
+            background-color: #111111;
+            border: 1px solid #333333;
+            border-radius: 10px;
+            padding: 40px 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .package-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(to right, #d4af37, #8a7322);
+        }
+
+        .package-card:hover {
+            border-color: #d4af37;
+            transform: translateY(-10px);
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.15);
+        }
+
+        .package-title {
+            font-family: 'Playfair Display', serif;
+            color: #d4af37;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .package-subtitle {
+            color: #ffffff;
+            font-size: 0.95rem;
+            margin-bottom: 30px;
+            font-weight: 300;
+            min-height: 45px; /* Mantiene la misma altura en todas las tarjetas */
+        }
+
+        .package-features {
+            list-style: none;
+            margin-bottom: 40px;
+            text-align: left;
+        }
+
+        .package-features li {
+            color: #cccccc;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .package-features li::before {
+            content: '✓';
+            color: #d4af37;
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+
+        .package-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background-color: #1a1a1a;
+            color: #d4af37;
+            text-decoration: none;
+            font-weight: 600;
+            border: 1px solid #d4af37;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+        }
+
+        .package-btn:hover {
+            background-color: #d4af37;
+            color: #0a0a0a;
+        }
+
+        .methodology-section {
+            padding: 100px 20px;
+            background-color: #111111;
+            text-align: center;
+        }
+
+        .steps-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 40px;
+            max-width: 1000px;
+            margin: 0 auto;
+            margin-top: 50px;
+        }
+
+        .step-card {
+            flex: 1;
+            min-width: 220px;
+            text-align: center;
+        }
+
+        .step-number {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.5rem;
+            color: #d4af37;
+            margin-bottom: 10px;
+            line-height: 1;
+            opacity: 0.9;
+        }
+
+        .step-title {
+            color: #ffffff;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .step-text {
+            color: #cccccc;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .footer-section {
+            padding: 100px 20px 40px 20px;
+            background: linear-gradient(to top, #000000, #0a0a0a);
+            text-align: center;
+            border-top: 1px solid #222222;
+        }
+
+        .final-cta-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            color: #ffffff;
+            margin-bottom: 20px;
+        }
+
+        .final-cta-text {
+            color: #cccccc;
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+        }
+
+        .btn-gold-solid {
+            display: inline-block;
+            padding: 15px 40px;
+            background-color: #d4af37;
+            color: #0a0a0a; 
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.1rem;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 60px;
+        }
+
+        .btn-gold-solid:hover {
+            background-color: #e6c855;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+            transform: scale(1.05);
+        }
+
+        .footer-credits {
+            color: #666666;
+            font-size: 0.8rem;
+            border-top: 1px solid #222222;
+            padding-top: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+    </style>
+        
+        <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+
+    
+    <header class="hero-section">
+    <div class="logo-container" style="display: flex; align-items: center; gap: 20px; margin-bottom: 60px;">
+    <img src="imagenes/tu-logo-isotipo.png" alt="THE DOM Logo" style="width: 50px; height: auto;">
+    
+    <div>
+        <h2 style="font-family: 'Cinzel Decorative', cursive; color: #d4af37; font-size: 1.8rem; letter-spacing: 2px; margin: 0;">
+            THE DOM
+        </h2>
+        <p style="font-family: 'Montserrat', sans-serif; color: #d4af37; font-size: 0.8rem; letter-spacing: 4px; text-transform: uppercase; margin: 0;">
+            Studio Web
+        </p>
+    </div>
+</div>
+    
+    <h1 class="main-title">Estructura y Potencia Digital para Escalar su Negocio.</h1>
+    <p class="hero-description">No diseñamos simples páginas; construimos herramientas de cierre y automatización comercial diseñadas para facturar 24/7.</p>
+    
+    <a href="https://wa.me/5492613431216" class="cta-button" target="_blank">Solicitar Auditoría Gratuita</a>
+</header>
+    
+    <!-- Sección de Diferenciales (Estética Dark/Gold THE DOM) -->
+<section class="bg-[#0a0a0a] py-16 border-b border-[#222222]">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      
+      <!-- Bloque 1: Soluciones Operativas -->
+      <div class="p-8 bg-[#111111] border-l-4 border-[#d4af37] rounded-lg shadow-lg hover:-translate-y-2 transition-transform duration-300">
+        <div class="w-14 h-14 bg-[#1a1a1a] text-[#d4af37] border border-[#333333] rounded-lg flex items-center justify-center mb-6">
+          <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+        </div>
+        <h3 class="text-xl font-bold text-white mb-3" style="font-family: 'Playfair Display', serif;">Soluciones Operativas</h3>
+        <p class="text-[#cccccc] leading-relaxed text-sm">
+          Cotizadores automáticos, sistemas de reservas y portales de gestión diseñados para agilizar el trabajo diario de tu empresa.
+        </p>
+      </div>
+
+      <!-- Bloque 2: PWA -->
+      <div class="p-8 bg-[#111111] border-l-4 border-[#d4af37] rounded-lg shadow-lg hover:-translate-y-2 transition-transform duration-300">
+        <div class="w-14 h-14 bg-[#1a1a1a] text-[#d4af37] border border-[#333333] rounded-lg flex items-center justify-center mb-6">
+          <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+        </div>
+        <h3 class="text-xl font-bold text-white mb-3" style="font-family: 'Playfair Display', serif;">Tu App sin intermediarios</h3>
+        <p class="text-[#cccccc] leading-relaxed text-sm">
+          Tus clientes instalan la plataforma directamente en su celular. Carga inmediata y sin pasar por las tiendas de apps.
+        </p>
+      </div>
+
+      <!-- Bloque 3: Socio Tecnológico -->
+      <div class="p-8 bg-[#111111] border-l-4 border-[#d4af37] rounded-lg shadow-lg hover:-translate-y-2 transition-transform duration-300">
+        <div class="w-14 h-14 bg-[#1a1a1a] text-[#d4af37] border border-[#333333] rounded-lg flex items-center justify-center mb-6">
+          <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+        </div>
+        <h3 class="text-xl font-bold text-white mb-3" style="font-family: 'Playfair Display', serif;">Socio Tecnológico</h3>
+        <p class="text-[#cccccc] leading-relaxed text-sm">
+          Cero costos sorpresa. Mediante un abono accesible, mantenemos tu plataforma siempre actualizada y evolucionando.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+    <section class="problem-section">
+        <h2 class="section-title">El costo de la invisibilidad digital.</h2>
+        <p class="section-subtitle">¿Cuántas ventas pierde por mes por depender exclusivamente del mostrador físico?</p>
+        
+        <div class="problem-grid">
+            <div class="problem-card">
+                <h3>Pérdida de Prospectos</h3>
+                <p>Una empresa sin presencia web estructurada pierde más de la mitad de sus clientes potenciales en la primera búsqueda de Google. Si no lo encuentran a usted, encuentran a su competencia.</p>
+            </div>
+            
+            <div class="problem-card">
+                <h3>Ventas Fuera de Horario</h3>
+                <p>Cada cliente que intenta contactarlo un domingo o de madrugada y no recibe respuesta inmediata, es una oportunidad de cierre desperdiciada por falta de automatización.</p>
+            </div>
+            
+            <div class="problem-card">
+                <h3>Cuellos de Botella Operativos</h3>
+                <p>El costo oculto de gestionar presupuestos, turnos o stock de forma manual. Tareas repetitivas que consumen el tiempo valioso de su equipo comercial.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECCIÓN 3: LAS SOLUCIONES -->
+    <section class="solutions-section">
+        <h2 class="section-title">Nuestras Soluciones</h2>
+        <p class="section-subtitle">Herramientas diseñadas exclusivamente para la conversión.</p>
+
+        <div class="solutions-grid">
+            
+            <!-- PAQUETE PRESENCIA -->
+            <div class="package-card">
+                <div>
+                    <h3 class="package-title">Presencia</h3>
+                    <p class="package-subtitle">Tu vitrina digital de alto impacto corporativo.</p>
+                    <ul class="package-features">
+                        <li>Diseño UI/UX de estética premium.</li>
+                        <li>Arquitectura Mobile-First optimizada.</li>
+                        <li>Formularios de captura de leads.</li>
+                        <li>Enlace directo a WhatsApp comercial.</li>
+                    </ul>
+                </div>
+                <a href="https://wa.me/5492613431216?text=Hola%20Daniel,%20quiero%20consultar%20por%20el%20Paquete%20Presencia." class="package-btn" target="_blank">Consultar Plan</a>
+            </div>
+
+            <!-- PAQUETE COMERCIO -->
+            <div class="package-card">
+                <div>
+                    <h3 class="package-title">Comercio</h3>
+                    <p class="package-subtitle">Su sucursal digital abierta y facturando las 24hs.</p>
+                    <ul class="package-features">
+                        <li>Catálogo dinámico escalable.</li>
+                        <li>Pasarelas de cobro integradas.</li>
+                        <li>Cotizador de envíos automatizado.</li>
+                        <li>Estrategias de venta cruzada (Up-selling).</li>
+                    </ul>
+                </div>
+                <a href="https://wa.me/5492613431216?text=Hola%20Daniel,%20quiero%20consultar%20por%20el%20Paquete%20Comercio." class="package-btn" target="_blank">Consultar Plan</a>
+            </div>
+
+            <!-- PAQUETE POTENCIA -->
+            <div class="package-card">
+                <div>
+                    <h3 class="package-title">Potencia</h3>
+                    <p class="package-subtitle">Software a la medida de su estructura comercial.</p>
+                    <ul class="package-features">
+                        <li>Portales B2B y listas mayoristas.</li>
+                        <li>Calculadoras y cotizadores a medida.</li>
+                        <li>Gestión operativa y sistemas de turnos.</li>
+                        <li>Bases de datos y conexiones API.</li>
+                    </ul>
+                </div>
+                <a href="https://wa.me/5492613431216?text=Hola%20Daniel,%20quiero%20consultar%20por%20el%20Paquete%20Potencia." class="package-btn" target="_blank">Consultar Plan</a>
+            </div>
+
+        </div>
+    </section>
+    
+    <!-- SECCIÓN: DEMO / TECNOLOGÍA EN ACCIÓN -->
+<section class="bg-[#111111] py-20 border-t border-[#222222]">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <div class="text-center mb-16">
+      <h2 class="text-3xl md:text-4xl font-bold text-[#d4af37] mb-4" style="font-family: 'Playfair Display', serif;">Tecnología en Acción</h2>
+      <p class="text-[#cccccc] text-lg max-w-2xl mx-auto font-light">
+        No te contamos cómo funcionan nuestros sistemas. Te invitamos a ponerlos a prueba en tu propio celular.
+      </p>
+    </div>
+
+    <!-- Tarjeta del Caso de Estudio -->
+    <div class="bg-[#0a0a0a] rounded-xl border border-[#333333] overflow-hidden shadow-2xl flex flex-col lg:flex-row transition hover:border-[#d4af37] duration-500">
+      
+      <!-- Mitad Texto -->
+      <div class="p-10 lg:w-1/2 flex flex-col justify-center">
+        <div class="inline-block bg-[#1a1a1a] border border-[#d4af37] text-[#d4af37] text-xs font-bold px-4 py-1 rounded-full uppercase tracking-widest mb-6 w-max">
+          Demo PWA Operativa
+        </div>
+        
+        <h3 class="text-2xl font-bold text-white mb-4" style="font-family: 'Playfair Display', serif;">Caso: Fixture Mundial 2026</h3>
+        
+        <p class="text-[#cccccc] mb-6 leading-relaxed text-sm">
+          Desarrollamos esta aplicación progresiva para que experimentes la potencia de nuestra arquitectura web. Podés navegarla con carga instantánea y, lo más importante para tu negocio: <strong>podés instalarla en tu inicio ahora mismo sin pasar por ninguna tienda de aplicaciones.</strong>
+        </p>
+        
+        <ul class="text-[#cccccc] mb-8 space-y-3 text-sm">
+          <li class="flex items-center"><span class="text-[#d4af37] mr-3 font-bold">✓</span> Carga y respuesta en menos de 2 segundos.</li>
+          <li class="flex items-center"><span class="text-[#d4af37] mr-3 font-bold">✓</span> Funcionamiento fluido incluso con baja conexión.</li>
+          <li class="flex items-center"><span class="text-[#d4af37] mr-3 font-bold">✓</span> Ocupa una fracción del espacio de una app tradicional.</li>
+        </ul>
+        
+        <a href="https://fixtureinteractivo2026.netlify.app" class="inline-block bg-[#d4af37] text-[#0a0a0a] font-bold py-3 px-8 rounded hover:bg-[#e6c855] transition text-center uppercase tracking-wide shadow-[0_0_15px_rgba(212,175,55,0.3)]">
+          Probar Demo en Vivo
+        </a>
+      </div>
+
+      <!-- Mitad Visual (Espacio para el Celular / QR) -->
+      <div class="lg:w-1/2 bg-[#161616] p-10 flex items-center justify-center border-t lg:border-t-0 lg:border-l border-[#333333] relative">
+        <div class="text-center">
+          <!-- Placeholder del QR o Captura -->
+          <img src="imagenes/qr-fixture.png" 
+          alt="Código QR para probar la PWA" 
+          class="w-56 h-56 rounded-xl border border-[#d4af37] shadow-[0_0_      15px_rgba(212,175,55,0.2)] mx-auto mb-6 hover:scale-105 transition-transform duration-300"
+>
+          <p class="text-[#888888] text-sm italic font-light">Escaneá para ver la velocidad real desde tu dispositivo.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+    <!-- SECCIÓN 4: METODOLOGÍA -->
+    <section class="methodology-section">
+        <h2 class="section-title">Ingeniería Aplicada a su Rentabilidad</h2>
+        <p class="section-subtitle">Un proceso claro, estructurado y sin sorpresas.</p>
+
+        <div class="steps-container">
+            <div class="step-card">
+                <div class="step-number">1</div>
+                <h3 class="step-title">Auditoría</h3>
+                <p class="step-text">Analizamos su operativa actual para detectar fugas de tiempo y capital.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">2</div>
+                <h3 class="step-title">Arquitectura</h3>
+                <p class="step-text">Diseñamos la lógica comercial y visual antes de escribir una línea de código.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">3</div>
+                <h3 class="step-title">Desarrollo</h3>
+                <p class="step-text">Construcción ágil de la plataforma con integraciones a sus sistemas.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">4</div>
+                <h3 class="step-title">Despliegue</h3>
+                <p class="step-text">Entrega del sistema funcionando, optimizado y listo para facturar.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECCIÓN: SISTEMAS EN ACCIÓN (Ajustada para equilibrio visual) -->
+<section class="bg-[#0a0a0a] py-20 border-t border-[#222222]">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <!-- Título con más aire -->
+    <div class="text-center mb-12">
+      <h2 class="text-3xl md:text-4xl font-bold text-[#d4af37] mb-4" style="font-family: 'Playfair Display', serif;">Sistemas en Acción</h2>
+      <p class="text-[#cccccc] text-lg max-w-2xl mx-auto font-light">Tecnología diseñada para escalar tu operativa.</p>
+    </div>
+
+    <!-- EL MOCKUP HERO: Ahora limitado en ancho para que no se "coma" la pantalla -->
+    <div class="mb-16 max-w-4xl mx-auto border border-[#333333] rounded-2xl overflow-hidden shadow-2xl">
+      <img src="imagenes/tu-mockup-estacion.png" alt="Estación de trabajo DOM" class="w-full h-auto">
+    </div>
+
+    <!-- LA GRILLA: Ahora con más espacio y mejor proporción -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-5xl mx-auto">
+      
+      <!-- Panel B2B -->
+      <div class="group bg-[#111111] p-6 rounded-xl border border-[#333333] transition hover:border-[#d4af37]">
+        <div class="overflow-hidden rounded-lg mb-6">
+          <img src="imagenes/panel-b2b.png" alt="Panel de Control B2B" class="w-full aspect-video object-cover transform transition duration-500 group-hover:scale-105">
+        </div>
+        <h3 class="text-xl font-bold text-white mb-2">Panel de Control B2B</h3>
+        <p class="text-[#888888] text-sm">Gestión integral para ventas mayoristas. Controla tu stock, precios y pedidos masivos desde un solo lugar.</p>
+      </div>
+
+      <!-- Sistema de Reservas -->
+      <div class="group bg-[#111111] p-6 rounded-xl border border-[#333333] transition hover:border-[#d4af37]">
+        <div class="overflow-hidden rounded-lg mb-6">
+          <img src="imagenes/sistema-reservas.png" alt="Sistema de Reservas" class="w-full aspect-video object-cover transform transition duration-500 group-hover:scale-105">
+        </div>
+        <h3 class="text-xl font-bold text-white mb-2">Sistema de Reservas</h3>
+        <p class="text-[#888888] text-sm">Automatiza tu agenda. Tus clientes gestionan sus turnos mientras tú te enfocas en cerrar ventas.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+    <!-- SECCIÓN 5: CIERRE -->
+    <footer class="footer-section">
+        <h2 class="final-cta-title">Es momento de optimizar la maquinaria de su negocio.</h2>
+        <p class="final-cta-text">Deje de perder ventas por no tener una estructura digital a la altura de su empresa.</p>
+        
+        <a href="https://wa.me/5492613431216?text=Hola%20Daniel,%20estoy%20listo%20para%20la%20auditoría%20gratuita." class="btn-gold-solid" target="_blank">INICIAR PROYECTO HOY</a>
+
+        <div class="footer-credits" style="display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; border-top: 1px solid #222; max-width: 1200px; width: 100%; margin: 0 auto;">
+            
+            <!-- MARGEN IZQUIERDO: Redes Sociales -->
+            <div style="flex: 1; display: flex; justify-content: flex-start; gap: 15px; align-items: center;">
+                <!-- Instagram -->
+                <a href="https://www.instagram.com/thedomstudioweb" target="_blank" rel="noopener" class="text-[#d4af37] hover:text-white transition-colors duration-300 hover:scale-110 transform">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                    </svg>
+                </a>
+                
+                <!-- LinkedIn -->
+                <a href="https://www.linkedin.com/company/the-dom-studio-web" target="_blank" rel="noopener" class="text-[#d4af37] hover:text-white transition-colors duration-300 hover:scale-110 transform">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+                        <rect x="2" y="9" width="4" height="12"></rect>
+                        <circle cx="4" cy="4" r="2"></circle>
+                    </svg>
+                </a>
+            </div>
+
+            <!-- CENTRO EXACTO: Créditos -->
+            <div style="flex: 1; text-align: center;">
+                <p style="margin: 0; line-height: 1.4;">&copy; 2026 THE DOM STUDIO WEB. Todos los derechos reservados.<br>
+                <span style="font-size: 0.9em; opacity: 0.8;">Dirección Comercial: Daniel Arancibia.</span></p>
+            </div>
+
+            <!-- MARGEN DERECHO: Logo gráfico -->
+            <div style="flex: 1; display: flex; justify-content: flex-end; align-items: center;">
+                <img src="imagenes/tu-logo-isotipo.png" alt="Logo THE DOM" style="width: 40px; height: auto; opacity: 0.9;">
+            </div>
+            
+        </div>
+</footer>
+</body>
+</html>
