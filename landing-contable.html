@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estudio Contable | Asesoramiento Profesional</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-base: #0a0a0c;
+            --bg-panel: #16161a;
+            --bg-hover: #24242b;
+            --text-main: #f0f0f0;
+            --text-muted: #8b8b99;
+            --gold: #c9a227;
+            --border: #2a2a35;
+        }
+        body { background: var(--bg-base); color: var(--text-main); font-family: 'Inter', sans-serif; }
+        
+        /* NAVBAR */
+        nav {
+            position: fixed; top: 0; width: 100%; z-index: 100;
+            background: rgba(10,10,12,0.95); backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 40px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .nav-logo { display: flex; align-items: center; gap: 12px; }
+        .nav-logo-icon {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: var(--gold); color: var(--bg-base);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 600; font-size: 14px;
+        }
+        .nav-logo span { font-size: 13px; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; }
+        .nav-links { display: flex; align-items: center; gap: 24px; }
+        .nav-links a { color: var(--text-muted); text-decoration: none; font-size: 13px; transition: color 0.3s; }
+        .nav-links a:hover { color: var(--text-main); }
+        .btn-gold {
+            background: var(--gold); color: var(--bg-base);
+            padding: 8px 20px; border-radius: 4px;
+            font-size: 13px; font-weight: 500; text-decoration: none;
+            transition: background 0.3s;
+        }
+        .btn-gold:hover { background: #e6c855; color: var(--bg-base); }
+        .btn-outline {
+            border: 1px solid var(--text-muted); color: var(--text-muted);
+            padding: 8px 20px; border-radius: 4px;
+            font-size: 13px; text-decoration: none; transition: 0.3s;
+        }
+        .btn-outline:hover { border-color: var(--text-main); color: var(--text-main); }
+
+        /* HERO */
+        .hero {
+            min-height: 100vh;
+            background: linear-gradient(rgba(10,10,12,0.75), rgba(10,10,12,0.85)),
+                url('https://images.unsplash.com/photo-1497366216548-37526070297c?w=1600&q=80') center/cover no-repeat;
+            display: flex; align-items: center; justify-content: center;
+            text-align: center; padding: 120px 40px 80px;
+        }
+        .hero-content { max-width: 680px; }
+        .hero-tag {
+            display: inline-block; font-size: 11px; letter-spacing: 3px;
+            color: var(--gold); text-transform: uppercase;
+            border: 1px solid var(--gold); padding: 4px 16px;
+            border-radius: 20px; margin-bottom: 24px;
+        }
+        .hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 48px; font-weight: 400; line-height: 1.2;
+            color: var(--text-main); margin-bottom: 20px;
+        }
+        .hero h1 span { color: var(--gold); }
+        .hero p {
+            color: var(--text-muted); font-size: 16px; line-height: 1.8;
+            margin-bottom: 36px; font-weight: 300;
+        }
+        .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+        /* SECCIONES GENERALES */
+        section { padding: 80px 40px; }
+        .section-tag {
+            font-size: 11px; letter-spacing: 3px; color: var(--gold);
+            text-transform: uppercase; text-align: center; margin-bottom: 16px;
+        }
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px; font-weight: 400; text-align: center;
+            color: var(--text-main); margin-bottom: 48px;
+        }
+        .container { max-width: 1100px; margin: 0 auto; }
+
+        /* NOSOTROS */
+        .nosotros-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;
+        }
+        .nosotros-img {
+            width: 100%; height: 400px; object-fit: cover;
+            border-radius: 8px; border: 1px solid var(--border);
+            filter: grayscale(80%);
+        }
+        .nosotros-texto h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px; font-weight: 400; color: var(--text-main);
+            margin-bottom: 20px; line-height: 1.3;
+        }
+        .nosotros-texto h2 span { color: var(--gold); }
+        .nosotros-texto p {
+            color: var(--text-muted); font-size: 14px; line-height: 1.9;
+            margin-bottom: 16px; font-weight: 300;
+        }
+        .nosotros-valores { display: flex; flex-direction: column; gap: 10px; margin-top: 24px; }
+        .valor-item { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-muted); }
+        .valor-item::before { content: "◈"; color: var(--gold); font-size: 10px; }
+
+        /* SERVICIOS */
+        .servicios-bg { background: var(--bg-panel); }
+        .servicios-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+        }
+        .servicio-card {
+            background: var(--bg-base); border: 1px solid var(--border);
+            border-radius: 8px; padding: 28px;
+            transition: border-color 0.3s;
+        }
+        .servicio-card:hover { border-color: var(--gold); }
+        .servicio-icon { color: var(--gold); font-size: 22px; margin-bottom: 14px; }
+        .servicio-card h3 { font-size: 14px; font-weight: 500; color: var(--text-main); margin-bottom: 10px; }
+        .servicio-card p { font-size: 13px; color: var(--text-muted); line-height: 1.7; }
+
+        /* NÚMEROS */
+        .numeros-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; text-align: center;
+        }
+        .numero-item .cifra {
+            font-family: 'Playfair Display', serif;
+            font-size: 48px; color: var(--gold); margin-bottom: 8px;
+        }
+        .numero-item p { font-size: 13px; color: var(--text-muted); letter-spacing: 1px; }
+
+        /* ACCESOS */
+        .accesos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .acceso-card {
+            background: var(--bg-panel); border: 1px solid var(--border);
+            border-radius: 8px; padding: 36px; text-align: center;
+            transition: border-color 0.3s;
+        }
+        .acceso-card:hover { border-color: var(--gold); }
+        .acceso-card h3 { font-size: 16px; font-weight: 500; color: var(--text-main); margin-bottom: 12px; }
+        .acceso-card p { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.7; }
+
+        /* CONTACTO */
+        .contacto-bg { background: var(--bg-panel); }
+        .contacto-form { max-width: 560px; margin: 0 auto; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+        .form-group input, .form-group textarea, .form-group select {
+            background: var(--bg-base); border: 1px solid var(--border);
+            color: var(--text-main); padding: 10px 14px; border-radius: 4px;
+            font-size: 13px; font-family: 'Inter', sans-serif;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+            outline: none; border-color: var(--gold);
+        }
+        .form-group textarea { height: 100px; resize: vertical; }
+        .form-submit { text-align: center; margin-top: 24px; }
+        .btn-submit-form {
+            background: var(--gold); color: var(--bg-base);
+            border: none; padding: 12px 40px; border-radius: 4px;
+            font-size: 14px; font-weight: 500; cursor: pointer;
+            font-family: 'Inter', sans-serif; transition: background 0.3s;
+        }
+        .btn-submit-form:hover { background: #e6c855; }
+
+        /* FOOTER */
+        footer {
+            background: var(--bg-base); border-top: 1px solid var(--border);
+            padding: 30px 40px;
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 12px;
+        }
+        footer p { font-size: 12px; color: var(--text-muted); }
+        .footer-powered { font-size: 12px; color: var(--gold); }
+        .footer-redes { display: flex; gap: 12px; }
+        .footer-redes a { font-size: 12px; color: var(--text-muted); text-decoration: none; transition: color 0.3s; }
+        .footer-redes a:hover { color: var(--gold); }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            nav { padding: 14px 20px; }
+            .nav-links { display: none; }
+            .hero h1 { font-size: 32px; }
+            section { padding: 60px 20px; }
+            .nosotros-grid, .servicios-grid, .accesos-grid, .form-grid { grid-template-columns: 1fr; }
+            .numeros-grid { grid-template-columns: 1fr; gap: 24px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+    <div class="nav-logo">
+        <div class="nav-logo-icon">E</div>
+        <span>Estudio Contable</span>
+    </div>
+    <div class="nav-links">
+        <a href="#servicios">Servicios</a>
+        <a href="#nosotros">Nosotros</a>
+        <a href="#contacto">Contacto</a>
+        <a href="https://thedomstudioweb.github.io/domino-profesional/login-cliente.html" class="btn-gold" target="_blank">Acceso clientes</a>
+        <a href="https://thedomstudioweb.github.io/domino-profesional/login.html" class="btn-outline" target="_blank">Acceso interno</a>
+    </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+    <div class="hero-content">
+        <div class="hero-tag">Asesoramiento contable profesional</div>
+        <h1>Tu estudio contable, <br><span>siempre un paso adelante</span></h1>
+        <p>Asesoramiento impositivo, laboral y contable con tecnología de gestión moderna. Tu documentación, tus procesos y tu equipo, todo en un solo lugar.</p>
+        <div class="hero-btns">
+            <a href="#contacto" class="btn-gold">Consultá sin cargo</a>
+            <a href="#servicios" class="btn-outline">Conocé nuestros servicios</a>
+        </div>
+    </div>
+</section>
+
+<!-- NOSOTROS -->
+<section id="nosotros">
+    <div class="container">
+        <div class="nosotros-grid">
+            <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80" alt="Equipo del estudio contable" class="nosotros-img">
+            <div class="nosotros-texto">
+                <h2>Más de una década <span>construyendo confianza</span></h2>
+                <p>Somos un estudio contable con más de 15 años de experiencia acompañando a empresas, profesionales y emprendedores en todas las etapas de su crecimiento.</p>
+                <p>Combinamos el rigor técnico de la contaduría tradicional con herramientas digitales modernas que nos permiten ofrecerte un servicio ágil, transparente y siempre disponible.</p>
+                <p>Nuestro equipo está formado por contadores públicos matriculados, especializados en impuestos, sociedades y liquidación de sueldos — siempre actualizados con los cambios normativos.</p>
+                <div class="nosotros-valores">
+                    <div class="valor-item">Transparencia en cada proceso</div>
+                    <div class="valor-item">Respuesta en menos de 24 horas</div>
+                    <div class="valor-item">Portal digital para gestión documental</div>
+                    <div class="valor-item">Asesoramiento personalizado</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- SERVICIOS -->
+<section id="servicios" class="servicios-bg">
+    <div class="container">
+        <div class="section-tag">Nuestros servicios</div>
+        <h2 class="section-title">Todo lo que tu empresa necesita</h2>
+        <div class="servicios-grid">
+            <div class="servicio-card">
+                <div class="servicio-icon">◈</div>
+                <h3>Liquidación impositiva</h3>
+                <p>IVA, Ganancias, Ingresos Brutos, Monotributo y Responsable Inscripto. Presentaciones en término, siempre.</p>
+            </div>
+            <div class="servicio-card">
+                <div class="servicio-icon">◈</div>
+                <h3>Liquidación de sueldos</h3>
+                <p>Altas, bajas y novedades. Cargas sociales, F931 y recibos digitales para tu equipo.</p>
+            </div>
+            <div class="servicio-card">
+                <div class="servicio-icon">◈</div>
+                <h3>Balances y estados contables</h3>
+                <p>Informes mensuales, balances anuales y certificaciones para bancos, licitaciones y organismos.</p>
+            </div>
+            <div class="servicio-card">
+                <div class="servicio-icon">◈</div>
+                <h3>Asesoramiento societario</h3>
+                <p>Constitución de SAS, SRL y SA. Trámites en IGJ, AFIP y organismos provinciales.</p>
+            </div>
+            <div class="servicio-card">
+                <div class="servicio-icon">◈</div>
+                <h3>Auditoría contable</h3>
+                <p>Revisión de procesos, control interno y dictámenes profesionales para tu tranquilidad.</p>
+            </div>
+            <div class="servicio-card" style="border-color: var(--gold);">
+                <div class="servicio-icon">◈</div>
+                <h3>Portal digital para clientes</h3>
+                <p>Enviá documentación y descargá tus informes, VEPs y recibos desde cualquier dispositivo, en cualquier momento.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- NÚMEROS -->
+<section>
+    <div class="container">
+        <div class="numeros-grid">
+            <div class="numero-item">
+                <div class="cifra">+15</div>
+                <p>años de experiencia</p>
+            </div>
+            <div class="numero-item">
+                <div class="cifra">+200</div>
+                <p>clientes activos</p>
+            </div>
+            <div class="numero-item">
+                <div class="cifra">100%</div>
+                <p>digital y sin filas</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ACCESOS -->
+<section style="background: var(--bg-panel);">
+    <div class="container">
+        <div class="section-tag">Plataforma digital</div>
+        <h2 class="section-title">Accedé cuando quieras, desde donde estés</h2>
+        <div class="accesos-grid">
+            <div class="acceso-card">
+                <h3>Portal de Clientes</h3>
+                <p>Enviá tu documentación mensual y descargá tus comprobantes, VEPs, balances e informes sin necesidad de llamar ni enviar emails.</p>
+                <a href="https://thedomstudioweb.github.io/domino-profesional/portal-cliente.html" class="btn-gold" target="_blank">Ingresar como cliente</a>
+            </div>
+            <div class="acceso-card">
+                <h3>Acceso Profesional</h3>
+                <p>Para contadores y asistentes del estudio. Gestión operativa completa de clientes, tareas, documentación y comunicación interna.</p>
+                <a href="https://thedomstudioweb.github.io/domino-profesional/" class="btn-outline" target="_blank">Acceso interno</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CONTACTO -->
+<!-- CONTACTO -->
+<section id="contacto" class="contacto-bg">
+    <div class="container">
+        <div class="section-tag">Contacto</div>
+        <h2 class="section-title">¿Hablamos?</h2>
+        <p style="text-align: center; color: var(--text-muted); font-size: 14px; margin-bottom: 48px; font-weight: 300;">
+            Elegí el canal que más te resulte cómodo. Respondemos en menos de 24 horas.
+        </p>
+        <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+            <a href="https://wa.me/5492614000000?text=Hola%2C%20quisiera%20consultar%20sobre%20sus%20servicios" 
+               target="_blank"
+               style="display: flex; align-items: center; gap: 12px; background: var(--bg-base); border: 1px solid var(--gold); color: var(--text-main); padding: 20px 36px; border-radius: 8px; text-decoration: none; font-size: 14px; transition: background 0.3s; min-width: 240px; justify-content: center;">
+                <span style="font-size: 24px;">💬</span>
+                <div>
+                    <div style="font-weight: 500;">WhatsApp</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">Respuesta inmediata</div>
+                </div>
+            </a>
+            <a href="mailto:contacto@estudiocontable.com"
+               style="display: flex; align-items: center; gap: 12px; background: var(--bg-base); border: 1px solid var(--border); color: var(--text-main); padding: 20px 36px; border-radius: 8px; text-decoration: none; font-size: 14px; transition: background 0.3s; min-width: 240px; justify-content: center;">
+                <span style="font-size: 24px;">✉</span>
+                <div>
+                    <div style="font-weight: 500;">Email</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">contacto@estudiocontable.com</div>
+                </div>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+    <p>© 2026 Estudio Contable · Todos los derechos reservados</p>
+    <div class="footer-redes">
+        <!-- Redes sociales se agregan acá cuando estén disponibles -->
+        <!-- <a href="#">Instagram</a> -->
+        <!-- <a href="#">LinkedIn</a> -->
+    </div>
+    <span class="footer-powered">Powered by DOMINO · The DOM Studio Web</span>
+</footer>
+
+</body>
+</html>
