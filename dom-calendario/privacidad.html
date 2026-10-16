@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Política de privacidad · DOM Calendario</title>
+<meta name="description" content="Política de privacidad de DOM Calendario, de The DOM Studio Web.">
+<style>
+  :root {
+    --bg: #0B0B0C; --ink: #F4EFE3; --muted: #B8B1A1; --gold: #C9A44C; --line: #2E2A22; --card: #141310;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: "Segoe UI", system-ui, -apple-system, sans-serif; line-height: 1.65; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 56px 20px 40px; }
+  .brand { display: flex; align-items: center; gap: 12px; font-size: 13px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; }
+  .hex { width: 22px; height: 25px; flex: none; clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); background: var(--gold); }
+  .kicker { margin-top: 48px; color: var(--gold); font-size: 13px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; }
+  h1 { font-family: Georgia, "Times New Roman", serif; font-weight: 600; font-size: clamp(36px, 7vw, 54px); line-height: 1.05; margin: 10px 0 12px; }
+  .date { color: var(--muted); font-size: 15px; margin: 0 0 36px; }
+  h2 { font-size: 20px; margin: 40px 0 10px; padding-top: 24px; border-top: 1px solid var(--line); }
+  p, li { font-size: 16px; color: #E4DED0; }
+  ul { padding-left: 22px; }
+  li { margin: 6px 0; }
+  a { color: var(--gold); }
+  a:hover { color: #E3C77A; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin: 18px 0; }
+  .card p { margin: 0; }
+  footer { margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: space-between; align-items: center; color: var(--muted); font-size: 14px; }
+  footer .brand { font-size: 12px; color: var(--ink); }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="brand"><span class="hex" aria-hidden="true"></span>The DOM Studio Web</div>
+
+  <div class="kicker">DOM Calendario</div>
+  <h1>Política de privacidad</h1>
+  <p class="date">Última actualización: 16 de octubre de 2026</p>
+
+  <p>DOM Calendario es una aplicación de The DOM Studio Web (Mendoza, Argentina) que muestra en una sola pantalla los eventos de Google Calendar del usuario: vistas de día, semana y mes, y una agenda con cuenta regresiva. Esta política explica qué datos usa la aplicación y cómo los protege.</p>
+
+  <div class="card"><p><strong>En resumen:</strong> DOM Calendario solo lee tus calendarios para mostrártelos en tu propio dispositivo. No guarda tus datos en servidores, no los comparte ni los vende, y The DOM Studio Web no tiene acceso a ellos.</p></div>
+
+  <h2>Qué datos usa</h2>
+  <p>Cuando conectás una cuenta de Google, la aplicación solicita estos permisos:</p>
+  <ul>
+    <li><strong>Ver tus calendarios</strong> (<code>calendar.readonly</code>): lista de calendarios y eventos con título, fecha, hora, ubicación y color. Es de solo lectura: la aplicación no puede crear, modificar ni borrar eventos.</li>
+    <li><strong>Información básica de la cuenta</strong> (mail, nombre e imagen de perfil): solo para identificar cada cuenta dentro de la aplicación y permitir cambiar entre ellas.</li>
+  </ul>
+
+  <h2>Cómo los usa</h2>
+  <ul>
+    <li>Los eventos se descargan directamente desde Google al dispositivo del usuario y se usan únicamente para mostrarlos en pantalla.</li>
+    <li>Se guarda en el mismo dispositivo una copia de los últimos eventos, para poder mostrarlos sin conexión a internet.</li>
+    <li>No se usan con fines publicitarios, de análisis ni de perfilado, y no se usan para entrenar modelos de inteligencia artificial.</li>
+  </ul>
+
+  <h2>Dónde se guardan</h2>
+  <p>Todo queda en el dispositivo del usuario. Las credenciales de acceso de cada cuenta se guardan cifradas con la protección del sistema operativo (en Windows, la protección de datos del usuario de Windows). DOM Calendario no tiene servidores propios: The DOM Studio Web no recibe, almacena ni puede consultar los datos de calendario de ningún usuario.</p>
+
+  <h2>Con quién se comparten</h2>
+  <p>Con nadie. La aplicación solo se comunica con los servicios de Google necesarios para iniciar sesión y leer el calendario.</p>
+
+  <h2>Uso de datos de las API de Google</h2>
+  <p>El uso y la transferencia de información recibida de las API de Google por parte de DOM Calendario se ajustan a la <a href="https://developers.google.com/terms/api-services-user-data-policy" rel="noopener">Política de datos del usuario de los servicios de las API de Google</a>, incluidos los requisitos de uso limitado.</p>
+
+  <h2>Cómo quitar el acceso y borrar los datos</h2>
+  <ul>
+    <li>Dentro de la aplicación: <strong>Ajustes › Cuentas de Google › quitar la cuenta</strong>. Se revoca el acceso y se borran del dispositivo los datos de esa cuenta.</li>
+    <li>Desde Google: en <a href="https://myaccount.google.com/permissions" rel="noopener">myaccount.google.com/permissions</a>, quitando el acceso de DOM Calendario.</li>
+    <li>Al desinstalar la aplicación se eliminan sus archivos. Los ajustes guardados en la carpeta del usuario pueden borrarse manualmente o a pedido.</li>
+  </ul>
+
+  <h2>Menores de edad</h2>
+  <p>DOM Calendario no está dirigida a menores de 13 años y no recopila datos de manera intencional sobre ellos.</p>
+
+  <h2>Cambios en esta política</h2>
+  <p>Si esta política cambia, se publicará la nueva versión en esta misma página con la fecha de actualización.</p>
+
+  <h2>Contacto</h2>
+  <p>Para consultas sobre privacidad o para pedir ayuda:<br>
+    Mail: <a href="mailto:thedomstudioweb@gmail.com">thedomstudioweb@gmail.com</a><br>
+    WhatsApp: <a href="https://wa.me/5492613431216" rel="noopener">261 343-1216</a><br>
+    Web: <a href="https://thedomstudioweb.github.io/">thedomstudioweb.github.io</a>
+  </p>
+
+  <footer>
+    <div class="brand"><span class="hex" aria-hidden="true"></span>The DOM Studio Web · Estructura y potencia digital</div>
+    <div>Mendoza, Argentina</div>
+  </footer>
+</main>
+</body>
+</html>
