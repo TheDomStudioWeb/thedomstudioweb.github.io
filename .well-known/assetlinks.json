@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "ar.com.thedomstudioweb.dominoredes",
+    "sha256_cert_fingerprints": ["A9:74:53:38:DF:A8:5F:DF:87:3E:74:BD:89:86:98:CA:8F:C9:49:7A:2A:32:58:71:D7:02:6A:7B:FC:35:A7:11"]
+  }
+}]
