@@ -536,10 +536,10 @@ sim();
 var TOOLS=[
  ['Hubs comerciales','Un mini-CRM para el equipo de ventas: consultas, seguimientos, visitas y agenda del día en un solo lugar.',''],
  ['DOMino Redes','Gestor de redes sociales: prepara, aprueba y publica en Instagram y LinkedIn desde una sola aplicación.',''],
- ['Claudio','Asistente personal de voz con IA: agenda, recordatorios y resumen de reuniones, en el teléfono.',''],
- ['DOM Calendario','Widget de calendario a pantalla completa, con vistas de día, semana y mes y varias cuentas.',''],
- ['Gestor documental','Control de trámites y documentos de un estudio profesional, con portal para sus clientes.',''],
- ['Validador de documentos','Escanea documentos personales de cualquier tipo y los unifica en una página para imprimir o enviar.',''],
+ ['Claudio','Asistente personal de voz con IA: agenda, recordatorios y resumen de reuniones, en el teléfono.','../imagenes/tool-claudio.jpg'],
+ ['DOM Calendario','Calendario a pantalla completa con agenda de 30 días, varias cuentas y widget para el teléfono.','../imagenes/tool-dom-calendario.jpg'],
+ ['Gestor documental','Escanea con la cámara y unifica legajos completos en un solo PDF, con bordes detectados y página enderezada.','../imagenes/tool-gestor-documental.jpg'],
+ ['Validador de DNI','Frente y dorso del documento en una sola hoja A4, listo para imprimir o enviar.','../imagenes/tool-validador.jpg'],
  ['Checklist de unidades','Control de recepción y entrega de unidades, con registro ordenado y sin papeles.',''],
  ['Radar de usados','Compara precios de usados entre plataformas y sitios de agencias para fijar un precio con criterio.','']];
 $('#tools').innerHTML=TOOLS.map(function(t){return '<article class="tool"><div class="shot">'+(t[2]?'<img src="'+t[2]+'" alt="Captura de '+esc(t[0])+'" loading="lazy">':'<span>'+esc(t[0])+'</span>')+'</div><div class="t"><h3>'+esc(t[0])+'</h3><p>'+esc(t[1])+'</p></div></article>'}).join('');
