@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>The DOM Studio Web | Estructura y potencia digital</title>
+<meta name="description" content="The DOM Studio Web: estructura comercial y herramientas a medida para escalar su negocio. Pruebe las demos en esta página.">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="icon" type="image/png" href="../imagenes/favicon-64.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Kit de marca The DOM Studio Web — Premium-Noir */
+:root{
+  --bg:#0a0a0a; --surface:#16181c; --raised:#1f2227;
+  --ink:#f4f1ea; --muted:#a8a396;
+  --gold:#d4af37; --gold-light:#e8c766; --gold-text:#d4af37;
+  --hairline:#d4af3740; --on-gold:#0a0a0a;
+  --sin:#ff6b61; --con:#4cc38a; --proc:#22d3ee;
+  --display:"Cinzel","Trajan Pro",Georgia,serif;
+  --sans:"Montserrat",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px; --s8:64px;
+  --r-sm:2px; --r-md:6px; --r-lg:12px;
+  --glow:0 0 24px #d4af3733; --elev:0 8px 24px #00000066;
+  color-scheme:dark;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font:400 16px/26px var(--sans);-webkit-font-smoothing:antialiased}
+img{max-width:100%;height:auto;display:block}
+a{color:var(--gold-text)}
+:focus-visible{outline:2px solid var(--gold-text);outline-offset:3px}
+button,input,select{font:inherit;color:inherit}
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+section{padding-block:var(--s8)}
+h1,h2,h3{font-family:var(--display);letter-spacing:.02em;text-wrap:balance}
+h2{font-size:clamp(24px,4vw,30px);line-height:1.3;font-weight:600;color:var(--gold-text)}
+h3{font-size:19px;line-height:27px;font-weight:600;letter-spacing:.03em}
+.caption{font:500 12px/16px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--gold-text)}
+.lead{color:var(--muted);max-width:65ch}
+.head{display:grid;gap:var(--s3);margin-bottom:var(--s7)}
+.center{text-align:center;justify-items:center}
+.center .lead{margin-inline:auto}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:var(--s3) var(--s6);font:600 14px/20px var(--sans);letter-spacing:.08em;text-transform:uppercase;text-decoration:none;border:1px solid var(--gold);border-radius:var(--r-sm);color:var(--gold-text);background:transparent;cursor:pointer;transition:background .2s,color .2s,box-shadow .2s;touch-action:manipulation}
+.btn:hover{background:var(--gold);color:var(--on-gold);box-shadow:var(--glow)}
+.btn-solid{background:var(--gold);color:var(--on-gold)}
+.btn-solid:hover{background:var(--gold-light)}
+.btn-sm{min-height:36px;padding:6px 14px;font-size:12px}
+.card{background:var(--surface);border:1px solid var(--hairline);border-radius:var(--r-md);padding:var(--s5)}
+.grid3{display:grid;gap:var(--s5);grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+
+/* Barra superior */
+.top{position:sticky;top:0;z-index:20;background:#0a0a0acc;backdrop-filter:blur(10px);border-bottom:1px solid var(--hairline)}
+.top .wrap{display:flex;align-items:center;gap:var(--s5);min-height:60px;flex-wrap:wrap}
+.top .logo{display:flex;align-items:center;gap:var(--s3);text-decoration:none;color:var(--ink);font:700 16px var(--display);letter-spacing:.06em}
+.top .logo img{width:36px;height:36px;border-radius:50%}
+.top nav{display:flex;gap:var(--s5);margin-left:auto;flex-wrap:wrap}
+.top nav a{font:500 12px/16px var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-decoration:none;padding:8px 0}
+.top nav a:hover{color:var(--gold-text)}
+
+@media(max-width:600px){.top{position:static}.top .wrap{padding-block:8px}.top nav{margin-left:0;gap:var(--s4)}}
+/* Portada */
+.hero{padding-block:var(--s8) var(--s8);border-bottom:1px solid var(--hairline)}
+.hero .wrap{display:grid;grid-template-columns:1.2fr .8fr;gap:var(--s7);align-items:center}
+.hero h1{font-size:clamp(32px,5.5vw,54px);line-height:1.12;font-weight:700;margin:var(--s4) 0 var(--s5)}
+.hero h1 span{color:var(--gold-text)}
+.hero p{color:var(--muted);font-size:18px;line-height:28px;max-width:54ch;margin-bottom:var(--s6)}
+.hero .acts{display:flex;gap:var(--s4);flex-wrap:wrap}
+.medal{justify-self:center;width:min(100%,360px);filter:drop-shadow(0 0 32px #d4af3722)}
+@media(max-width:820px){.hero .wrap{grid-template-columns:1fr}.medal{order:-1;width:200px}}
+
+/* Pérdidas */
+.loss b{display:block;font:700 15px var(--display);color:var(--gold-text);letter-spacing:.04em;margin-bottom:var(--s2)}
+.loss p{color:var(--muted);font-size:15px;line-height:24px}
+
+/* Estructura + herramientas */
+.flow{display:grid;gap:var(--s4);grid-template-columns:repeat(auto-fit,minmax(210px,1fr));counter-reset:f}
+.flow .card{position:relative;padding-top:var(--s6)}
+.flow .card::before{counter-increment:f;content:counter(f);position:absolute;top:-16px;left:var(--s5);width:32px;height:32px;border-radius:50%;background:var(--gold);color:var(--on-gold);font:700 15px/32px var(--display);text-align:center}
+.flow p{color:var(--muted);font-size:15px;line-height:24px;margin-top:var(--s2)}
+.link{margin-top:var(--s6);padding:var(--s5);border:1px solid var(--hairline);border-left:4px solid var(--gold);border-radius:var(--r-md);background:var(--surface);color:var(--muted)}
+.link b{color:var(--ink)}
+
+/* Demos */
+.tabs{display:flex;gap:var(--s2);flex-wrap:wrap;margin-bottom:var(--s5)}
+.tab{padding:10px 16px;min-height:44px;background:transparent;border:1px solid var(--hairline);border-radius:var(--r-sm);color:var(--muted);font:600 12px/16px var(--sans);letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--gold);border-color:var(--gold);color:var(--on-gold)}
+.demo{background:var(--surface);border:1px solid var(--hairline);border-radius:var(--r-lg);box-shadow:var(--elev);padding:var(--s5);min-width:0}
+.demo[hidden]{display:none}
+.demo-h{display:flex;gap:var(--s3);align-items:baseline;flex-wrap:wrap;margin-bottom:var(--s4)}
+.demo-h p{color:var(--muted);font-size:14px;flex:1;min-width:220px}
+.badge{display:inline-block;padding:3px 10px;border:1px solid var(--hairline);border-radius:9999px;font:600 11px/16px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--gold-text);white-space:nowrap}
+.nota{margin-top:var(--s4);font-size:12px;line-height:18px;color:var(--muted)}
+
+/* Hub comercial */
+.kan{display:grid;gap:var(--s3);grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:860px){.kan{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:480px){.kan{grid-template-columns:1fr}}
+.col{background:var(--bg);border:1px solid var(--hairline);border-radius:var(--r-md);padding:var(--s3);min-height:200px}
+.col h4{font:600 11px/16px var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--gold-text);display:flex;justify-content:space-between;margin-bottom:var(--s3)}
+.lead-c{background:var(--surface);border:1px solid var(--hairline);border-radius:var(--r-sm);padding:10px;margin-bottom:var(--s2);font-size:13px;line-height:19px}
+.lead-c b{display:block;font-weight:600}
+.lead-c span{color:var(--muted);font-size:12px}
+.lead-c .row{display:flex;gap:6px;margin-top:8px}
+.kpis{display:flex;gap:var(--s5);flex-wrap:wrap;margin:var(--s4) 0}
+.kpi b{display:block;font:700 26px/30px var(--display);color:var(--gold-text)}
+.kpi span{font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+
+/* Calendario */
+.calbar{display:flex;gap:var(--s2);align-items:center;flex-wrap:wrap;margin-bottom:var(--s3)}
+.calbar h4{font:600 16px var(--display);flex:1;min-width:140px;text-transform:capitalize}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
+.cal .dw{font:600 11px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:center;padding:4px 0}
+.cal button{aspect-ratio:1/.8;min-height:44px;background:var(--bg);border:1px solid var(--hairline);border-radius:var(--r-sm);cursor:pointer;position:relative;color:var(--ink);font-size:13px;padding:4px}
+.cal button.out{opacity:.35}
+.cal button.hoy{border-color:var(--gold)}
+.cal button.sel{background:var(--gold);color:var(--on-gold)}
+.cal button i{position:absolute;bottom:5px;left:50%;transform:translateX(-50%);display:flex;gap:2px}
+.cal button i s{width:5px;height:5px;border-radius:50%;background:var(--gold-text);display:block}
+.cal button.sel i s{background:var(--on-gold)}
+.agenda{margin-top:var(--s4);display:grid;gap:var(--s2)}
+.ev{display:flex;gap:var(--s3);align-items:center;padding:10px 12px;border:1px solid var(--hairline);border-left:3px solid var(--gold);border-radius:var(--r-sm);background:var(--bg);font-size:14px}
+.ev time{font:600 13px var(--sans);color:var(--gold-text);min-width:48px}
+
+/* Claudio */
+.claudio{background:#00050a;border:1px solid #22d3ee55;border-radius:var(--r-lg);padding:var(--s5);color:#bfeaf2;box-shadow:0 0 28px #22d3ee14}
+.claudio .orb{width:56px;height:56px;border-radius:50%;border:2px dashed #22d3eeaa;display:grid;place-items:center;flex:none}
+.claudio .orb i{width:26px;height:26px;border-radius:50%;background:#35c6dc;box-shadow:0 0 18px #22d3ee88;animation:pulso 2.4s ease-in-out infinite}
+@keyframes pulso{50%{transform:scale(.78);opacity:.7}}
+@media(prefers-reduced-motion:reduce){.claudio .orb i{animation:none}}
+.cl-top{display:flex;gap:var(--s4);align-items:center;margin-bottom:var(--s4)}
+.cl-top b{font:700 14px var(--display);letter-spacing:.3em;color:#35c6dc}
+.cl-top span{display:block;font-size:12px;color:#7aa9b4}
+.chat{min-height:220px;max-height:340px;overflow:auto;display:grid;gap:var(--s3);align-content:start;padding:var(--s2) 0}
+.msg{padding:10px 14px;border-radius:10px;max-width:88%;font-size:14px;line-height:21px}
+.msg.u{justify-self:end;background:#0c2b36;border:1px solid #22d3ee44}
+.msg.c{justify-self:start;background:#06141c;border:1px solid #22d3ee22}
+.chips{display:flex;gap:var(--s2);flex-wrap:wrap;margin-top:var(--s3)}
+.chip{padding:9px 14px;min-height:40px;border:1px solid #22d3ee66;border-radius:9999px;background:transparent;color:#8fe3f3;font-size:13px;cursor:pointer}
+.chip:hover{background:#22d3ee22}
+.chip:disabled{opacity:.4;cursor:default}
+
+/* Simulador */
+.sim{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.3fr);gap:var(--s5)}
+@media(max-width:860px){.sim{grid-template-columns:1fr}}
+.sim label{display:block;font:500 11px/16px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:10px 0 4px}
+.sim input{width:100%;background:var(--raised);border:1px solid var(--hairline);border-radius:var(--r-sm);padding:9px 10px;min-height:42px}
+.sim .two{display:grid;grid-template-columns:1fr 1fr;gap:var(--s3)}
+.res{display:grid;gap:var(--s3);grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-top:var(--s3)}
+.res .k{background:var(--bg);border:1px solid var(--hairline);border-radius:var(--r-md);padding:12px}
+.res .k span{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:block}
+.res .k b{font:700 19px/26px var(--display);display:block;color:var(--ink);overflow-wrap:anywhere}
+.res .k.gap b{color:var(--sin)}
+.res .k.ok b{color:var(--con)}
+.chart{width:100%;height:auto;background:var(--bg);border:1px solid var(--hairline);border-radius:var(--r-md)}
+.legend{display:flex;gap:var(--s5);flex-wrap:wrap;font-size:12px;color:var(--muted);margin:var(--s2) 0}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px}
+.cred{margin-top:var(--s4);padding:var(--s4);border:1px dashed var(--hairline);border-radius:var(--r-md)}
+
+/* Planes */
+.plan{display:grid;gap:var(--s3);align-content:start}
+.plan ul{list-style:none;display:grid;gap:6px;color:var(--muted);font-size:15px;line-height:22px}
+.plan li::before{content:"✓ ";color:var(--gold-text)}
+.plan .sub{color:var(--muted);font-size:15px}
+.plan .who{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-text)}
+
+/* Lo que ya construimos */
+.tools{display:grid;gap:var(--s4);grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.tool{background:var(--surface);border:1px solid var(--hairline);border-radius:var(--r-md);overflow:hidden;display:flex;flex-direction:column}
+.tool .shot{aspect-ratio:16/10;background:radial-gradient(ellipse at 50% 40%,#1c1a14,#0a0a0a);display:grid;place-items:center;border-bottom:1px solid var(--hairline);color:var(--gold-text);font:600 12px var(--sans);letter-spacing:.14em;text-transform:uppercase;overflow:hidden}
+.tool .shot img{width:100%;height:100%;object-fit:cover;object-position:top}
+.tool div.t{padding:var(--s4)}
+.tool h3{font-size:16px;line-height:22px;margin-bottom:6px}
+.tool p{color:var(--muted);font-size:14px;line-height:21px}
+
+/* Proceso */
+.steps{display:grid;gap:var(--s4);grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.steps .card b{font:700 30px var(--display);color:var(--gold-text);display:block}
+.steps p{color:var(--muted);font-size:15px;line-height:24px;margin-top:6px}
+
+footer{border-top:1px solid var(--hairline);padding-block:var(--s7)}
+.foot{display:flex;gap:var(--s5);align-items:center;justify-content:space-between;flex-wrap:wrap;color:var(--muted);font-size:14px}
+.soc{display:flex;gap:var(--s4)}
+.soc a{width:44px;height:44px;display:grid;place-items:center;border:1px solid var(--hairline);border-radius:50%;color:var(--gold-text)}
+.soc svg{width:20px;height:20px}
+.sig{margin-top:var(--s5);font-size:12px;color:var(--muted);text-align:center}
+.cta{text-align:center;display:grid;gap:var(--s5);justify-items:center}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="#inicio"><img src="../imagenes/medallon-192.webp" alt="" width="36" height="36">THE DOM</a>
+    <nav aria-label="Secciones">
+      <a href="#estructura">Estructura</a>
+      <a href="#herramientas">Herramientas</a>
+      <a href="#planes">Planes</a>
+      <a href="#proceso">Proceso</a>
+    </nav>
+  </div>
+</header>
+
+<main id="inicio">
+
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <span class="caption">The DOM Studio Web · Estructura y potencia digital</span>
+      <h1>La estructura que ordena su negocio. <span>Las herramientas que la hacen funcionar.</span></h1>
+      <p>Primero diseñamos la arquitectura comercial: cómo llegan sus clientes, quién responde y cómo se cierra una venta. Después construimos las herramientas y aplicaciones a medida que la sostienen, para que su negocio venda y funcione las 24 horas.</p>
+      <div class="acts">
+        <a class="btn btn-solid" href="https://wa.me/5492613431216?text=Hola%20Daniel,%20quiero%20solicitar%20la%20auditor%C3%ADa%20gratuita." target="_blank" rel="noopener">Solicitar auditoría gratuita</a>
+        <a class="btn" href="#herramientas">Probar las herramientas</a>
+      </div>
+    </div>
+    <img class="medal" src="../imagenes/medallon-760.webp" alt="Logo de The DOM Studio Web" width="360" height="360">
+  </div>
+</section>
+
+<section aria-labelledby="costo">
+  <div class="wrap">
+    <div class="head center">
+      <span class="caption">El costo de la invisibilidad digital</span>
+      <h2 id="costo">¿Cuántas ventas pierde por mes por depender solo del mostrador?</h2>
+    </div>
+    <div class="grid3">
+      <div class="card loss"><b>Pérdida de prospectos</b><p>Una empresa sin presencia web estructurada se pierde a muchos clientes potenciales en la primera búsqueda. Si no lo encuentran a usted, encuentran a su competencia.</p></div>
+      <div class="card loss"><b>Ventas fuera de horario</b><p>Cada cliente que lo busca un domingo o de madrugada y no recibe respuesta inmediata es una oportunidad de cierre desperdiciada.</p></div>
+      <div class="card loss"><b>Cuellos de botella</b><p>Presupuestos, turnos, stock y seguimiento hechos a mano: tareas repetitivas que consumen el tiempo valioso de su equipo comercial.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="estructura" aria-labelledby="est" style="background:var(--surface);border-block:1px solid var(--hairline)">
+  <div class="wrap">
+    <div class="head center">
+      <span class="caption">Cómo trabajamos</span>
+      <h2 id="est">Estructura primero. Herramientas después. Las dos juntas.</h2>
+      <p class="lead">Una herramienta sin estructura es un parche. Una estructura sin herramientas es un plano que nadie construye. Por eso las diseñamos como un solo sistema.</p>
+    </div>
+    <div class="flow">
+      <div class="card"><h3>Auditoría</h3><p>Analizamos cómo vende hoy y dónde se le fugan tiempo y clientes.</p></div>
+      <div class="card"><h3>Estructura</h3><p>Diseñamos el recorrido comercial: de la primera consulta al cierre, con roles y reglas claras.</p></div>
+      <div class="card"><h3>Herramientas</h3><p>Construimos las aplicaciones a medida que ejecutan ese recorrido: cotizadores, embudos, agendas, asistentes.</p></div>
+      <div class="card"><h3>Resultado</h3><p>Un negocio que responde rápido, no pierde consultas y puede crecer sin desordenarse.</p></div>
+    </div>
+    <div class="link"><b>Cómo se relacionan:</b> la estructura define qué debe pasar con cada cliente; la herramienta lo hace pasar, siempre igual y a toda hora. Y como las construimos a medida, se adaptan a su negocio, no al revés.</div>
+  </div>
+</section>
+
+<section id="herramientas" aria-labelledby="herr">
+  <div class="wrap">
+    <div class="head center">
+      <span class="caption">Herramientas en acción</span>
+      <h2 id="herr">No le contamos cómo funcionan: pruébelas.</h2>
+      <p class="lead">Estas demos se usan acá, con datos de ejemplo. Son versiones limitadas: muestran el funcionamiento, no son aplicaciones para descargar.</p>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="Demos">
+      <button class="tab" role="tab" id="t-hub" aria-selected="true" aria-controls="d-hub">Hub comercial</button>
+      <button class="tab" role="tab" id="t-cal" aria-selected="false" aria-controls="d-cal">Calendario</button>
+      <button class="tab" role="tab" id="t-cla" aria-selected="false" aria-controls="d-cla">Claudio</button>
+      <button class="tab" role="tab" id="t-sim" aria-selected="false" aria-controls="d-sim">Simulador de inversión</button>
+    </div>
+
+    <!-- HUB -->
+    <div class="demo" id="d-hub" role="tabpanel" aria-labelledby="t-hub">
+      <div class="demo-h"><h3>Hub comercial</h3><span class="badge">Datos de ejemplo</span><p>Cada consulta que llega queda en un tablero. Avance cada una por el embudo y mire cómo cambian los números del equipo.</p></div>
+      <div class="kpis" aria-live="polite">
+        <div class="kpi"><b id="k-tot">0</b><span>Consultas</span></div>
+        <div class="kpi"><b id="k-cie">0</b><span>Cerradas</span></div>
+        <div class="kpi"><b id="k-pct">0%</b><span>Conversión</span></div>
+      </div>
+      <div class="kan" id="kan"></div>
+      <div style="display:flex;gap:var(--s3);flex-wrap:wrap;margin-top:var(--s4)">
+        <button class="btn btn-sm" id="hub-add">+ Simular nueva consulta</button>
+        <button class="btn btn-sm" id="hub-rst">Reiniciar demo</button>
+      </div>
+      <p class="nota">Demostración con nombres y datos ficticios. El hub real se conecta a su WhatsApp, su web y su equipo de ventas.</p>
+    </div>
+
+    <!-- CALENDARIO -->
+    <div class="demo" id="d-cal" role="tabpanel" aria-labelledby="t-cal" hidden>
+      <div class="demo-h"><h3>Calendario</h3><span class="badge">Datos de ejemplo</span><p>Su agenda del día de un vistazo. Toque un día para ver sus compromisos y cambie entre mes y semana.</p></div>
+      <div class="calbar">
+        <button class="btn btn-sm" id="c-prev" aria-label="Anterior">‹</button>
+        <h4 id="c-tit"></h4>
+        <button class="btn btn-sm" id="c-next" aria-label="Siguiente">›</button>
+        <button class="btn btn-sm" id="c-vm" aria-pressed="true">Mes</button>
+        <button class="btn btn-sm" id="c-vs" aria-pressed="false">Semana</button>
+      </div>
+      <div class="cal" id="cal"></div>
+      <div class="agenda" id="agenda" aria-live="polite"></div>
+      <p class="nota">Eventos ficticios de ejemplo. La versión real se sincroniza con su calendario de Google y se muestra como widget en la pantalla del teléfono.</p>
+    </div>
+
+    <!-- CLAUDIO -->
+    <div class="demo" id="d-cla" role="tabpanel" aria-labelledby="t-cla" hidden>
+      <div class="demo-h"><h3>Claudio, asistente de voz</h3><span class="badge">Demo guiada</span><p>Un asistente personal que responde por voz y conoce su agenda y su negocio. Elija una pregunta.</p></div>
+      <div class="claudio">
+        <div class="cl-top"><div class="orb"><i></i></div><div><b>CLAUDIO</b><span>Todos los sistemas en línea.</span></div></div>
+        <div class="chat" id="chat" aria-live="polite"></div>
+        <div class="chips" id="chips"></div>
+      </div>
+      <p class="nota">Respuestas escritas de antemano para esta demostración, con datos ficticios. La versión real habla, escucha y consulta su información de verdad.</p>
+    </div>
+
+    <!-- SIMULADOR -->
+    <div class="demo" id="d-sim" role="tabpanel" aria-labelledby="t-sim" hidden>
+      <div class="demo-h"><h3>Simulador de inversión y brecha</h3><span class="badge">Cálculo en vivo</span><p>Vea cómo avanza lo que va pagando frente al valor del bien, y cuánto falta (la brecha) para llegar a obtenerlo.</p></div>
+      <div class="sim">
+        <div>
+          <label for="s-val">Valor actual del bien ($)</label><input id="s-val" inputmode="numeric" value="20000000">
+          <label for="s-ini">Lo que ya aportó ($)</label><input id="s-ini" inputmode="numeric" value="2000000">
+          <label for="s-cuo">Cuota mensual ($)</label><input id="s-cuo" inputmode="numeric" value="350000">
+          <div class="two">
+            <div><label for="s-mes">Plazo (meses)</label><input id="s-mes" inputmode="numeric" value="60"></div>
+            <div><label for="s-g">Suba mensual del bien (%)</label><input id="s-g" inputmode="decimal" value="2"></div>
+          </div>
+          <label for="s-c">Suba mensual de la cuota (%)</label><input id="s-c" inputmode="decimal" value="1.5">
+        </div>
+        <div>
+          <div class="res" aria-live="polite">
+            <div class="k"><span>Valor del bien al final</span><b id="r-vf">—</b></div>
+            <div class="k"><span>Aportado al final</span><b id="r-af">—</b></div>
+            <div class="k gap" id="r-gk"><span>Brecha (GAP)</span><b id="r-gap">—</b></div>
+            <div class="k"><span>Cubierto</span><b id="r-pct">—</b></div>
+          </div>
+          <div class="legend"><span><i style="background:#d4af37"></i>Valor del bien</span><span><i style="background:#22d3ee"></i>Lo aportado</span></div>
+          <svg class="chart" id="chart" viewBox="0 0 560 260" role="img" aria-label="Gráfico de la evolución del valor del bien y de lo aportado"></svg>
+          <div class="cred">
+            <b style="font:600 13px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--gold-text)">¿Cómo cubrir la brecha con un crédito?</b>
+            <div class="two" style="margin-top:8px">
+              <div><label for="s-tna">Tasa mensual del crédito (%)</label><input id="s-tna" inputmode="decimal" placeholder="Ej: 3"></div>
+              <div><label for="s-cm">Plazo del crédito (meses)</label><input id="s-cm" inputmode="numeric" value="48"></div>
+            </div>
+            <p id="r-cred" class="nota" style="font-size:14px;color:var(--ink)">Ingrese la tasa de su crédito para ver la cuota estimada.</p>
+          </div>
+        </div>
+      </div>
+      <p class="nota">Simulación ilustrativa con los supuestos que usted ingresa. No incluye costos, impuestos ni condiciones de ningún crédito real, y no constituye oferta ni asesoramiento financiero.</p>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="hechas" style="background:var(--surface);border-block:1px solid var(--hairline)">
+  <div class="wrap">
+    <div class="head center">
+      <span class="caption">Lo que ya construimos</span>
+      <h2 id="hechas">Herramientas a medida, funcionando.</h2>
+      <p class="lead">Cada una nació de una necesidad concreta de un negocio. Todas se pueden adaptar al suyo.</p>
+    </div>
+    <div class="tools" id="tools"></div>
+  </div>
+</section>
+
+<section id="planes" aria-labelledby="pl">
+  <div class="wrap">
+    <div class="head center">
+      <span class="caption">Niveles de estructura</span>
+      <h2 id="pl">Elija hasta dónde quiere llegar.</h2>
+      <p class="lead">Cada plan suma estructura y herramientas. Con un abono accesible, mantenemos su plataforma actualizada y en evolución, sin costos sorpresa.</p>
+    </div>
+    <div class="grid3">
+      <div class="card plan"><span class="who">Para empezar</span><h3>Presencia</h3><p class="sub">Su vitrina digital de alto impacto.</p><ul><li>Diseño de estética premium</li><li>Arquitectura mobile first</li><li>Formularios de captura de consultas</li><li>Enlace directo a su WhatsApp comercial</li></ul><a class="btn" href="https://wa.me/5492613431216?text=Hola%20Daniel,%20quiero%20consultar%20por%20el%20Paquete%20Presencia." target="_blank" rel="noopener">Consultar plan</a></div>
+      <div class="card plan"><span class="who">Para vender</span><h3>Comercio</h3><p class="sub">Su sucursal digital, abierta las 24 horas.</p><ul><li>Catálogo dinámico escalable</li><li>Cobro integrado</li><li>Cotizador automático</li><li>Estrategias de venta cruzada</li></ul><a class="btn" href="https://wa.me/5492613431216?text=Hola%20Daniel,%20quiero%20consultar%20por%20el%20Paquete%20Comercio." target="_blank" rel="noopener">Consultar plan</a></div>
+      <div class="card plan"><span class="who">Para escalar</span><h3>Potencia</h3><p class="sub">Herramientas y aplicaciones a la medida de su estructura.</p><ul><li>Hubs de gestión comercial</li><li>Calculadoras, simuladores y portales</li><li>Agendas, turnos y asistentes</li><li>Bases de datos y conexiones con sus sistemas</li></ul><a class="btn" href="https://wa.me/5492613431216?text=Hola%20Daniel,%20quiero%20consultar%20por%20el%20Paquete%20Potencia." target="_blank" rel="noopener">Consultar plan</a></div>
+    </div>
+  </div>
+</section>
+
+<section id="proceso" aria-labelledby="pr" style="background:var(--surface);border-block:1px solid var(--hairline)">
+  <div class="wrap">
+    <div class="head center">
+      <span class="caption">Ingeniería aplicada a su rentabilidad</span>
+      <h2 id="pr">Un proceso claro y sin sorpresas.</h2>
+    </div>
+    <div class="steps">
+      <div class="card"><b>1</b><h3>Auditoría</h3><p>Analizamos su operativa para detectar fugas de tiempo y capital.</p></div>
+      <div class="card"><b>2</b><h3>Arquitectura</h3><p>Diseñamos la lógica comercial y visual antes de escribir una línea de código.</p></div>
+      <div class="card"><b>3</b><h3>Desarrollo</h3><p>Construimos sus herramientas con integraciones a los sistemas que ya usa.</p></div>
+      <div class="card"><b>4</b><h3>Despliegue</h3><p>Entregamos el sistema funcionando, optimizado y listo para vender.</p></div>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="fin">
+  <div class="wrap cta">
+    <span class="caption">Auditoría gratuita</span>
+    <h2 id="fin">Es momento de optimizar la maquinaria de su negocio.</h2>
+    <p class="lead">Cuéntenos cómo vende hoy. Le decimos dónde está perdiendo y qué herramienta lo resuelve.</p>
+    <a class="btn btn-solid" href="https://wa.me/5492613431216?text=Hola%20Daniel,%20estoy%20listo%20para%20la%20auditor%C3%ADa%20gratuita." target="_blank" rel="noopener">Iniciar proyecto hoy</a>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <div class="soc">
+        <a href="https://www.instagram.com/thedomstudioweb" target="_blank" rel="noopener" aria-label="Instagram de The DOM Studio Web"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.4A4 4 0 1112.6 8 4 4 0 0116 11.4z"/><line x1="17.5" y1="6.5" x2="17.5" y2="6.5"/></svg></a>
+        <a href="https://www.linkedin.com/company/the-dom-studio-web" target="_blank" rel="noopener" aria-label="LinkedIn de The DOM Studio Web"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-4 0v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></a>
+      </div>
+      <p>© 2026 The DOM Studio Web. Todos los derechos reservados.<br>Dirección comercial: Daniel Arancibia.</p>
+      <img src="../imagenes/medallon-192.webp" alt="Logo de The DOM Studio Web" width="96" height="96">
+    </div>
+    <p class="sig">Desarrollado por The DOM Studio Web · WhatsApp 261-3431216 · thedomstudioweb@gmail.com</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+var $=function(s,r){return (r||document).querySelector(s)};
+function esc(t){return String(t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+var AR=new Intl.NumberFormat('es-AR',{maximumFractionDigits:0});
+function money(n){return '$ '+AR.format(Math.round(n))}
+
+/* Pestañas */
+var tabs=document.querySelectorAll('.tab');
+tabs.forEach(function(t){t.addEventListener('click',function(){
+  tabs.forEach(function(x){var on=x===t;x.setAttribute('aria-selected',on);var p=document.getElementById(x.getAttribute('aria-controls'));p.hidden=!on});
+})});
+
+/* HUB */
+var ETAPAS=['Nueva','Contactada','Visita / reunión','Cerrada'];
+var BASE=[
+ {n:'Lucía M.',t:'Consulta por WhatsApp',e:0},{n:'Martín R.',t:'Pidió cotización',e:0},
+ {n:'Carolina S.',t:'Formulario de la web',e:1},{n:'Julián P.',t:'Recomendado por un cliente',e:1},
+ {n:'Andrea V.',t:'Agendó visita',e:2},{n:'Gustavo L.',t:'Venta confirmada',e:3}];
+var NUEVOS=['Paula G.','Diego F.','Sofía B.','Ramiro T.','Natalia C.','Hernán D.'],NT=['Consulta por WhatsApp','Formulario de la web','Llamada entrante','Consulta por Instagram'];
+var leads=[],nx=0,id=0;
+function hubReset(){leads=BASE.map(function(l){return {id:++id,n:l.n,t:l.t,e:l.e}});nx=0;hub()}
+function hub(){
+  var k=$('#kan');k.innerHTML='';
+  ETAPAS.forEach(function(nm,i){
+    var ls=leads.filter(function(l){return l.e===i});
+    var c=document.createElement('div');c.className='col';
+    c.innerHTML='<h4><span>'+nm+'</span><span>'+ls.length+'</span></h4>'+ls.map(function(l){
+      return '<div class="lead-c"><b>'+esc(l.n)+'</b><span>'+esc(l.t)+'</span>'+(i<3?'<div class="row"><button class="btn btn-sm" data-id="'+l.id+'">Avanzar →</button></div>':'')+'</div>'}).join('');
+    k.appendChild(c)});
+  var tot=leads.length,ci=leads.filter(function(l){return l.e===3}).length;
+  $('#k-tot').textContent=tot;$('#k-cie').textContent=ci;$('#k-pct').textContent=(tot?Math.round(ci*100/tot):0)+'%';
+}
+$('#kan').addEventListener('click',function(e){var b=e.target.closest('button[data-id]');if(!b)return;var l=leads.filter(function(x){return x.id==b.dataset.id})[0];if(l&&l.e<3){l.e++;hub()}});
+$('#hub-add').addEventListener('click',function(){if(leads.length>=14)return;leads.unshift({id:++id,n:NUEVOS[nx%NUEVOS.length],t:NT[nx%NT.length],e:0});nx++;hub()});
+$('#hub-rst').addEventListener('click',hubReset);
+hubReset();
+
+/* CALENDARIO */
+var hoy=new Date();hoy.setHours(0,0,0,0);
+var cur=new Date(hoy.getFullYear(),hoy.getMonth(),1),sel=new Date(hoy),vista='m';
+var EVS=[[0,'09:00','Reunión de equipo comercial'],[0,'16:00','Visita agendada · Andrea V.'],[1,'11:30','Llamada a consulta pendiente'],[2,'10:00','Entrega de unidad'],[3,'15:00','Cotización a enviar'],[5,'09:30','Seguimiento de clientes'],[6,'12:00','Almuerzo con proveedor'],[8,'10:30','Capacitación de vendedores'],[9,'17:00','Visita de cierre'],[12,'09:00','Reunión de equipo comercial'],[13,'14:00','Revisión de métricas'],[15,'11:00','Llamada de seguimiento'],[19,'16:30','Presentación de propuesta'],[22,'10:00','Entrega de unidad'],[26,'09:00','Reunión de equipo comercial']];
+function evDe(d){var base=new Date(hoy.getFullYear(),hoy.getMonth(),1);var off=Math.round((d-base)/864e5);return EVS.filter(function(e){return e[0]===off+0}).map(function(e){return e})}
+function evDay(d){var m1=new Date(d.getFullYear(),d.getMonth(),1);var n=d.getDate()-1;
+  return EVS.filter(function(e){return (e[0]%28)===(n%28)&&e[0]<=n+28*3}).slice(0,2).map(function(e){return e}).filter(function(e,i){return (n+e[0])%3!==2||i===0})}
+function evs(d){var seed=(d.getDate()*7+d.getMonth()*3)%EVS.length;var c=(d.getDate()%3);var r=[];for(var i=0;i<c;i++){r.push(EVS[(seed+i*5)%EVS.length])}
+  if(d.getDay()===0||d.getDay()===6)return r.slice(0,1);return r.sort(function(a,b){return a[1]<b[1]?-1:1})}
+var DW=['lun','mar','mié','jue','vie','sáb','dom'];
+function same(a,b){return a.getTime()===b.getTime()}
+function cal(){
+  var g=$('#cal');g.innerHTML='';DW.forEach(function(d){var s=document.createElement('div');s.className='dw';s.textContent=d;g.appendChild(s)});
+  var days=[];
+  if(vista==='m'){
+    $('#c-tit').textContent=cur.toLocaleDateString('es-AR',{month:'long',year:'numeric'});
+    var first=new Date(cur.getFullYear(),cur.getMonth(),1),off=(first.getDay()+6)%7;
+    for(var i=0;i<42;i++)days.push(new Date(first.getFullYear(),first.getMonth(),1-off+i));
+  }else{
+    var l=new Date(sel);l.setDate(sel.getDate()-((sel.getDay()+6)%7));
+    $('#c-tit').textContent='Semana del '+l.toLocaleDateString('es-AR',{day:'numeric',month:'long'});
+    for(var j=0;j<7;j++)days.push(new Date(l.getFullYear(),l.getMonth(),l.getDate()+j));
+  }
+  days.forEach(function(d){var b=document.createElement('button');var e=evs(d);
+    b.className=(vista==='m'&&d.getMonth()!==cur.getMonth()?'out ':'')+(same(d,hoy)?'hoy ':'')+(same(d,sel)?'sel':'');
+    b.innerHTML=d.getDate()+(e.length?'<i>'+e.map(function(){return '<s></s>'}).join('')+'</i>':'');
+    b.setAttribute('aria-label',d.toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'})+(e.length?', '+e.length+' compromisos':''));
+    b.addEventListener('click',function(){sel=new Date(d);if(vista==='m'&&d.getMonth()!==cur.getMonth())cur=new Date(d.getFullYear(),d.getMonth(),1);cal()});
+    g.appendChild(b)});
+  var e=evs(sel);
+  $('#agenda').innerHTML='<div class="caption" style="margin-top:4px">'+esc(sel.toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'}))+'</div>'+(e.length?e.map(function(x){return '<div class="ev"><time>'+x[1]+'</time><span>'+esc(x[2])+'</span></div>'}).join(''):'<div class="ev" style="border-left-color:var(--hairline);color:var(--muted)">Día libre</div>');
+}
+$('#c-prev').addEventListener('click',function(){if(vista==='m'){cur=new Date(cur.getFullYear(),cur.getMonth()-1,1)}else{sel.setDate(sel.getDate()-7)}cal()});
+$('#c-next').addEventListener('click',function(){if(vista==='m'){cur=new Date(cur.getFullYear(),cur.getMonth()+1,1)}else{sel.setDate(sel.getDate()+7)}cal()});
+$('#c-vm').addEventListener('click',function(){vista='m';cur=new Date(sel.getFullYear(),sel.getMonth(),1);$('#c-vm').setAttribute('aria-pressed',true);$('#c-vs').setAttribute('aria-pressed',false);cal()});
+$('#c-vs').addEventListener('click',function(){vista='s';$('#c-vm').setAttribute('aria-pressed',false);$('#c-vs').setAttribute('aria-pressed',true);cal()});
+cal();
+
+/* CLAUDIO */
+var QA=[
+ ['¿Qué tengo hoy?','Señor, hoy tiene tres compromisos. A las 9:00, reunión de equipo comercial. A las 11:30, una llamada a una consulta pendiente. Y a las 16:00, una visita agendada. ¿Desea que le recuerde la visita media hora antes?'],
+ ['Recordame la visita de las 16','Hecho, señor. Le avisaré a las 15:30: visita agendada, cliente Andrea V. ¿Quiere que deje preparada la ficha de la propiedad?'],
+ ['¿Cuántas consultas nuevas hay?','Hay dos consultas nuevas sin responder: una llegó por WhatsApp hace 12 minutos y otra por el formulario de la web. La más antigua lleva menos de una hora. ¿Se las leo?'],
+ ['Resumí la reunión de ayer','Con gusto. Hubo tres participantes. Se acordó priorizar el seguimiento de las consultas de la semana, revisar los precios de la lista y cerrar la agenda de visitas del viernes. Quedaron dos tareas asignadas, con fecha.']];
+function chips(){var c=$('#chips');c.innerHTML='';QA.forEach(function(q,i){var b=document.createElement('button');b.className='chip';b.textContent=q[0];b.addEventListener('click',function(){ask(i)});c.appendChild(b)})}
+function msg(t,c){var d=document.createElement('div');d.className='msg '+c;d.textContent=t;$('#chat').appendChild(d);$('#chat').scrollTop=1e5;return d}
+var busy=false;
+function ask(i){if(busy)return;busy=true;document.querySelectorAll('.chip').forEach(function(b){b.disabled=true});
+  msg(QA[i][0],'u');var m=msg('…','c'),txt=QA[i][1],k=0;
+  var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  setTimeout(function(){m.textContent='';
+    function tick(){k+=reduce?txt.length:3;m.textContent=txt.slice(0,k);$('#chat').scrollTop=1e5;if(k<txt.length){setTimeout(tick,22)}else{busy=false;document.querySelectorAll('.chip').forEach(function(b){b.disabled=false})}}tick()},600)}
+msg('Buenos días, señor. Soy Claudio. ¿En qué puedo ayudarle?','c');chips();
+
+/* SIMULADOR */
+function num(id){var r=String($('#'+id).value).trim(),v;if(r.indexOf(',')>-1)v=parseFloat(r.replace(/\./g,'').replace(',','.'));else if(/^\d{1,3}(\.\d{3})+$/.test(r))v=parseFloat(r.replace(/\./g,''));else v=parseFloat(r);return isFinite(v)?v:0}
+function sim(){
+  var V=num('s-val'),A0=num('s-ini'),C=num('s-cuo'),N=Math.max(1,Math.min(240,Math.round(num('s-mes')))),g=num('s-g')/100,c=num('s-c')/100;
+  var vb=[],ap=[],a=A0;vb.push(V);ap.push(A0);
+  for(var t=1;t<=N;t++){a+=C*Math.pow(1+c,t-1);vb.push(V*Math.pow(1+g,t));ap.push(a)}
+  var VF=vb[N],AF=ap[N],gap=VF-AF;
+  $('#r-vf').textContent=money(VF);$('#r-af').textContent=money(AF);
+  var pct=VF>0?Math.min(100,AF*100/VF):0;$('#r-pct').textContent=Math.round(pct)+'%';
+  $('#r-gap').textContent=gap>0?money(gap):'Sin brecha';
+  $('#r-gk').className='k '+(gap>0?'gap':'ok');
+  var W=560,H=260,L=56,R=12,T=14,B=30,mx=Math.max.apply(null,vb.concat(ap))*1.05||1;
+  function X(t){return L+(W-L-R)*t/N}function Y(v){return T+(H-T-B)*(1-v/mx)}
+  function path(s){return s.map(function(v,t){return (t?'L':'M')+X(t).toFixed(1)+' '+Y(v).toFixed(1)}).join(' ')}
+  var g1='';for(var i=0;i<=4;i++){var yv=mx*i/4;g1+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(yv)+'" y2="'+Y(yv)+'" stroke="#d4af3722"/><text x="'+(L-6)+'" y="'+(Y(yv)+4)+'" text-anchor="end" font-size="10" fill="#a8a396">'+(yv>=1e6?(yv/1e6).toFixed(0)+' M':AR.format(yv/1e3)+' mil')+'</text>'}
+  var xs='';[0,.25,.5,.75,1].forEach(function(f){var t=Math.round(N*f);xs+='<text x="'+X(t)+'" y="'+(H-10)+'" text-anchor="'+(f===1?'end':'middle')+'" font-size="10" fill="#a8a396">mes '+t+'</text>'});
+  var cruce=-1;for(var q=0;q<=N;q++){if(ap[q]>=vb[q]){cruce=q;break}}
+  $('#chart').innerHTML=g1+xs+'<path d="'+path(vb)+'" fill="none" stroke="#d4af37" stroke-width="2.5"/><path d="'+path(ap)+'" fill="none" stroke="#22d3ee" stroke-width="2.5"/>'
+   +(gap>0?'<line x1="'+X(N)+'" x2="'+X(N)+'" y1="'+Y(VF)+'" y2="'+Y(AF)+'" stroke="#ff6b61" stroke-width="2" stroke-dasharray="4 3"/><text x="'+(X(N)-6)+'" y="'+((Y(VF)+Y(AF))/2)+'" text-anchor="end" font-size="11" fill="#ff6b61">brecha</text>':'')
+   +(cruce>0?'<circle cx="'+X(cruce)+'" cy="'+Y(ap[cruce])+'" r="5" fill="#4cc38a"/>':'');
+  var tna=num('s-tna')/100,M=Math.max(1,Math.round(num('s-cm')));
+  var el=$('#r-cred');
+  if(gap<=0){el.textContent='Con estos supuestos lo aportado alcanza el valor del bien'+(cruce>0?' en el mes '+cruce:'')+'. No necesitaría un crédito.'}
+  else if(!tna){el.textContent='Brecha a cubrir: '+money(gap)+'. Ingrese la tasa mensual de su crédito para ver la cuota estimada.'}
+  else{var cuota=gap*tna/(1-Math.pow(1+tna,-M));el.textContent='Para cubrir '+money(gap)+' con un crédito a '+M+' meses y '+(tna*100).toLocaleString('es-AR')+'% mensual, la cuota estimada sería de '+money(cuota)+' por mes.'}
+}
+['s-val','s-ini','s-cuo','s-mes','s-g','s-c','s-tna','s-cm'].forEach(function(i){$('#'+i).addEventListener('input',sim)});
+sim();
+
+/* Herramientas construidas */
+var TOOLS=[
+ ['Hubs comerciales','Un mini-CRM para el equipo de ventas: consultas, seguimientos, visitas y agenda del día en un solo lugar.',''],
+ ['DOMino Redes','Gestor de redes sociales: prepara, aprueba y publica en Instagram y LinkedIn desde una sola aplicación.',''],
+ ['Claudio','Asistente personal de voz con IA: agenda, recordatorios y resumen de reuniones, en el teléfono.',''],
+ ['DOM Calendario','Widget de calendario a pantalla completa, con vistas de día, semana y mes y varias cuentas.',''],
+ ['Gestor documental','Control de trámites y documentos de un estudio profesional, con portal para sus clientes.',''],
+ ['Validador de documentos','Escanea documentos personales de cualquier tipo y los unifica en una página para imprimir o enviar.',''],
+ ['Checklist de unidades','Control de recepción y entrega de unidades, con registro ordenado y sin papeles.',''],
+ ['Radar de usados','Compara precios de usados entre plataformas y sitios de agencias para fijar un precio con criterio.','']];
+$('#tools').innerHTML=TOOLS.map(function(t){return '<article class="tool"><div class="shot">'+(t[2]?'<img src="'+t[2]+'" alt="Captura de '+esc(t[0])+'" loading="lazy">':'<span>'+esc(t[0])+'</span>')+'</div><div class="t"><h3>'+esc(t[0])+'</h3><p>'+esc(t[1])+'</p></div></article>'}).join('');
+})();
+</script>
+</body>
+</html>
