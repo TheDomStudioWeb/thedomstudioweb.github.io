@@ -204,6 +204,16 @@ footer{border-top:1px solid var(--hairline);padding-block:var(--s7)}
   .kan .col{min-height:0}
   .cta{gap:var(--s4)}
 }
+
+.car{position:relative}.car .hint{display:none}
+@media(max-width:700px){
+  .car .hint{display:flex;position:absolute;right:-16px;top:0;bottom:var(--s3);width:76px;align-items:center;justify-content:flex-end;gap:2px;padding-right:20px;flex-direction:column;justify-content:center;border:0;cursor:pointer;color:var(--gold-text);background:linear-gradient(90deg,#0a0a0a00,#0a0a0aee 55%);font:600 11px/14px var(--sans);letter-spacing:.08em;text-transform:uppercase;text-align:center;transition:opacity .25s}
+  .car .hint b{font-size:26px;line-height:26px;animation:emp 1.4s ease-in-out infinite}
+  .car .hint.off{opacity:0;pointer-events:none}
+  #estructura .car .hint,#proceso .car .hint{background:linear-gradient(90deg,#16181c00,#16181cee 55%)}
+}
+@keyframes emp{50%{transform:translateX(5px)}}
+@media(prefers-reduced-motion:reduce){.car .hint b{animation:none}}
 </style>
 </head>
 <body>
@@ -560,6 +570,15 @@ var TOOLS=[
  ['Checklist de unidades','Control de recepción y entrega de unidades, con registro ordenado y sin papeles.',''],
  ['Radar de usados','Compara precios de usados entre plataformas y sitios de agencias para fijar un precio con criterio.','']];
 $('#tools').innerHTML=TOOLS.map(function(t){return '<article class="tool"><div class="shot">'+(t[2]?'<img src="'+t[2]+'" alt="Captura de '+esc(t[0])+'" loading="lazy">':'<span>'+esc(t[0])+'</span>')+'</div><div class="t"><h3>'+esc(t[0])+'</h3><p>'+esc(t[1])+'</p></div></article>'}).join('');
+/* Pista de deslizar en carruseles (celular) */
+document.querySelectorAll('.grid3,.tools,.flow,.steps').forEach(function(el){
+  var w=document.createElement('div');w.className='car';el.parentNode.insertBefore(w,el);w.appendChild(el);
+  var b=document.createElement('button');b.type='button';b.className='hint';b.setAttribute('aria-label','Ver más');
+  b.innerHTML='<b aria-hidden="true">›</b><span>'+(el.id==='tools'?'Más ejemplos':'Ver más')+'</span>';w.appendChild(b);
+  function chk(){b.classList.toggle('off',el.scrollLeft+el.clientWidth>=el.scrollWidth-24||el.scrollWidth<=el.clientWidth+4)}
+  el.addEventListener('scroll',chk,{passive:true});window.addEventListener('resize',chk);
+  b.addEventListener('click',function(){el.scrollBy({left:el.clientWidth*.8,behavior:'smooth'})});chk();
+});
 })();
 </script>
 </body>
