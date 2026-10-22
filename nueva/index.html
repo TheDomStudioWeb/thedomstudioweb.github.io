@@ -187,6 +187,23 @@ footer{border-top:1px solid var(--hairline);padding-block:var(--s7)}
 .soc svg{width:20px;height:20px}
 .sig{margin-top:var(--s5);font-size:12px;color:var(--muted);text-align:center}
 .cta{text-align:center;display:grid;gap:var(--s5);justify-items:center}
+
+/* Celular: página más corta */
+@media(max-width:700px){
+  section{padding-block:var(--s6)}
+  .head{margin-bottom:var(--s5)}
+  .hero{padding-block:var(--s5)}
+  .hero p{font-size:16px;line-height:25px;margin-bottom:var(--s5)}
+  .medal{width:110px}
+  .grid3,.tools,.flow,.steps{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:var(--s3);padding-bottom:var(--s3);margin-right:calc(-1*max(16px,env(safe-area-inset-right,0px)));padding-right:16px;-webkit-overflow-scrolling:touch}
+  .grid3>*,.tools>*,.flow>*,.steps>*{flex:0 0 82%;scroll-snap-align:start}
+  .flow .card{padding-top:var(--s6)}
+  .flow{padding-top:16px}
+  .tool .shot{aspect-ratio:16/10}
+  .link{margin-top:var(--s4)}
+  .kan .col{min-height:0}
+  .cta{gap:var(--s4)}
+}
 </style>
 </head>
 <body>
