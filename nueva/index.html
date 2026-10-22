@@ -175,6 +175,8 @@ h3{font-size:19px;line-height:27px;font-weight:600;letter-spacing:.03em}
 .tool h3{font-size:16px;line-height:22px;margin-bottom:6px}
 .tool p{color:var(--muted);font-size:14px;line-height:21px}
 
+.feat{margin:0 auto var(--s6);max-width:760px;border:1px solid var(--hairline);border-radius:var(--r-lg);overflow:hidden;background:var(--bg);box-shadow:var(--elev)}
+.feat img{width:100%;height:auto}.feat figcaption{padding:var(--s3) var(--s4);font-size:14px;color:var(--muted);text-align:center;border-top:1px solid var(--hairline)}
 /* Proceso */
 .steps{display:grid;gap:var(--s4);grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
 .steps .card b{font:700 30px var(--display);color:var(--gold-text);display:block}
@@ -380,6 +382,7 @@ footer{border-top:1px solid var(--hairline);padding-block:var(--s7)}
       <h2 id="hechas">Herramientas a medida, funcionando.</h2>
       <p class="lead">Cada una nació de una necesidad concreta de un negocio. Todas se pueden adaptar al suyo.</p>
     </div>
+    <figure class="feat"><img src="../imagenes/escritorio.jpg" alt="Escritorio de una computadora con el widget de DOM Calendario y Claudio funcionando al lado" loading="lazy" width="915" height="586"><figcaption>En la computadora: el calendario y Claudio, siempre a la vista y funcionando juntos.</figcaption></figure>
     <div class="tools" id="tools"></div>
   </div>
 </section>
@@ -561,14 +564,14 @@ sim();
 
 /* Herramientas construidas */
 var TOOLS=[
- ['Hubs comerciales','Un mini-CRM para el equipo de ventas: consultas, seguimientos, visitas y agenda del día en un solo lugar.',''],
+ ['Hubs comerciales','Un mini-CRM para el equipo de ventas: consultas, seguimientos, visitas y agenda del día en un solo lugar.','../imagenes/tool-hub.jpg'],
  ['DOMino Redes','Gestor de redes sociales: prepara, aprueba y publica en Instagram y LinkedIn desde una sola aplicación.',''],
  ['Claudio','Asistente personal de voz con IA: agenda, recordatorios y resumen de reuniones, en el teléfono.','../imagenes/tool-claudio.jpg'],
  ['DOM Calendario','Calendario a pantalla completa con agenda de 30 días, varias cuentas y widget para el teléfono.','../imagenes/tool-dom-calendario.jpg'],
  ['Gestor documental','Escanea con la cámara y unifica legajos completos en un solo PDF, con bordes detectados y página enderezada.','../imagenes/tool-gestor-documental.jpg'],
  ['Validador de DNI','Frente y dorso del documento en una sola hoja A4, listo para imprimir o enviar.','../imagenes/tool-validador.jpg'],
- ['Checklist de unidades','Control de recepción y entrega de unidades, con registro ordenado y sin papeles.',''],
- ['Radar de usados','Compara precios de usados entre plataformas y sitios de agencias para fijar un precio con criterio.','']];
+ ['Checklist de unidades','Control de recepción y entrega de unidades, con registro ordenado y sin papeles.','../imagenes/tool-checklist.jpg'],
+ ['Radar de usados','Compara precios de usados entre plataformas y sitios de agencias para fijar un precio con criterio.','../imagenes/tool-radar.jpg']];
 $('#tools').innerHTML=TOOLS.map(function(t){return '<article class="tool"><div class="shot">'+(t[2]?'<img src="'+t[2]+'" alt="Captura de '+esc(t[0])+'" loading="lazy">':'<span>'+esc(t[0])+'</span>')+'</div><div class="t"><h3>'+esc(t[0])+'</h3><p>'+esc(t[1])+'</p></div></article>'}).join('');
 /* Pista de deslizar en carruseles (celular) */
 document.querySelectorAll('.grid3,.tools,.flow,.steps').forEach(function(el){
