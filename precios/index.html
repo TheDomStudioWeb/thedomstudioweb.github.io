@@ -137,7 +137,146 @@ footer a{color:var(--goldt)}
 }
 @media (max-width:380px){.grid2,.ped-h{grid-template-columns:minmax(0,1fr)}.grid3{grid-template-columns:minmax(0,1fr)}.cat{grid-template-columns:minmax(0,1fr)}}
 </style>
-</head><body>
+</head><body><title>DOMino Ganancias</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0A0A0A;--panel:#16181C;--panel2:#1E2127;--fg:#F4F1EA;--mut:#A9A79E;--line:#3A3322;
+  --gold:#D4AF37;--goldt:#D4AF37;--goldd:#9E7535;--on-gold:#0A0A0A;
+  --ok:#4CC38A;--bad:#FF6B61;--field:#0F1114;--fieldline:#4A4332;
+  --s1:#4A4F57;--s2:#7A7F88;--s3:#A9AEB6;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){
+  --bg:#F1EEE3;--panel:#FBF9F2;--panel2:#E9E5D6;--fg:#0A0A0A;--mut:#5A584F;--line:#CDC6AE;
+  --gold:#D4AF37;--goldt:#7A5F0E;--goldd:#7A5F0E;--on-gold:#0A0A0A;
+  --ok:#1B6E3C;--bad:#A82019;--field:#FFFFFF;--fieldline:#B9B190;
+  --s1:#5B616A;--s2:#8C9199;--s3:#BFC3C9;color-scheme:light}}
+:root[data-theme="light"]{
+  --bg:#F1EEE3;--panel:#FBF9F2;--panel2:#E9E5D6;--fg:#0A0A0A;--mut:#5A584F;--line:#CDC6AE;
+  --gold:#D4AF37;--goldt:#7A5F0E;--goldd:#7A5F0E;--on-gold:#0A0A0A;
+  --ok:#1B6E3C;--bad:#A82019;--field:#FFFFFF;--fieldline:#B9B190;
+  --s1:#5B616A;--s2:#8C9199;--s3:#BFC3C9;color-scheme:light}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 'Montserrat',system-ui,-apple-system,'Segoe UI',sans-serif;
+  padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1040px;margin:0 auto;display:grid;gap:18px}
+h1,h2,h3{font-family:'Cinzel',Georgia,serif;margin:0;font-weight:700;letter-spacing:.02em;text-wrap:balance}
+header{display:flex;align-items:center;gap:14px}
+header img{width:52px;height:52px;flex:none;border-radius:50%}
+header h1{font-size:26px;line-height:1.1;color:var(--goldt)}
+header p{margin:2px 0 0;color:var(--mut);font-size:13px;letter-spacing:.04em}
+.lead{margin:0;color:var(--fg);max-width:64ch}
+.bar-ex{display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);padding:12px 14px;font-size:14px}
+.bar-ex span{color:var(--mut);min-width:0;flex:1 1 260px}
+.bar-ex div{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:600 14px 'Montserrat',sans-serif;min-height:44px;padding:0 16px;border:1px solid var(--gold);background:transparent;color:var(--goldt);border-radius:3px;cursor:pointer}
+.btn.pri{background:var(--gold);color:var(--on-gold)}
+.btn.sm{min-height:40px;padding:0 12px;font-size:13px}
+.btn:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,.prow:focus-visible,.chip:focus-visible{outline:2px solid var(--goldt);outline-offset:2px}
+section.card{background:var(--panel);border:1px solid var(--line);padding:18px 16px;display:grid;gap:14px;min-width:0}
+.step{font:600 11px 'Montserrat',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--goldt)}
+section.card>h2{font-size:21px;line-height:1.2}
+.hint{margin:0;color:var(--mut);font-size:13px}
+label,.lab{display:block;font-size:13px;font-weight:600;margin-bottom:4px}
+.fld{min-width:0}
+.in{display:flex;align-items:stretch;background:var(--field);border:1px solid var(--fieldline);border-radius:3px;min-width:0}
+.in:focus-within{border-color:var(--goldt)}
+.in b{display:grid;place-items:center;padding:0 10px;color:var(--mut);font-weight:600;font-size:14px}
+.in input{flex:1;min-width:0;width:100%;background:transparent;border:0;color:var(--fg);font:500 16px 'Montserrat',sans-serif;padding:11px 10px;min-height:46px}
+.in input::placeholder,.txt::placeholder{color:var(--mut);opacity:.8}
+.in input:focus{outline:0}
+.txt{width:100%;background:var(--field);border:1px solid var(--fieldline);border-radius:3px;color:var(--fg);font:500 16px 'Montserrat',sans-serif;padding:11px 10px;min-height:46px}
+select.txt{appearance:auto}
+.fix{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 44px;gap:8px;align-items:end}
+.x{min-height:46px;border:1px solid var(--fieldline);background:transparent;color:var(--mut);border-radius:3px;cursor:pointer;font-size:18px}
+.tot{display:flex;justify-content:space-between;gap:10px;border-top:1px solid var(--line);padding-top:10px;font-weight:700}
+.tot span:last-child{color:var(--goldt);white-space:nowrap}
+.modo{display:grid;gap:8px;grid-template-columns:minmax(0,1fr)}
+.opt{text-align:left;background:transparent;border:1px solid var(--fieldline);color:var(--fg);padding:12px;border-radius:3px;cursor:pointer;font:500 14px/1.4 'Montserrat',sans-serif;display:grid;gap:2px}
+.opt b{font-size:14px}
+.opt small{color:var(--mut);font-size:12px}
+.opt[aria-pressed=true]{border-color:var(--gold);background:var(--panel2)}
+.opt[aria-pressed=true] b{color:var(--goldt)}
+/* rubros */
+.cat{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:8px;background:var(--panel2);border:1px solid var(--line);padding:12px;align-items:end}
+.cat .nm{grid-column:1 / -1;display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:8px;align-items:end}
+/* productos */
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px}
+.chip{flex:none;min-height:40px;padding:0 14px;border:1px solid var(--fieldline);background:transparent;color:var(--fg);border-radius:3px;cursor:pointer;font:600 13px 'Montserrat',sans-serif;white-space:nowrap}
+.chip[aria-pressed=true]{background:var(--gold);border-color:var(--gold);color:var(--on-gold)}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tools .txt{flex:1 1 220px;width:auto}
+.lhead{display:none}
+.plist{display:grid;gap:6px}
+.prow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;width:100%;text-align:left;background:var(--panel2);border:1px solid var(--line);color:var(--fg);padding:10px 12px;font:500 15px 'Montserrat',sans-serif;cursor:pointer;min-height:58px;border-radius:3px;align-items:center}
+.prow[aria-expanded=true]{border-color:var(--gold)}
+.prow .rn{font-weight:600;overflow-wrap:anywhere;grid-column:1}
+.prow .sub{grid-column:1;font-size:12px;color:var(--mut)}
+.prow .rp{grid-column:2;grid-row:1 / span 2;font:700 18px/1.1 'Cinzel',Georgia,serif;color:var(--goldt);text-align:right;white-space:nowrap}
+.prow .dc{display:none}
+.ped{background:var(--panel2);border:1px solid var(--gold);padding:14px;display:grid;gap:14px;min-width:0;margin-bottom:6px}
+.ped-h{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:end}
+.ped-act{display:flex;gap:8px;flex-wrap:wrap}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-items:end}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:end}
+.res{border-top:1px solid var(--line);padding-top:14px;display:grid;gap:12px}
+.big{display:grid;gap:2px}
+.big small{color:var(--mut);font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+.big strong{font:700 34px/1.1 'Cinzel',Georgia,serif;color:var(--goldt)}
+.kv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 14px}
+.kv div{min-width:0}
+.kv small{display:block;color:var(--mut);font-size:12px}
+.kv b{font-size:16px}
+.stack{display:flex;gap:2px;height:16px}
+.stack i{display:block;min-width:2px;height:100%}
+.leg{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--mut)}
+.leg span{display:inline-flex;gap:6px;align-items:center}
+.leg em{width:10px;height:10px;display:inline-block;font-style:normal}
+.pill{display:inline-block;font-weight:700;font-size:13px}
+.ok{color:var(--ok)}.bad{color:var(--bad)}
+.warn{margin:0;background:var(--panel);border:1px solid var(--bad);color:var(--fg);padding:10px 12px;font-size:14px}
+.warn b{color:var(--bad)}
+.pager{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+details.how{border:1px solid var(--line);padding:10px 12px;background:var(--panel)}details.how summary{cursor:pointer;font-weight:600;font-size:14px;min-height:32px}details.how ol{margin:8px 0;padding-left:20px}.imp{background:var(--panel2);border:1px solid var(--line);padding:14px;display:grid;gap:10px}
+.copybox{width:100%;min-height:130px;background:var(--field);color:var(--fg);border:1px solid var(--fieldline);font:13px/1.5 'Montserrat',sans-serif;padding:10px;border-radius:3px}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:9px 4px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left;white-space:normal}
+th{font-size:12px;color:var(--mut);font-weight:600;letter-spacing:.04em}
+.sum{display:grid;gap:8px}
+.sum div{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:7px 0}
+.sum div.t{border-bottom:0;font-weight:700;font-size:17px}
+input[type=range]{width:100%;accent-color:var(--gold);min-height:36px}
+.cta{background:var(--panel);border:1px solid var(--gold);padding:18px 16px;display:grid;gap:10px}
+.cta h2{font-size:20px}
+.cta p{margin:0;color:var(--mut)}
+.cta .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.cta a.btn{display:inline-grid;place-items:center;text-decoration:none}
+.cta .num{font-weight:600;color:var(--fg)}
+footer{font-size:12px;color:var(--mut);text-align:center;display:grid;gap:6px}
+footer a{color:var(--goldt)}
+@media (min-width:860px){
+  header h1{font-size:32px}
+  .modo{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .lhead,.prow{grid-template-columns:minmax(0,2.4fr) minmax(0,1.2fr) 104px 84px 124px 124px;column-gap:12px}
+  .lhead{display:grid;padding:0 12px;font-size:12px;color:var(--mut);font-weight:600;letter-spacing:.04em}
+  .lhead span:nth-child(n+3){text-align:right}
+  .prow .sub{display:none}
+  .prow .dc{display:block;text-align:right;white-space:nowrap}
+  .prow .rr{text-align:left;color:var(--mut);font-size:13px;overflow:hidden;text-overflow:ellipsis}
+  .prow .rp{grid-column:auto;grid-row:auto;font-size:17px}
+  .prow .rn{grid-column:auto}
+  .ped{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:20px;align-items:start}
+  .ped-h,.ped-top{grid-column:1 / -1}
+  .ped .res{border-top:0;padding-top:0;border-left:1px solid var(--line);padding-left:20px}
+}
+@media (max-width:380px){.grid2,.ped-h{grid-template-columns:minmax(0,1fr)}.grid3{grid-template-columns:minmax(0,1fr)}.cat{grid-template-columns:minmax(0,1fr)}}
+</style>
 
 <div class="wrap">
   <header>
@@ -145,6 +284,7 @@ footer a{color:var(--goldt)}
     <div><h1>DOMino Ganancias</h1><p>Calculadora de precios y punto de equilibrio</p></div>
   </header>
   <p class="lead">Calculá cuánto tenés que cobrar para no perder y ganar lo que querés, aunque tengas cientos de productos. No te pide registro y los datos quedan solo en tu teléfono.</p>
+  <div><a class="btn pri" id="manual" href="https://thedomstudioweb.github.io/precios/manual-domino-ganancias.pdf" target="_blank" rel="noopener">Descargar el manual (PDF)</a></div>
   <div class="bar-ex"><span id="barmsg"></span><div id="barbtns"></div></div>
 
   <section class="card" aria-labelledby="h1">
@@ -358,9 +498,9 @@ function calc(){
 
 /* ---------- vistas ---------- */
 function renderBar(){
-  var m=S.ejemplo?'Estás viendo un ejemplo con datos ficticios. Cambialos por los tuyos o empezá desde cero.':'Tus datos quedan guardados en este teléfono.';
+  var m=S.ejemplo==='almacen'?'Ejemplo de almacén (datos ficticios): 5 rubros, 14 productos y los costos fijos repartidos según lo que se vende por mes. Cambialos por los tuyos o empezá desde cero.':S.ejemplo==='velas'?'Ejemplo de emprendimiento (datos ficticios): 1 rubro, 2 productos y los costos fijos repartidos según las unidades de cada producto. Cambialos por los tuyos o empezá desde cero.':S.ejemplo?'Estás viendo un ejemplo con datos ficticios.':'Tus datos quedan guardados en este teléfono.';
   $('barmsg').textContent=m;
-  var b=[['almacen','Ejemplo: almacén'],['velas','Ejemplo: emprendimiento']];
+  var b=[['almacen','Ejemplo: almacén (muchos productos)'],['velas','Ejemplo: emprendimiento (pocos productos)']];
   var h=b.map(function(x){return '<button class="btn sm" type="button" data-ex="'+x[0]+'">'+(armKey===x[0]?'Tocá de nuevo para reemplazar':x[1])+'</button>'}).join('');
   h+='<button class="btn sm" type="button" data-ex="blank">'+(armKey==='blank'?'Tocá de nuevo para borrar todo':'Empezar desde cero')+'</button>';
   $('barbtns').innerHTML=h;
@@ -693,4 +833,5 @@ function copyText(txt,msgEl,okMsg){
 renderAll();
 })();
 </script>
+
 </body></html>
