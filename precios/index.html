@@ -345,7 +345,7 @@ function calc(){
     R.byId[p.id]=o;R.rows.push(o);
     var k=o.cat;(R.cat[k]=R.cat[k]||{n:0,sm:0,ok:0});R.cat[k].n++;if(o.ok&&o.price>0){R.cat[k].ok++;R.cat[k].sm+=o.margin}
   });
-  R.nok=nok;
+  R.nok=nok;R.missQ=0;if(!ven&&Q>0)S.prods.forEach(function(p){if(!(num(p.q)>0)&&(num(p.c)+num(p.o))>0)R.missQ++});
   if(ven){
     var cr=nok?sumCR/nok:0;
     R.cr=cr;R.rev=Y;R.vc=Y*(nok?sumCost/nok:0);R.fee=Y*(nok?sumFee/nok:0);R.contrib=Y*cr;
@@ -409,7 +409,7 @@ function filtered(){
 }
 function pf(label,k,p,val,suf,ph){
   var id='p'+k+p.id;
-  return '<div class="fld"><label for="'+id+'">'+label+'</label><div class="in">'+(suf?'':'<b>$</b>')+'<input id="'+id+'" data-p="'+k+'" data-id="'+p.id+'" inputmode="decimal" autocomplete="off" value="'+esc(suf?val:fv(val))+'"'+(ph!=null?' placeholder="'+esc(ph)+'"':'')+'>'+(suf?'<b>%</b>':'')+'</div></div>';
+  return '<div class="fld"><label for="'+id+'">'+label+'</label><div class="in">'+((suf||k==='q')?'':'<b>$</b>')+'<input id="'+id+'" data-p="'+k+'" data-id="'+p.id+'" inputmode="decimal" autocomplete="off" value="'+esc(suf?val:fv(val))+'"'+(ph!=null?' placeholder="'+esc(ph)+'"':'')+'>'+(suf?'<b>%</b>':'')+'</div></div>';
 }
 function editor(p){
   var c=catOf(p);
@@ -423,7 +423,7 @@ function editor(p){
      '<div class="hint" style="font-size:12px;margin-top:-4px">Otros costos: envase, etiqueta, flete que pagás, etc.</div>'+
      '<div class="grid3">'+pf('Margen','m',p,p.m,1,ph('m'))+pf('Comisión','com',p,p.com,1,ph('com'))+pf('Impuestos','imp',p,p.imp,1,ph('imp'))+'</div>'+
      '<div class="hint" style="font-size:12px;margin-top:-4px">Si lo dejás vacío, usa lo del rubro (se ve en gris).</div>'+
-     (S.modo==='unidad'?pf('Unidades por mes','q',p,p.q):'')+
+     (S.modo==='unidad'?pf('Unidades por mes','q',p,p.q)+'<div class="hint" style="font-size:12px;margin-top:-4px">Cuántas unidades de este producto pensás vender en un mes (una cantidad, no pesos). Cargalas en todos los productos: los costos fijos se reparten entre el total.</div>':'')+
      pf('Precio para comparar (opcional)','ref',p,p.ref)+
      '<div class="hint" style="font-size:12px;margin-top:-4px">Tu precio de hoy o el de la competencia: te muestro cuánto ganarías o perderías.</div>'+
      '<div class="ped-act"><button class="btn sm" type="button" data-dup="'+p.id+'">Duplicar</button><button class="btn sm" type="button" data-delp="'+p.id+'">Eliminar producto</button><button class="btn sm" type="button" data-close="1">Cerrar</button></div>'+
@@ -478,6 +478,7 @@ function fillRes(){
       '<div class="hint" style="color:var(--fg)">Si tus costos suben '+pct1(num(S.aum))+': precio nuevo <b>'+money(o.newp)+'</b>.</div>';
     if(o.ref){var rk=o.refgain>=0?'ok':'bad';h+='<div class="hint" style="color:var(--fg)">A '+money(o.ref)+': <span class="pill '+rk+'">'+(o.refgain>=0?'✓ ganás ':'✕ perdés ')+money(Math.abs(o.refgain))+' por unidad</span> ('+pct1(o.refmargin)+' de margen).</div>'}
   }
+  if(R0.missQ>0)h='<p class="warn"><b>Ojo:</b> faltan unidades en '+R0.missQ+' productos. Hasta cargarlas, este precio carga '+money(R0.fu)+' de costos fijos por unidad.</p>'+h;
   el.innerHTML=h;
 }
 function refresh(){
@@ -504,6 +505,7 @@ function refresh(){
   var w='';
   if(R.ven&&R.Y<=0)w+='<p class="warn"><b>Falta un dato:</b> cargá cuánto vendés por mes (en pesos) en el Paso 1 para repartir tus costos fijos.</p>';
   if(!R.ven&&R.Q<=0)w+='<p class="warn"><b>Falta un dato:</b> cargá cuántas unidades por mes pensás vender de cada producto, o cambiá a «Según lo que vendo por mes» en el Paso 1.</p>';
+  if(R.missQ>0)w+='<p class="warn"><b>Cuidado:</b> '+R.missQ+' productos no tienen unidades por mes. Los costos fijos ('+money(R.F)+') se están repartiendo entre solo '+nf0.format(R.Q)+' unidades, y por eso los precios salen altísimos. Cargá las unidades de todos los productos o cambiá a «Según lo que vendo por mes» en el Paso 1.</p>';
   $('warns').innerHTML=w;
   /* resumen por rubro */
   var tb='';
