@@ -316,7 +316,13 @@ footer a{color:var(--goldt)}
     <div class="step">Paso 2</div>
     <h2 id="h2r">Tus rubros</h2>
     <p class="hint">Agrupá tus productos (por ejemplo carnicería, kiosco, almacén). Cada rubro define el margen, la comisión y los impuestos que usan <b>todos</b> sus productos, así no los cargás uno por uno. Si un producto es distinto, lo cambiás solo en ese producto.</p>
-    <p class="hint"><b>Margen:</b> es tu <b>ganancia limpia sobre el precio de venta</b>, después de pagar el costo del producto, la comisión, los impuestos y la parte de costos fijos. Un margen de 20 % significa que de cada $100 que cobrás te quedan $20 limpios. <b>No es «sumarle un % al costo»</b>: un margen de 100 % no existe (sería cobrar un precio infinito). Para empezar probá con 10 a 30 %.</p>
+    
+    <div class="lab" style="margin:10px 0 4px">¿Cómo querés cargar tu ganancia?</div>
+    <div class="modo">
+      <button class="opt" type="button" data-mm="margen" aria-pressed="true"><b>Margen sobre el precio</b><small>De cada $100 que cobrás, cuántos te quedan limpios.</small></button>
+      <button class="opt" type="button" data-mm="recargo" aria-pressed="false"><b>Recargo sobre el costo</b><small>El «le pongo 100 %» de siempre: cuánto le sumás a lo que te costó. Puede ser 100 %, 1.000 % o más.</small></button>
+    </div>
+    <p class="hint" id="mmhelp"></p>
     <div id="cats" style="display:grid;gap:10px"></div>
     <div><button class="btn sm" type="button" id="addcat">+ Agregar rubro</button></div>
   </section>
@@ -419,7 +425,7 @@ footer a{color:var(--goldt)}
 var KEY='domino_precios_v2';
 var PAGE=25;
 function uid(){return 'x'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
-function P(n,cat,c,o,q,L){return {id:uid(),n:n,cat:cat,c:c,o:o==null?'':o,com:'',imp:'',m:'',q:q==null?'':q,ref:'',L:L==null?'':L,u:''}}
+function P(n,cat,c,o,q,L){return {id:uid(),n:n,cat:cat,c:c,o:o==null?'':o,com:'',imp:'',m:'',k:'',q:q==null?'':q,ref:'',L:L==null?'':L,u:''}}
 function exAlmacen(){
   var a={id:'ca',n:'Almacén',m:8,com:0,imp:3},k={id:'ck',n:'Kiosco',m:12,com:0,imp:3},c={id:'cc',n:'Carnicería',m:10,com:0,imp:3},e={id:'ce',n:'Comida elaborada',m:25,com:0,imp:3},g={id:'cg',n:'Cigarrillos',m:2,com:0,imp:3};
   return {modo:'ventas',ventas:22000000,
@@ -466,6 +472,7 @@ function fv(v){var n=num(v);return n>0?nfi.format(n):(v==null?'':v)}
 function rup(x,step){return step>0?Math.ceil(x/step-1e-9)*step:x}
 function has(v){return v!==''&&v!=null&&String(v).trim()!==''}
 function catOf(p){for(var i=0;i<S.cats.length;i++)if(S.cats[i].id===p.cat)return S.cats[i];return S.cats[0]}
+function mk(){return S.mm==='recargo'?'k':'m'}
 function eff(p,k){return has(p[k])?num(p[k]):num(catOf(p)[k])}
 function prodById(id){for(var i=0;i<S.prods.length;i++)if(S.prods[i].id===id)return S.prods[i];return null}
 function catById(id){for(var i=0;i<S.cats.length;i++)if(S.cats[i].id===id)return S.cats[i];return null}
@@ -479,14 +486,14 @@ function calc(){
   var R={F:F,Y:Y,Q:Q,fu:fu,fp:fp,ven:ven,byId:{},rows:[],cat:{}};
   var nok=0,sumCR=0,sumCost=0,sumFee=0,rev=0,vc=0,fee=0,contrib=0;
   S.prods.forEach(function(p){
-    var c=num(p.c)+num(p.o),r=(eff(p,'com')+eff(p,'imp'))/100,m=eff(p,'m')/100,q=num(p.q);
+    var c=num(p.c)+num(p.o),r=(eff(p,'com')+eff(p,'imp'))/100,m=eff(p,'m')/100,k=eff(p,'k')/100,q=num(p.q),rec=S.mm==='recargo';
     var o={id:p.id,c:c,r:r,m:m,q:q,ok:true,cat:catOf(p).id};
-    var den=ven?(1-r-m-fp):(1-r-m);
+    var den=rec?(ven?(1-r-fp):(1-r)):(ven?(1-r-m-fp):(1-r-m));
     if(den<=0.0001){
       o.ok=false;
       var base0=1-r-m,avail=1-r-(ven?fp:0);
-      if(ven&&avail<=0.0001){
-        o.err='Entre la comisión ('+pct1(eff(p,'com'))+'), los impuestos ('+pct1(eff(p,'imp'))+') y tus costos fijos ('+pct1(fp*100)+' de tus ventas: '+money(F)+' sobre '+money(Y)+') se va todo el precio. Subí las <b>ventas estimadas</b> o revisá los <b>costos fijos</b> (Paso 1).';
+      if(avail<=0.0001){
+        o.err=ven?'Entre la comisión ('+pct1(eff(p,'com'))+'), los impuestos ('+pct1(eff(p,'imp'))+') y tus costos fijos ('+pct1(fp*100)+' de tus ventas: '+money(F)+' sobre '+money(Y)+') se va todo el precio. Subí las <b>ventas estimadas</b> o revisá los <b>costos fijos</b> (Paso 1).':'La comisión y los impuestos suman 100 % o más. Bajalos.';
       }else if(ven&&base0>0.0001&&fp>0&&fp>=base0){
         o.err='Con un margen de '+pct1(m*100)+', '+pct1(eff(p,'com'))+' de comisión y '+pct1(eff(p,'imp'))+' de impuestos, del precio solo queda '+pct1(base0*100)+' para pagar los costos fijos, y los tuyos son el '+pct1(fp*100)+' de tus ventas ('+money(F)+' sobre '+money(Y)+'). Bajá el <b>margen</b>, subí las <b>ventas estimadas</b> o revisá los <b>costos fijos</b>.';
         o.sinFijos=rup(c/base0,step);
@@ -496,7 +503,7 @@ function calc(){
     }
     else if(c<=0&&fu<=0){o.ok=false;o.err=null}
     else{
-      var base=(c+fu)/den;
+      var base=rec?(ven?c*(1+k)/den:(c*(1+k)+fu)/den):(c+fu)/den;
       o.price=rup(base,step);
       o.fee=r*o.price;
       o.fixed=ven?o.price*fp:fu;
@@ -557,7 +564,7 @@ function renderCats(){
   $('cats').innerHTML=S.cats.map(function(c){
     return '<div class="cat"><div class="nm"><div class="fld"><label for="cn'+c.id+'">Nombre del rubro</label><input class="txt" id="cn'+c.id+'" data-ck="n" data-cid="'+c.id+'" value="'+esc(c.n)+'" autocomplete="off"></div>'+
       '<button class="x" type="button" data-delc="'+c.id+'" aria-label="Quitar el rubro '+esc(c.n)+'"'+(S.cats.length<2?' disabled style="opacity:.4"':'')+'>✕</button></div>'+
-      catIn(c.id,'m','Margen deseado',c.m)+catIn(c.id,'com','Comisión de venta',c.com)+catIn(c.id,'imp','Impuestos sobre la venta',c.imp)+'</div>';
+      catIn(c.id,mk(),S.mm==='recargo'?'Recargo deseado sobre el costo':'Margen deseado',c[mk()])+catIn(c.id,'com','Comisión de venta',c.com)+catIn(c.id,'imp','Impuestos sobre la venta',c.imp)+'</div>';
   }).join('');
   var sel='<option value="todos">Todos los productos</option>'+S.cats.map(function(c){return '<option value="'+c.id+'">'+esc(c.n)+'</option>'}).join('');
   var cur=$('aumscope').value;$('aumscope').innerHTML=sel;$('aumscope').value=catById(cur)?cur:'todos';
@@ -591,7 +598,7 @@ function editor(p){
    '<div style="display:grid;gap:10px;min-width:0">'+
      '<div class="grid2">'+pf('Costo de reposición por unidad','c',p,p.c)+pf('Otros costos por unidad','o',p,p.o)+'</div>'+
      '<div class="hint" style="font-size:12px;margin-top:-4px">Otros costos: envase, etiqueta, flete que pagás, etc.</div>'+
-     '<div class="grid3">'+pf('Margen','m',p,p.m,1,ph('m'))+pf('Comisión','com',p,p.com,1,ph('com'))+pf('Impuestos','imp',p,p.imp,1,ph('imp'))+'</div>'+
+     '<div class="grid3">'+pf(S.mm==='recargo'?'Recargo':'Margen',mk(),p,p[mk()],1,ph(mk()))+pf('Comisión','com',p,p.com,1,ph('com'))+pf('Impuestos','imp',p,p.imp,1,ph('imp'))+'</div>'+
      '<div class="hint" style="font-size:12px;margin-top:-4px">Si lo dejás vacío, usa lo del rubro (se ve en gris).</div>'+
      (S.modo==='unidad'?pf('Unidades por mes','q',p,p.q)+'<div class="hint" style="font-size:12px;margin-top:-4px">Cuántas unidades de este producto pensás vender en un mes (una cantidad, no pesos). Cargalas en todos los productos: los costos fijos se reparten entre el total.</div>':'')+
      pf('Tu precio de venta de hoy, por unidad (opcional)','ref',p,p.ref)+
@@ -660,6 +667,10 @@ function refresh(){
   $('totfijos').textContent=money(R.F);
   [].forEach.call(document.querySelectorAll('[data-modo]'),function(b){b.setAttribute('aria-pressed',String(b.dataset.modo===S.modo))});
   $('ventasbox').hidden=S.modo!=='ventas';
+  [].forEach.call(document.querySelectorAll('[data-mm]'),function(b){b.setAttribute('aria-pressed',String(b.dataset.mm===(S.mm==='recargo'?'recargo':'margen')))});
+  var mh=$('mmhelp');if(mh)mh.innerHTML=S.mm==='recargo'
+    ?'<b>Recargo:</b> es tu <b>ganancia limpia expresada como % del costo</b>, después de pagar comisión, impuestos y costos fijos. Con un recargo de 100 % ganás limpio lo mismo que te costó el producto; con 1.000 %, diez veces lo que te costó. Por eso el precio sale más alto que «costo por dos»: primero hay que pagar todo lo demás. En el Paso 4 ves cuánto te queda con el precio que realmente cobrás.'
+    :'<b>Margen:</b> es tu <b>ganancia limpia sobre el precio de venta</b>, después de pagar el costo, la comisión, los impuestos y la parte de costos fijos. Un margen de 20 % significa que de cada $100 que cobrás te quedan $20 limpios. No es «sumarle un % al costo»: un margen de 100 % no existe. Si preferís pensar en «le pongo X % al costo», elegí <b>Recargo</b> arriba.';
   var fw=$('fixwarn'),fm='';
   if(S.modo==='ventas'&&R.F>0){
     if(!(R.Y>0))fm='<b>Falta cargar las ventas estimadas.</b> Sin ese dato los costos fijos no se reparten en los precios.';
@@ -765,7 +776,7 @@ function fillRev(){
     if(!o){out.innerHTML='<span class="hint">Escribí tu precio para ver cuánto ganás.</span>';return}
     var h='<span class="pill '+(o.vk==='ok'?'ok':o.vk==='bad'?'bad':'')+'">'+o.vt+'</span> '+
       '<div class="rv-k"><span>Recargo sobre el costo <b>'+(o.markup==null?'—':pct1(o.markup*100))+'</b></span><span>Margen sobre el precio, antes de costos fijos <b>'+pct1(o.gross*100)+'</b></span><span>Margen real, ya con todo <b class="'+(o.net>=0?'ok':'bad')+'">'+pct1(o.net*100)+'</b></span><span>Ganás por unidad <b class="'+(o.gain>=0?'ok':'bad')+'">'+money(o.gain)+'</b></span></div>';
-    if(c&&c.ok)h+='<div class="hint" style="color:var(--fg)">Para tu margen deseado ('+pct1(eff(p,'m'))+') tendrías que cobrar <b>'+money(c.price)+'</b>'+(c.price>o.p?' (hoy cobrás '+money(o.p)+').':'.')+'</div>';
+    if(c&&c.ok)h+='<div class="hint" style="color:var(--fg)">Para tu '+(S.mm==='recargo'?'recargo deseado':'margen deseado')+' ('+pct1(eff(p,mk()))+') tendrías que cobrar <b>'+money(c.price)+'</b>'+(c.price>o.p?' (hoy cobrás '+money(o.p)+').':'.')+'</div>';
     if(o.L){var u=uni(p);h+='<div class="hint" style="color:var(--fg)">De cada compra de <b>'+nn(o.L)+' '+esc(u)+'</b> vendiendo a '+money(o.p)+': <b>'+nn(o.cu)+'</b> pagan el costo (y la comisión e impuestos), <b>'+nn(o.fu_)+'</b> pagan los costos fijos y '+(o.gu>=0?'<b class="ok">'+nn(o.gu)+'</b> son ganancia.':'<b class="bad">faltan '+nn(-o.gu)+'</b>: la compra no alcanza a cubrirse.')+'</div>'}
     out.innerHTML=h;
   });
@@ -788,6 +799,28 @@ function fillRev(){
   if(bad)h+='<p class="hint"><b class="bad">'+bad+'</b> de tus '+n+' productos con precio te hacen perder plata (el margen real es negativo).</p>';
   if(realNet!=null&&realNet>0)h+='<div class="tools"><button class="btn sm" type="button" id="usemarg">Usar este margen en mis rubros</button><span class="hint" id="usemsg" role="status"></span></div>';
   sm.innerHTML=h;
+}
+function cambiarMM(modo){
+  var nuevo=modo==='recargo'?'recargo':'margen';if((S.mm||'margen')===nuevo)return;
+  var R=calc(),fp=R.ven?R.fp:0,fu=R.ven?0:R.fu;
+  var rd=function(n){return String(Math.round(n*1000)/10).replace('.',',')};
+  var rOf=function(x,isP){var cc=isP?catOf(x):x;return (num(has(x.com)?x.com:cc.com)+num(has(x.imp)?x.imp:cc.imp))/100};
+  var cOf=function(x,isP){return isP?(num(x.c)+num(x.o)):0};
+  var cv=function(x,isP){
+    var r=rOf(x,isP),c=cOf(x,isP);
+    if(nuevo==='recargo'){
+      if(!has(x.m))return;var m=num(x.m)/100,d=1-r-fp-m;if(m<=0||d<=0.0001)return;
+      /* misma ganancia en $ que con el margen elegido, expresada sobre el costo */
+      var k=R.ven?m/d:(c>0?m*((c+fu)/(1-r-m))/c:m/d);
+      x.k=rd(k);
+    }else{
+      if(!has(x.k))return;var k2=num(x.k)/100;if(k2<=0)return;
+      var m2=R.ven?(1-r-fp)*k2/(1+k2):(c>0?(1-r)*k2*c/(c*(1+k2)+fu):(1-r)*k2/(1+k2));
+      if(m2>0)x.m=rd(m2);
+    }
+  };
+  S.cats.forEach(function(x){cv(x,false)});S.prods.forEach(function(x){cv(x,true)});
+  S.mm=nuevo;touch();renderCats();renderList();refresh();save();
 }
 function usarMargenReal(){
   var R=R0,por={},n=0;
@@ -840,7 +873,7 @@ document.addEventListener('click',function(e){
   else if(d.modo){S.modo=d.modo;touch();renderList();refresh();save()}
   else if(d.delf!=null){S.fijos.splice(+d.delf,1);touch();renderFijos();refresh();save()}
   else if(t.id==='addfijo'){S.fijos.push({n:'',v:''});touch();renderFijos();refresh();save();var l=$('fn'+(S.fijos.length-1));if(l)l.focus()}
-  else if(t.id==='addcat'){S.cats.push({id:uid(),n:'',m:S.cats[0]?S.cats[0].m:'',com:S.cats[0]?S.cats[0].com:'',imp:S.cats[0]?S.cats[0].imp:''});touch();renderCats();renderList();refresh();save();var cn=$('cn'+S.cats[S.cats.length-1].id);if(cn)cn.focus()}
+  else if(t.id==='addcat'){S.cats.push({id:uid(),n:'',m:S.cats[0]?S.cats[0].m:'',k:S.cats[0]?S.cats[0].k:'',com:S.cats[0]?S.cats[0].com:'',imp:S.cats[0]?S.cats[0].imp:''});touch();renderCats();renderList();refresh();save();var cn=$('cn'+S.cats[S.cats.length-1].id);if(cn)cn.focus()}
   else if(d.delc){
     if(S.cats.length<2)return;
     var first=S.cats.filter(function(c){return c.id!==d.delc})[0];
@@ -854,6 +887,7 @@ document.addEventListener('click',function(e){
   else if(d.close){OPEN=null;renderList()}
   else if(t.id==='more'){SHOWN+=PAGE;renderList()}
   else if(t.id==='rvmore'){SHOWN2+=PAGE;renderRev()}
+  else if(d.mm){cambiarMM(d.mm)}
   else if(t.id==='usemarg'){usarMargenReal()}
   else if(t.id==='addprod'){
     var cid=(FIL!=='todos'&&catById(FIL))?FIL:S.cats[0].id;
@@ -912,7 +946,7 @@ function importar(){
   out.forEach(function(x){
     var cat=null;
     if(x.cat){S.cats.forEach(function(c){if(String(c.n).trim().toLowerCase()===x.cat.toLowerCase())cat=c});
-      if(!cat){var b=S.cats[0];cat={id:uid(),n:x.cat,m:b.m,com:b.com,imp:b.imp};S.cats.push(cat);nuevas++}}
+      if(!cat){var b=S.cats[0];cat={id:uid(),n:x.cat,m:b.m,k:b.k,com:b.com,imp:b.imp};S.cats.push(cat);nuevas++}}
     else cat=S.cats[0];
     var igual=null;S.prods.forEach(function(q){if(String(q.n).trim().toLowerCase()===x.n.trim().toLowerCase())igual=q});
     if(igual){igual.c=fv(x.c);if(has(x.o))igual.o=fv(x.o);if(has(x.q))igual.q=fv(x.q);if(has(x.L))igual.L=fv(x.L);actualizados++}
