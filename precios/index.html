@@ -312,7 +312,7 @@ footer a{color:var(--goldt)}
     <div class="step">Paso 2</div>
     <h2 id="h2r">Tus rubros</h2>
     <p class="hint">Agrupá tus productos (por ejemplo carnicería, kiosco, almacén). Cada rubro define el margen, la comisión y los impuestos que usan <b>todos</b> sus productos, así no los cargás uno por uno. Si un producto es distinto, lo cambiás solo en ese producto.</p>
-    <p class="hint"><b>Margen:</b> es sobre el <b>precio de venta</b>, no sobre el costo. Un margen de 40 % significa que de cada $100 que cobrás te quedan $40 de ganancia (el costo y lo demás son los otros $60). No es lo mismo que «sumarle 40 % al costo».</p>
+    <p class="hint"><b>Margen:</b> es tu <b>ganancia limpia sobre el precio de venta</b>, después de pagar el costo del producto, la comisión, los impuestos y la parte de costos fijos. Un margen de 20 % significa que de cada $100 que cobrás te quedan $20 limpios. <b>No es «sumarle un % al costo»</b>: un margen de 100 % no existe (sería cobrar un precio infinito). Para empezar probá con 10 a 30 %.</p>
     <div id="cats" style="display:grid;gap:10px"></div>
     <div><button class="btn sm" type="button" id="addcat">+ Agregar rubro</button></div>
   </section>
@@ -471,14 +471,14 @@ function calc(){
     var den=ven?(1-r-m-fp):(1-r-m);
     if(den<=0.0001){
       o.ok=false;
-      var base0=1-r-m;
-      if(ven&&base0>0.0001&&fp>0){
-        o.err=F>=Y
-          ?'Tus costos fijos ('+money(F)+') son más que lo que pensás vender por mes ('+money(Y)+'), así que no queda lugar para ganar. Subí las <b>ventas estimadas</b> o revisá los <b>costos fijos</b> (Paso 1).'
-          :'Con un margen de '+pct1(m*100)+', '+pct1(eff(p,'com'))+' de comisión y '+pct1(eff(p,'imp'))+' de impuestos, del precio solo queda '+pct1(base0*100)+' para pagar los costos fijos, y los tuyos son el '+pct1(fp*100)+' de tus ventas ('+money(F)+' sobre '+money(Y)+'). Bajá el <b>margen</b>, subí las <b>ventas estimadas</b> o revisá los <b>costos fijos</b>.';
+      var base0=1-r-m,avail=1-r-(ven?fp:0);
+      if(ven&&avail<=0.0001){
+        o.err='Entre la comisión ('+pct1(eff(p,'com'))+'), los impuestos ('+pct1(eff(p,'imp'))+') y tus costos fijos ('+pct1(fp*100)+' de tus ventas: '+money(F)+' sobre '+money(Y)+') se va todo el precio. Subí las <b>ventas estimadas</b> o revisá los <b>costos fijos</b> (Paso 1).';
+      }else if(ven&&base0>0.0001&&fp>0&&fp>=base0){
+        o.err='Con un margen de '+pct1(m*100)+', '+pct1(eff(p,'com'))+' de comisión y '+pct1(eff(p,'imp'))+' de impuestos, del precio solo queda '+pct1(base0*100)+' para pagar los costos fijos, y los tuyos son el '+pct1(fp*100)+' de tus ventas ('+money(F)+' sobre '+money(Y)+'). Bajá el <b>margen</b>, subí las <b>ventas estimadas</b> o revisá los <b>costos fijos</b>.';
         o.sinFijos=rup(c/base0,step);
       }else{
-        o.err='La comisión ('+pct1(eff(p,'com'))+'), los impuestos ('+pct1(eff(p,'imp'))+') y el margen ('+pct1(m*100)+')'+(ven?' más la parte de costos fijos':'')+' suman 100 % o más. Bajá el margen, la comisión o los impuestos.';
+        o.err='El margen de '+pct1(m*100)+' no se puede cobrar: con '+pct1(eff(p,'com'))+' de comisión, '+pct1(eff(p,'imp'))+' de impuestos'+(ven?' y '+pct1(fp*100)+' de costos fijos':'')+', el <b>máximo posible es '+pct1(Math.max(avail,0)*100)+'</b>. El margen se calcula sobre el precio de venta, por eso nunca puede llegar a 100 %. Bajalo por debajo de ese máximo.'+(ven&&fp>0.3?' Ojo: tus costos fijos ('+pct1(fp*100)+' de las ventas) son lo que más empuja los precios para arriba; subí las ventas estimadas o bajá los costos fijos.':'');
       }
     }
     else if(c<=0&&fu<=0){o.ok=false;o.err=null}
