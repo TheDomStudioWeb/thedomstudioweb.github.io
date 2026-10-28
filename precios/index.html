@@ -136,6 +136,9 @@ footer a{color:var(--goldt)}
   .ped .res{border-top:0;padding-top:0;border-left:1px solid var(--line);padding-left:20px}
 }
 @media (max-width:380px){.grid2,.ped-h{grid-template-columns:minmax(0,1fr)}.grid3{grid-template-columns:minmax(0,1fr)}.cat{grid-template-columns:minmax(0,1fr)}}
+
+.ptop{border:1px solid var(--goldt);border-radius:6px;padding:10px 12px;margin:10px 0;background:rgba(212,175,55,.08)}
+.ptop .pt-l{font-size:12px;color:var(--mut);letter-spacing:.08em;text-transform:uppercase;font-weight:600}.ptop .pt-v{font:700 30px/1.2 'Cinzel',Georgia,serif;color:var(--goldt)}.ptop .pt-s{font-size:13px}
 </style>
 </head><body><title>DOMino Ganancias</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -302,12 +305,14 @@ footer a{color:var(--goldt)}
       </div>
     </div>
     <div class="fld" id="ventasbox" style="max-width:380px"><label for="ventas">Ventas estimadas por mes (en pesos)</label><div class="in"><b>$</b><input id="ventas" inputmode="decimal" autocomplete="off"></div><div class="hint" style="margin-top:3px;font-size:12px">Lo que entra a la caja en un mes normal, antes de pagar nada.</div></div>
+    <p class="warn" id="fixwarn" role="status" hidden></p>
   </section>
 
   <section class="card" aria-labelledby="h2r">
     <div class="step">Paso 2</div>
     <h2 id="h2r">Tus rubros</h2>
     <p class="hint">Agrupá tus productos (por ejemplo carnicería, kiosco, almacén). Cada rubro define el margen, la comisión y los impuestos que usan <b>todos</b> sus productos, así no los cargás uno por uno. Si un producto es distinto, lo cambiás solo en ese producto.</p>
+    <p class="hint"><b>Margen:</b> es sobre el <b>precio de venta</b>, no sobre el costo. Un margen de 40 % significa que de cada $100 que cobrás te quedan $40 de ganancia (el costo y lo demás son los otros $60). No es lo mismo que «sumarle 40 % al costo».</p>
     <div id="cats" style="display:grid;gap:10px"></div>
     <div><button class="btn sm" type="button" id="addcat">+ Agregar rubro</button></div>
   </section>
@@ -332,7 +337,7 @@ footer a{color:var(--goldt)}
         <input type="file" id="impfile" accept=".csv,.txt,.tsv,text/csv,text/plain" aria-label="Elegir archivo CSV">
         <button class="btn sm" type="button" id="imphead">Copiar encabezado</button>
       </div>
-      <div class="tools"><button class="btn pri" type="button" id="impgo">Importar</button><button class="btn sm" type="button" id="impno">Cerrar</button><span class="hint" id="impmsg" role="status"></span></div>
+      <div class="tools"><button class="btn pri" type="button" id="impgo">Importar</button><button class="btn sm" type="button" id="impno">Cerrar</button><button class="btn sm" type="button" id="impundo" hidden>Deshacer esta importación</button><span class="hint" id="impmsg" role="status"></span></div>
       <details class="how"><summary>¿Tenés la factura en papel? Pasala a planilla con IA</summary>
 <ol class="hint"><li>Sacale una foto clara a la factura del proveedor (toda la hoja, sin sombras).</li><li>Abrí tu asistente de IA (Claude, ChatGPT, Gemini), subí la foto y pegale el texto que copiás con el botón de abajo.</li><li>Copiá la respuesta, pegala en el cuadro de arriba y tocá «Importar».</li><li>Revisá los costos: la IA puede leer mal un número.</li></ol>
 <button class="btn sm" type="button" id="copyprompt">Copiar el texto para la IA</button> <span class="hint" id="promptmsg" role="status"></span></details>
@@ -464,7 +469,18 @@ function calc(){
     var c=num(p.c)+num(p.o),r=(eff(p,'com')+eff(p,'imp'))/100,m=eff(p,'m')/100,q=num(p.q);
     var o={id:p.id,c:c,r:r,m:m,q:q,ok:true,cat:catOf(p).id};
     var den=ven?(1-r-m-fp):(1-r-m);
-    if(den<=0.0001){o.ok=false;o.err='La comisión, los impuestos, el margen'+(ven?' y la parte de costos fijos':'')+' suman 100 % o más. Bajá alguno.'}
+    if(den<=0.0001){
+      o.ok=false;
+      var base0=1-r-m;
+      if(ven&&base0>0.0001&&fp>0){
+        o.err=F>=Y
+          ?'Tus costos fijos ('+money(F)+') son más que lo que pensás vender por mes ('+money(Y)+'), así que no queda lugar para ganar. Subí las <b>ventas estimadas</b> o revisá los <b>costos fijos</b> (Paso 1).'
+          :'Con un margen de '+pct1(m*100)+', '+pct1(eff(p,'com'))+' de comisión y '+pct1(eff(p,'imp'))+' de impuestos, del precio solo queda '+pct1(base0*100)+' para pagar los costos fijos, y los tuyos son el '+pct1(fp*100)+' de tus ventas ('+money(F)+' sobre '+money(Y)+'). Bajá el <b>margen</b>, subí las <b>ventas estimadas</b> o revisá los <b>costos fijos</b>.';
+        o.sinFijos=rup(c/base0,step);
+      }else{
+        o.err='La comisión ('+pct1(eff(p,'com'))+'), los impuestos ('+pct1(eff(p,'imp'))+') y el margen ('+pct1(m*100)+')'+(ven?' más la parte de costos fijos':'')+' suman 100 % o más. Bajá el margen, la comisión o los impuestos.';
+      }
+    }
     else if(c<=0&&fu<=0){o.ok=false;o.err=null}
     else{
       var base=(c+fu)/den;
@@ -558,6 +574,7 @@ function editor(p){
   var h='<div class="ped" data-ed="'+p.id+'">'+
    '<div class="ped-top"><div class="ped-h"><div class="fld"><label for="pn'+p.id+'">Nombre del producto</label><input class="txt" id="pn'+p.id+'" data-p="n" data-id="'+p.id+'" value="'+esc(p.n)+'" placeholder="Ej: Remera lisa" autocomplete="off"></div>'+
    '<div class="fld"><label for="pcat'+p.id+'">Rubro</label><select class="txt" id="pcat'+p.id+'" data-p="cat" data-id="'+p.id+'">'+opts+'</select></div></div></div>'+
+   '<div class="ptop" id="ptop'+p.id+'" aria-live="polite"></div>'+
    '<div style="display:grid;gap:10px;min-width:0">'+
      '<div class="grid2">'+pf('Costo de reposición por unidad','c',p,p.c)+pf('Otros costos por unidad','o',p,p.o)+'</div>'+
      '<div class="hint" style="font-size:12px;margin-top:-4px">Otros costos: envase, etiqueta, flete que pagás, etc.</div>'+
@@ -577,7 +594,7 @@ function rowHtml(p){
   var isO=OPEN===p.id;
   var h='<button class="prow" type="button" data-open="'+p.id+'" aria-expanded="'+isO+'" data-rid="'+p.id+'">'+
     '<span class="rn">'+esc(p.n||'Producto sin nombre')+'</span>'+
-    '<span class="sub"><span class="sc">'+esc(c.n)+'</span> · costo <span class="sk">'+money(num(p.c)+num(p.o))+'</span> · margen <span class="sm">'+mg+'</span></span>'+
+    '<span class="sub"><span class="sc">'+esc(c.n)+'</span> · costo <span class="sk">'+money(num(p.c)+num(p.o))+'</span> · <b>vendé a <span class="sv">'+price+'</span></b> · margen <span class="sm">'+mg+'</span></span>'+
     '<span class="dc rr">'+esc(c.n)+'</span><span class="dc rk">'+money(num(p.c)+num(p.o))+'</span><span class="dc rm">'+mg+'</span>'+
     '<span class="rp">'+price+'</span><span class="dc rg">'+gain+'</span></button>';
   if(isO)h+=editor(p);
@@ -605,8 +622,9 @@ function bar(o){
 function fillRes(){
   if(!OPEN)return;
   var el=$('res'+OPEN),o=R0.byId[OPEN];if(!el||!o)return;
-  var h='';
-  if(!o.ok){h=o.err?'<p class="warn"><b>Revisá:</b> '+o.err+'</p>':'<p class="hint">Cargá el costo del producto para ver el precio.</p>'}
+  var h='',pt=$('ptop'+OPEN);
+  if(pt)pt.innerHTML=o.ok?'<div class="pt-l">Precio de venta</div><div class="pt-v">'+money(o.price)+'</div><div class="pt-s">costo '+money(o.c)+' · ganás '+money(o.gain)+' por unidad ('+pct1(o.margin)+')</div>':'<div class="pt-l">Precio de venta</div><div class="pt-v">—</div><div class="pt-s">'+(o.sinFijos?'Sin repartir costos fijos sería '+money(o.sinFijos)+'. Mirá el aviso de abajo.':(o.err?'No se puede calcular con estos números. Mirá el aviso de abajo.':'Cargá el costo para ver el precio.'))+'</div>';
+  if(!o.ok){h=o.err?'<p class="warn"><b>Revisá:</b> '+o.err+(o.sinFijos?'<br>Sin repartir costos fijos, el precio de venta sería <b>'+money(o.sinFijos)+'</b>.':'')+'</p>':'<p class="hint">Cargá el costo del producto para ver el precio.</p>'}
   else{
     var tipo=o.gain>=0?'ok':'bad';
     h='<div class="big"><small>Precio de venta sugerido</small><strong>'+money(o.price)+'</strong></div>'+
@@ -626,6 +644,12 @@ function refresh(){
   $('totfijos').textContent=money(R.F);
   [].forEach.call(document.querySelectorAll('[data-modo]'),function(b){b.setAttribute('aria-pressed',String(b.dataset.modo===S.modo))});
   $('ventasbox').hidden=S.modo!=='ventas';
+  var fw=$('fixwarn'),fm='';
+  if(S.modo==='ventas'&&R.F>0){
+    if(!(R.Y>0))fm='<b>Falta cargar las ventas estimadas.</b> Sin ese dato los costos fijos no se reparten en los precios.';
+    else if(R.F>=R.Y)fm='<b>Ojo:</b> tus costos fijos ('+money(R.F)+') son más que lo que pensás vender por mes ('+money(R.Y)+'). Con esos números no hay precio que alcance: subí las ventas estimadas o bajá los costos fijos.';
+  }
+  fw.hidden=!fm;fw.innerHTML=fm;
   $('escv').textContent=num(S.esc)+' % de lo que pensaste vender';
   /* filas visibles */
   [].forEach.call(document.querySelectorAll('.prow'),function(r){
@@ -637,6 +661,7 @@ function refresh(){
     q('.rg').textContent=ok?money(o.gain):'—';
     q('.rm').textContent=ok?pct1(o.margin):'—';
     q('.sm').textContent=ok?pct1(o.margin):'—';
+    if(q('.sv'))q('.sv').textContent=ok?money(o.price):'—';
     q('.rk').textContent=money(num(p.c)+num(p.o));
     q('.sk').textContent=money(num(p.c)+num(p.o));
   });
@@ -755,7 +780,8 @@ document.addEventListener('click',function(e){
   else if(t.id==='impno'){$('imp').hidden=true}
   else if(t.id==='imphead'){copyText('Producto\tRubro\tCosto\tOtros costos\tUnidades por mes',$('impmsg'),'Encabezado copiado. Pegalo en la primera fila de tu planilla.')}
   else if(t.id==='impgo'){importar()}
-  else if(t.id==='copyprompt'){copyText('Te paso la foto de una factura de un proveedor. Extraé cada producto y devolvelo SOLO como tabla separada por tabulaciones, sin encabezado y sin texto extra, con estas columnas en este orden: Producto, Rubro, Costo, Otros costos, Unidades por mes. Usá como Costo el precio unitario SIN IVA (si la factura lo discrimina) y números sin el signo $ ni separador de miles (decimales con coma). Dejá Rubro, Otros costos y Unidades vacíos si no figuran en la factura. No inventes datos: si algo no se lee bien, dejá la celda vacía.',$('promptmsg'),'Texto copiado. Pegalo en tu IA junto con la foto.')}
+  else if(t.id==='impundo'){deshacerImport()}
+  else if(t.id==='copyprompt'){copyText('Te paso la foto de una factura de un proveedor. Extraé cada producto y devolvelo SOLO como tabla separada por tabulaciones, sin encabezado, sin numeración y sin texto extra.\n\nREGLA CLAVE: un producto por línea. Cada producto va en su propia línea nueva (salto de línea al final de cada producto). Nunca pongas dos productos en la misma línea ni todo seguido. Si en la foto hay 35 productos, tu respuesta tiene que tener exactamente 35 líneas.\n\nCada línea tiene exactamente 5 columnas separadas por tabulación, en este orden: Producto, Rubro, Costo, Otros costos, Unidades por mes. Si una columna no figura, dejala vacía pero mantené las tabulaciones (siempre 4 tabulaciones por línea).\n\nUsá como Costo el precio unitario SIN IVA (si la factura lo discrimina), con números sin el signo $ ni separador de miles (decimales con coma). No inventes datos: si algo no se lee bien, dejá la celda vacía.\n\nDevolvé la tabla dentro de un bloque de código para que se conserven los saltos de línea. Antes de responder, contá las líneas y verificá que coincidan con la cantidad de productos de la factura.',$('promptmsg'),'Texto copiado. Pegalo en tu IA junto con la foto.')}
   else if(t.id==='aumgo'){aplicarAumento()}
   else if(t.id==='copy'){copyText(resumen(),$('copymsg'),'Resumen copiado.')}
   else if(t.id==='copylist'){copyText(lista(),$('copymsg'),'Lista de precios copiada. Pegala en Excel.')}
@@ -764,12 +790,22 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'&&OPEN){OPEN=
 
 /* ---------- importar ---------- */
 function looksNum(s){return /^[\s$]*[\d.,]+\s*$/.test(String(s||''))&&num(s)>0}
+function deshacerImport(){
+  var raw=null;try{raw=localStorage.getItem(KEY+'_bak')}catch(e){}
+  if(!raw){$('impmsg').textContent='No hay nada para deshacer.';return}
+  try{S=JSON.parse(raw)}catch(e){return}
+  OPEN=null;renderCats();renderList();refresh();save();
+  $('impundo').hidden=true;$('impmsg').textContent='Listo: volvió a como estaba antes de importar ('+S.prods.length+' productos).';
+}
 function importar(){
   var txt=$('imptxt').value,msg=$('impmsg');
   var lines=txt.split(/\r?\n/).map(function(l){return l.replace(/\s+$/,'')}).filter(function(l){return l.trim()});
   if(!lines.length){msg.textContent='Pegá primero tus productos.';return}
   var sep=lines.some(function(l){return l.indexOf('\t')>-1})?'\t':lines.some(function(l){return l.indexOf(';')>-1})?';':',';
   var rows=lines.map(function(l){return l.split(sep).map(function(x){return x.trim().replace(/^"|"$/g,'')})});
+  var junto=false;
+  /* La IA a veces manda todo en una sola línea: si son 5 columnas por producto, lo separo de a 5. */
+  if(rows.length===1&&sep==='\t'&&rows[0].length>=10&&(rows[0].length%5===0||rows[0].length%5>=3)){var fl=rows[0];while(fl.length%5)fl.push('');rows=[];for(var k=0;k<fl.length;k+=5)rows.push(fl.slice(k,k+5));junto=true}
   var out=[],skipped=0;
   rows.forEach(function(c,i){
     var n=c[0],cat='',cost,oth='',un='';
@@ -781,18 +817,22 @@ function importar(){
     out.push({n:n,cat:cat,c:cost,o:oth,q:un});
   });
   if(!out.length){msg.textContent='No encontré productos con costo. Revisá el orden de las columnas.';return}
-  var nuevas=0;
+  var nuevas=0,actualizados=0;
+  try{localStorage.setItem(KEY+'_bak',JSON.stringify(S))}catch(e){}
+  if(S.ejemplo){S.prods=[];S.cats=[{id:uid(),n:'General',m:S.cats[0].m,com:S.cats[0].com,imp:S.cats[0].imp}]} /* los datos de ejemplo no se mezclan con los reales */
   out.forEach(function(x){
     var cat=null;
     if(x.cat){S.cats.forEach(function(c){if(String(c.n).trim().toLowerCase()===x.cat.toLowerCase())cat=c});
       if(!cat){var b=S.cats[0];cat={id:uid(),n:x.cat,m:b.m,com:b.com,imp:b.imp};S.cats.push(cat);nuevas++}}
     else cat=S.cats[0];
-    S.prods.push(P(x.n,cat.id,fv(x.c),has(x.o)?fv(x.o):'',has(x.q)?fv(x.q):''));
+    var igual=null;S.prods.forEach(function(q){if(String(q.n).trim().toLowerCase()===x.n.trim().toLowerCase())igual=q});
+    if(igual){igual.c=fv(x.c);if(has(x.o))igual.o=fv(x.o);if(has(x.q))igual.q=fv(x.q);actualizados++}
+    else S.prods.push(P(x.n,cat.id,fv(x.c),has(x.o)?fv(x.o):'',has(x.q)?fv(x.q):''));
   });
   touch();FIL='todos';QS='';$('qs').value='';SHOWN=PAGE;OPEN=null;
   renderCats();renderList();refresh();save();
-  $('imptxt').value='';
-  msg.textContent='Listo: importé '+out.length+' productos'+(nuevas?' y creé '+nuevas+' rubros nuevos':'')+(skipped?' ('+skipped+' filas sin costo, salteadas)':'')+'. Revisá el margen de cada rubro.';
+  $('imptxt').value='';$('impundo').hidden=false;
+  msg.textContent=(junto?'Venía todo en una sola línea: lo separé de a 5 columnas por producto. ':'')+'Listo: '+(out.length-actualizados)+' productos nuevos'+(actualizados?' y '+actualizados+' ya cargados con el costo actualizado (no se duplican)':'')+'. Ahora tenés '+S.prods.length+' en total'+(nuevas?' y creé '+nuevas+' rubros nuevos':'')+(skipped?' ('+skipped+' filas sin costo, salteadas)':'')+'. Revisá el margen de cada rubro.';
 }
 /* ---------- aumento masivo ---------- */
 function aplicarAumento(){
