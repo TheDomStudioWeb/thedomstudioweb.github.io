@@ -101,7 +101,7 @@ select.txt{appearance:auto}
 .warn{margin:0;background:var(--panel);border:1px solid var(--bad);color:var(--fg);padding:10px 12px;font-size:14px}
 .warn b{color:var(--bad)}
 .pager{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
-details.how{border:1px solid var(--line);padding:10px 12px;background:var(--panel)}details.how summary{cursor:pointer;font-weight:600;font-size:14px;min-height:32px}details.how ol{margin:8px 0;padding-left:20px}.imp{background:var(--panel2);border:1px solid var(--line);padding:14px;display:grid;gap:10px}
+details.how p{margin:8px 0 0;font-size:13.5px}details.how ul{margin:8px 0;padding-left:20px;display:grid;gap:4px;font-size:13.5px}.upg{border:1px dashed var(--gold,var(--line));padding:14px;display:grid;gap:8px;background:var(--panel)}.upg h2{font-size:17px;margin:0}.upg p{margin:0;font-size:14px}details.how{border:1px solid var(--line);padding:10px 12px;background:var(--panel)}details.how summary{cursor:pointer;font-weight:600;font-size:14px;min-height:32px}details.how ol{margin:8px 0;padding-left:20px}.imp{background:var(--panel2);border:1px solid var(--line);padding:14px;display:grid;gap:10px}
 .copybox{width:100%;min-height:130px;background:var(--field);color:var(--fg);border:1px solid var(--fieldline);font:13px/1.5 'Montserrat',sans-serif;padding:10px;border-radius:3px}
 .tbl{overflow-x:auto}
 table{border-collapse:collapse;width:100%;font-size:13px}
@@ -248,7 +248,7 @@ select.txt{appearance:auto}
 .warn{margin:0;background:var(--panel);border:1px solid var(--bad);color:var(--fg);padding:10px 12px;font-size:14px}
 .warn b{color:var(--bad)}
 .pager{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
-details.how{border:1px solid var(--line);padding:10px 12px;background:var(--panel)}details.how summary{cursor:pointer;font-weight:600;font-size:14px;min-height:32px}details.how ol{margin:8px 0;padding-left:20px}.imp{background:var(--panel2);border:1px solid var(--line);padding:14px;display:grid;gap:10px}
+details.how p{margin:8px 0 0;font-size:13.5px}details.how ul{margin:8px 0;padding-left:20px;display:grid;gap:4px;font-size:13.5px}.upg{border:1px dashed var(--gold,var(--line));padding:14px;display:grid;gap:8px;background:var(--panel)}.upg h2{font-size:17px;margin:0}.upg p{margin:0;font-size:14px}details.how{border:1px solid var(--line);padding:10px 12px;background:var(--panel)}details.how summary{cursor:pointer;font-weight:600;font-size:14px;min-height:32px}details.how ol{margin:8px 0;padding-left:20px}.imp{background:var(--panel2);border:1px solid var(--line);padding:14px;display:grid;gap:10px}
 .copybox{width:100%;min-height:130px;background:var(--field);color:var(--fg);border:1px solid var(--fieldline);font:13px/1.5 'Montserrat',sans-serif;padding:10px;border-radius:3px}
 .tbl{overflow-x:auto}
 table{border-collapse:collapse;width:100%;font-size:13px}
@@ -298,6 +298,12 @@ footer a{color:var(--goldt)}
     <div class="step">Paso 1</div>
     <h2 id="h1">Tus costos fijos del mes</h2>
     <p class="hint">Lo que pagás todos los meses, vendas mucho o poco. Incluí lo que querés cobrar vos de sueldo.</p>
+    <details class="how"><summary>¿Qué es un costo fijo y qué es uno variable?</summary>
+      <p><b>Fijo:</b> lo pagás todos los meses <b>aunque no vendas nada</b>. Va acá, en el Paso 1.</p>
+      <ul><li>Alquiler, sueldos, tu propio sueldo, luz, internet, contador, seguros, cuota del monotributo.</li></ul>
+      <p><b>Variable:</b> aparece <b>solo cuando vendés</b> y crece con cada venta. No va acá: se carga en cada producto o en cada rubro.</p>
+      <ul><li><b>En el producto (Paso 3):</b> lo que te cuesta reponer la mercadería, y en «Otros costos» el envase, la etiqueta o el flete de cada unidad.</li><li><b>En el rubro (Paso 2):</b> la comisión de venta (tarjeta, Mercado Pago, plataformas) y los impuestos sobre la venta (por ejemplo Ingresos Brutos).</li></ul>
+      <p>Para no contar dos veces: si algo lo pagás por cada venta, es variable; si lo pagás igual vendas o no, es fijo. Si dudás, preguntate: «¿y si este mes no vendo nada, lo pago igual?». Si la respuesta es sí, es fijo.</p></details>
     <div id="fijos" style="display:grid;gap:8px"></div>
     <div><button class="btn sm" type="button" id="addfijo">+ Agregar costo fijo</button></div>
     <div class="tot"><span>Total de costos fijos por mes</span><span id="totfijos"></span></div>
@@ -323,6 +329,10 @@ footer a{color:var(--goldt)}
       <button class="opt" type="button" data-ri="1" aria-pressed="false"><b>Sí, soy responsable inscripto</b><small>Cargás los costos sin IVA y te muestro el precio sin IVA y con IVA.</small></button>
     </div>
     <p class="hint" id="rihelp"></p>
+    <details class="how"><summary>¿Cómo cambia el IVA el costo del producto? Un ejemplo</summary>
+      <p>Comprás un producto a <b>$1.210</b> con IVA (21 %): $1.000 de neto + $210 de IVA.</p>
+      <ul><li><b>Monotributo u otro:</b> el IVA no lo podés recuperar, así que tu costo es <b>$1.210</b>. Cargás $1.210 y el precio que ves es el que cobrás.</li><li><b>Responsable inscripto:</b> ese IVA lo recuperás contra el que cobrás en tus ventas, así que tu costo real es <b>$1.000</b>. Cargás $1.000 (el neto de la factura) y te muestro el precio sin IVA y el precio final con IVA.</li></ul>
+      <p>La comisión, los impuestos y los costos fijos se calculan sobre el precio <b>sin IVA</b>, porque el IVA que cobrás no es tuyo: lo ingresás a ARCA. Cada rubro tiene su alícuota (21 % en general, 10,5 % en algunos alimentos): confirmala con tu contador.</p></details>
     <div class="lab" style="margin:10px 0 4px">¿Cómo querés cargar tu ganancia?</div>
     <div class="modo">
       <button class="opt" type="button" data-mm="margen" aria-pressed="true"><b>Margen sobre el precio</b><small>De cada $100 que cobrás, cuántos te quedan limpios.</small></button>
@@ -336,7 +346,7 @@ footer a{color:var(--goldt)}
   <section class="card" aria-labelledby="h2">
     <div class="step">Paso 3</div>
     <h2 id="h2">Tus productos</h2>
-    <p class="hint">Cargá el costo de <b>reponer</b> cada producto, no lo que te costó la última vez. Filtrá por rubro o buscá por nombre para encontrar cualquier producto rápido.</p>
+    <p class="hint">Cargá el costo de <b>reponer</b> cada producto, no lo que te costó la última vez: es lo que vas a pagar para volver a tenerlo. <b>Si no sos responsable inscripto, el costo lleva el IVA incluido</b> (tal cual lo pagaste); si lo sos, va <b>sin IVA</b>. Filtrá por rubro o buscá por nombre para encontrar cualquier producto rápido.</p>
     <div class="fld" style="max-width:340px"><label for="round">Redondear los precios hacia arriba a</label>
       <select class="txt" id="round"><option value="0">Sin redondeo</option><option value="10">$ 10</option><option value="50">$ 50</option><option value="100">$ 100</option><option value="500">$ 500</option></select></div>
     <div class="chips" id="chips" role="group" aria-label="Filtrar por rubro"></div>
@@ -410,6 +420,12 @@ footer a{color:var(--goldt)}
     <span class="hint" id="copymsg" role="status"></span>
   </div>
   <textarea class="copybox" id="copybox" readonly hidden aria-label="Texto para copiar"></textarea>
+
+  <section class="upg" aria-labelledby="hup">
+    <h2 id="hup">Esta es la versión gratuita</h2>
+    <p>Calcula tus precios y tu punto de equilibrio. Si querés una versión que <b>controle tu stock</b> y te muestre la <b>ganancia real sobre lo que vendiste</b>, escribinos y la armamos para tu negocio.</p>
+    <div class="row"><a class="btn pri" id="upgwa" href="https://wa.me/5492613431216?text=Hola%2C%20us%C3%A9%20DOMino%20Ganancias%20y%20quiero%20la%20versi%C3%B3n%20con%20stock%20y%20ganancia%20real%20sobre%20lo%20vendido." target="_blank" rel="noopener">Quiero la versión con stock y ganancia real</a></div>
+  </section>
 
   <div class="cta">
     <h2>¿Tenés un negocio y querés ordenar tus ventas, turnos o consultas?</h2>
