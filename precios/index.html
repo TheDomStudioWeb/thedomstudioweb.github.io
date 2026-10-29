@@ -447,7 +447,7 @@ footer a{color:var(--goldt)}
 var KEY='domino_precios_v2';
 var PAGE=25;
 function uid(){return 'x'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
-function P(n,cat,c,o,q,L){return {id:uid(),n:n,cat:cat,c:c,o:o==null?'':o,com:'',imp:'',m:'',k:'',q:q==null?'':q,ref:'',L:L==null?'':L,u:''}}
+function P(n,cat,c,o,q,L){return {id:uid(),n:n,cat:cat,c:c,o:o==null?'':o,com:'',imp:'',m:'',k:'',q:q==null?'':q,ref:'',L:L==null?'':L,u:'',mer:''}}
 function exAlmacen(){
   var a={id:'ca',n:'Almacén',m:8,com:0,imp:3},k={id:'ck',n:'Kiosco',m:12,com:0,imp:3},c={id:'cc',n:'Carnicería',m:10,com:0,imp:3},e={id:'ce',n:'Comida elaborada',m:25,com:0,imp:3},g={id:'cg',n:'Cigarrillos',m:2,com:0,imp:3};
   return {modo:'ventas',ventas:22000000,
@@ -494,6 +494,8 @@ function fv(v){var n=num(v);return n>0?nfi.format(n):(v==null?'':v)}
 function rup(x,step){return step>0?Math.ceil(x/step-1e-9)*step:x}
 function has(v){return v!==''&&v!=null&&String(v).trim()!==''}
 function catOf(p){for(var i=0;i<S.cats.length;i++)if(S.cats[i].id===p.cat)return S.cats[i];return S.cats[0]}
+function mermaOf(p){var v=num(p.mer)/100;return v>0?Math.min(v,0.9):0}
+function cst(p){return (num(p.c)+num(p.o))/(1-mermaOf(p))}
 function ivaOf(p){if(!S.ri)return 0;var c=catOf(p);var v=has(c.iva)?num(c.iva):21;return v>0?v/100:0}
 function mk(){return S.mm==='recargo'?'k':'m'}
 function eff(p,k){return has(p[k])?num(p[k]):num(catOf(p)[k])}
@@ -509,7 +511,7 @@ function calc(){
   var R={F:F,Y:Y,Q:Q,fu:fu,fp:fp,ven:ven,byId:{},rows:[],cat:{}};
   var nok=0,sumCR=0,sumCost=0,sumFee=0,rev=0,vc=0,fee=0,contrib=0;
   S.prods.forEach(function(p){
-    var c=num(p.c)+num(p.o),r=(eff(p,'com')+eff(p,'imp'))/100,m=eff(p,'m')/100,k=eff(p,'k')/100,q=num(p.q),rec=S.mm==='recargo';
+    var c=cst(p),r=(eff(p,'com')+eff(p,'imp'))/100,m=eff(p,'m')/100,k=eff(p,'k')/100,q=num(p.q),rec=S.mm==='recargo';
     var o={id:p.id,c:c,r:r,m:m,q:q,ok:true,cat:catOf(p).id};
     var den=rec?(ven?(1-r-fp):(1-r)):(ven?(1-r-m-fp):(1-r-m));
     if(den<=0.0001){
@@ -544,7 +546,7 @@ function calc(){
     R.byId[p.id]=o;R.rows.push(o);
     var k=o.cat;(R.cat[k]=R.cat[k]||{n:0,sm:0,ok:0});R.cat[k].n++;if(o.ok&&o.price>0){R.cat[k].ok++;R.cat[k].sm+=o.margin}
   });
-  R.nok=nok;R.missQ=0;if(!ven&&Q>0)S.prods.forEach(function(p){if(!(num(p.q)>0)&&(num(p.c)+num(p.o))>0)R.missQ++});
+  R.nok=nok;R.missQ=0;if(!ven&&Q>0)S.prods.forEach(function(p){if(!(num(p.q)>0)&&(cst(p))>0)R.missQ++});
   if(ven){
     var cr=nok?sumCR/nok:0;
     R.cr=cr;R.rev=Y;R.vc=Y*(nok?sumCost/nok:0);R.fee=Y*(nok?sumFee/nok:0);R.contrib=Y*cr;
@@ -619,8 +621,10 @@ function editor(p){
    '<div class="fld"><label for="pcat'+p.id+'">Rubro</label><select class="txt" id="pcat'+p.id+'" data-p="cat" data-id="'+p.id+'">'+opts+'</select></div></div></div>'+
    '<div class="ptop" id="ptop'+p.id+'" aria-live="polite"></div>'+
    '<div style="display:grid;gap:10px;min-width:0">'+
-     '<div class="grid2">'+pf('Costo de reposición por unidad','c',p,p.c)+pf('Otros costos por unidad','o',p,p.o)+'</div>'+
-     '<div class="hint" style="font-size:12px;margin-top:-4px">Otros costos: envase, etiqueta, flete que pagás, etc.</div>'+
+     '<div class="grid2">'+pf('Costo de reposición por unidad, kilo o litro','c',p,p.c)+pf('Otros costos por unidad','o',p,p.o)+'</div>'+
+     '<div class="hint" style="font-size:12px;margin-top:-4px">Si vendés <b>por kilo, por litro o a granel</b>, cargá acá el costo y más abajo el precio <b>por kilo o por litro</b>: es la misma cuenta que por unidad. Otros costos: envase, etiqueta, flete que pagás, etc.</div>'+
+     '<div class="grid2">'+pf('Merma (%) (opcional)','mer',p,p.mer,1,'0')+'<div></div></div>'+
+     '<div class="hint" style="font-size:12px;margin-top:-4px">Lo que comprás pero no podés vender: hueso o grasa de la carne, recorte del fiambre, hojas de la verdura, lo que se achica o se rompe. Con 15 % de merma, de cada 10 kg que pagás vendés 8,5, y el costo se corrige solo.</div>'+
      '<div class="grid3">'+pf(S.mm==='recargo'?'Recargo':'Margen',mk(),p,p[mk()],1,ph(mk()))+pf('Comisión','com',p,p.com,1,ph('com'))+pf('Impuestos','imp',p,p.imp,1,ph('imp'))+'</div>'+
      '<div class="hint" style="font-size:12px;margin-top:-4px">Si lo dejás vacío, usa lo del rubro (se ve en gris).</div>'+
      (S.modo==='unidad'?pf('Unidades por mes','q',p,p.q)+'<div class="hint" style="font-size:12px;margin-top:-4px">Cuántas unidades de este producto pensás vender en un mes (una cantidad, no pesos). Cargalas en todos los productos: los costos fijos se reparten entre el total.</div>':'')+
@@ -639,8 +643,8 @@ function rowHtml(p){
   var isO=OPEN===p.id;
   var h='<button class="prow" type="button" data-open="'+p.id+'" aria-expanded="'+isO+'" data-rid="'+p.id+'">'+
     '<span class="rn">'+esc(p.n||'Producto sin nombre')+'</span>'+
-    '<span class="sub"><span class="sc">'+esc(c.n)+'</span> · costo <span class="sk">'+money(num(p.c)+num(p.o))+'</span> · <b>vendé a <span class="sv">'+price+'</span></b> · margen <span class="sm">'+mg+'</span></span>'+
-    '<span class="dc rr">'+esc(c.n)+'</span><span class="dc rk">'+money(num(p.c)+num(p.o))+'</span><span class="dc rm">'+mg+'</span>'+
+    '<span class="sub"><span class="sc">'+esc(c.n)+'</span> · costo <span class="sk">'+money(cst(p))+'</span> · <b>vendé a <span class="sv">'+price+'</span></b> · margen <span class="sm">'+mg+'</span></span>'+
+    '<span class="dc rr">'+esc(c.n)+'</span><span class="dc rk">'+money(cst(p))+'</span><span class="dc rm">'+mg+'</span>'+
     '<span class="rp">'+price+'</span><span class="dc rg">'+gain+'</span></button>';
   if(isO)h+=editor(p);
   return h;
@@ -715,8 +719,8 @@ function refresh(){
     q('.rm').textContent=ok?pct1(o.margin):'—';
     q('.sm').textContent=ok?pct1(o.margin):'—';
     if(q('.sv'))q('.sv').textContent=ok?money(o.pf):'—';
-    q('.rk').textContent=money(num(p.c)+num(p.o));
-    q('.sk').textContent=money(num(p.c)+num(p.o));
+    q('.rk').textContent=money(cst(p));
+    q('.sk').textContent=money(cst(p));
   });
   fillRes();
   /* avisos */
@@ -768,7 +772,7 @@ function renderAll(){
 var SHOWN2=PAGE;
 function rv(p){
   var P_=num(p.ref);if(!(P_>0))return null;
-  var R=R0,c=num(p.c)+num(p.o),r=(eff(p,'com')+eff(p,'imp'))/100,ven=R.ven,iv=ivaOf(p),Pn=P_/(1+iv);
+  var R=R0,c=cst(p),r=(eff(p,'com')+eff(p,'imp'))/100,ven=R.ven,iv=ivaOf(p),Pn=P_/(1+iv);
   var fixed=ven?Pn*R.fp:R.fu;
   var gain=Pn-c-r*Pn-fixed,net=gain/Pn;
   var o={p:P_,pn:Pn,iva:iv,c:c,r:r,fixed:fixed,gain:gain,net:net,markup:c>0?(Pn-c)/c:null,gross:(Pn-c)/Pn,contr:1-r-c/Pn};
@@ -786,7 +790,7 @@ function nn(x){return (Math.round(x*10)/10).toString().replace('.',',')}
 function renderRev(){
   var f=filtered(),vis=f.slice(0,SHOWN2),z=$('rvlist');if(!z)return;
   z.innerHTML=vis.length?vis.map(function(p){
-    return '<div class="rv" data-rv="'+p.id+'"><div class="rv-h"><span class="rv-n">'+esc(p.n||'Producto sin nombre')+'</span><span class="rv-c">costo '+money(num(p.c)+num(p.o))+'</span></div>'+
+    return '<div class="rv" data-rv="'+p.id+'"><div class="rv-h"><span class="rv-n">'+esc(p.n||'Producto sin nombre')+'</span><span class="rv-c">costo '+money(cst(p))+'</span></div>'+
       '<div class="rv-in"><label for="rvp'+p.id+'">Vendés a'+(S.ri?' (con IVA)':'')+'</label><div class="in"><b>$</b><input id="rvp'+p.id+'" data-p="ref" data-id="'+p.id+'" inputmode="decimal" autocomplete="off" value="'+esc(fv(p.ref))+'"></div></div>'+
       '<div class="rv-out" id="rvo'+p.id+'"></div></div>';
   }).join(''):'<p class="hint">Cargá productos en el Paso 3 para revisar sus precios.</p>';
@@ -1012,7 +1016,7 @@ function resumen(){
 }
 function lista(){
   var R=calc(),L=['Producto\tRubro\tCosto\tPrecio sugerido\tGanancia por unidad'];
-  S.prods.forEach(function(p){var o=R.byId[p.id];L.push([p.n||'',catOf(p).n,Math.round((num(p.c)+num(p.o))*100)/100,o&&o.ok?o.pf:'',o&&o.ok?Math.round(o.gain*100)/100:''].join('\t'))});
+  S.prods.forEach(function(p){var o=R.byId[p.id];L.push([p.n||'',catOf(p).n,Math.round((cst(p))*100)/100,o&&o.ok?o.pf:'',o&&o.ok?Math.round(o.gain*100)/100:''].join('\t'))});
   return L.join('\n');
 }
 function copyText(txt,msgEl,okMsg){
