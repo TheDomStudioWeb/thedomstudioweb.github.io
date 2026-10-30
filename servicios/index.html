@@ -144,7 +144,7 @@ footer{display:grid;gap:6px;border-top:1px solid var(--line);padding-top:14px}
 </section>
 
 <section class="card noprint"><div class="step">Para llevarte</div><h2>Copiar resultados</h2>
-<div class="chips"><button class="btn sm" id="cp-res" type="button">Copiar resumen</button><button class="btn sm" id="cp-lis" type="button">Copiar lista de precios</button><button class="btn sm" id="pr" type="button">Imprimir</button></div><div class="msg" id="m-cp" role="status"></div></section>
+<div class="chips"><button class="btn sm" id="cp-res" type="button">Copiar resumen</button><button class="btn sm" id="cp-lis" type="button">Copiar lista de precios</button><button class="btn pri sm" id="pdf" type="button">Descargar PDF</button><button class="btn sm" id="pr" type="button">Imprimir</button></div><div class="msg" id="m-cp" role="status"></div></section>
 
 <footer><p class="fine">Los ejemplos tienen datos ficticios. Los precios son una guía para decidir: los impuestos y las comisiones dependen de tu caso, consultalos con tu contador.</p>
 <p class="fine">Desarrollado por The DOM Studio Web · WhatsApp 261-3431216 · thedomstudioweb@gmail.com</p></footer>
@@ -341,7 +341,34 @@ document.addEventListener('click',function(e){var t=e.target.closest('button');i
   arm('au',t,'Tocá de nuevo para subir '+fq(a)+' %',function(){var c=0;S.ins.forEach(function(i){var p=num(i.precio);if(!isNaN(p)&&p>0){i.precio=String(Math.round(p*(1+a/100)*100)/100);c++}});renderIns();refresh();m3.className='msg good';m3.textContent='Subieron '+c+' insumos un '+fq(a)+' %. Los precios de las recetas ya se recalcularon.'});return}
  if(t.id==='cp-res'){var rr=resumen(),tx='DOMino Ganancias por Servicio\nTu hora de trabajo: '+fm(costoHora().hora)+'\nVentas del mes: '+fm(rr.ing)+'\nInsumos: '+fm(rr.mat)+'\nComisiones e impuestos: '+fm(rr.ci)+'\nTu sueldo y gastos fijos: '+fm(rr.fix)+'\nTe queda: '+fm(rr.queda)+'\nHoras usadas: '+fq(rr.hrs)+' de '+fq(rr.cap);copyTxt(tx,$('m-cp'),'Resumen copiado.');return}
  if(t.id==='cp-lis'){var lines=['Producto\tSe vende por\tCosto\tPrecio sugerido\tGanancia extra'];S.items.forEach(function(it){var o=calc(it);if(!isNaN(o.price))lines.push([it.n,it.uni||'',Math.round(o.cu),o.price,Math.round(o.gain)].join('\t'))});copyTxt(lines.join('\n'),$('m-cp'),'Lista copiada: pegala en Excel.');return}
+ if(t.id==='pdf'){descargarPDF();return}
  if(t.id==='pr'){window.print();return}});
+function pf(n){return isFinite(n)?'$ '+Math.round(n).toLocaleString('es-AR').replace(/[\u00a0\u202f]/g,' '):'-'}
+function descargarPDF(){var m=$('m-cp');m.className='msg';m.textContent='Preparando el PDF...';
+ var fail=function(){m.className='msg bad';m.textContent='No se pudo generar el PDF. Probá con Imprimir (y elegí Guardar como PDF) o con Copiar.'};
+ function go(){try{
+  var d=new window.jspdf.jsPDF({unit:'mm',format:'a4'}),W=210,M=15,y=0,pg=1,CU=[180,96,43],GR=[110,110,110];
+  var logo=null;try{var im=document.querySelector('header img'),cv=document.createElement('canvas');cv.width=cv.height=120;cv.getContext('2d').drawImage(im,0,0,120,120);logo=cv.toDataURL('image/png')}catch(e){}
+  function foot(){d.setFont('helvetica','normal');d.setFontSize(7.5);d.setTextColor(GR[0],GR[1],GR[2]);d.text('Los precios son una guia para decidir. Impuestos y comisiones dependen de cada caso: consultalo con tu contador.',W/2,284,{align:'center'});d.text('Desarrollado por The DOM Studio Web \u00b7 WhatsApp 261-3431216 \u00b7 thedomstudioweb@gmail.com',W/2,289,{align:'center'});d.text('Pagina '+pg,W-M,289,{align:'right'})}
+  function head(){d.setFillColor(CU[0],CU[1],CU[2]);d.rect(0,0,W,24,'F');if(logo)d.addImage(logo,M,3.5,17,17);d.setTextColor(255,255,255);d.setFont('helvetica','bold');d.setFontSize(16);d.text('DOMino Ganancias por Servicio',M+21,13);d.setFont('helvetica','normal');d.setFontSize(9);d.text(new Date().toLocaleDateString('es-AR'),M+21,19);y=34}
+  function chk(h){if(y+h>278){foot();d.addPage();pg++;y=20}}
+  function h2(t){chk(14);d.setTextColor(CU[0],CU[1],CU[2]);d.setFont('helvetica','bold');d.setFontSize(12);d.text(t,M,y);d.setDrawColor(CU[0],CU[1],CU[2]);d.line(M,y+1.8,W-M,y+1.8);y+=9}
+  function kv(a,b){chk(7);d.setTextColor(40,40,40);d.setFont('helvetica','normal');d.setFontSize(10);d.text(a,M,y);d.setFont('helvetica','bold');d.text(b,W-M,y,{align:'right'});y+=6.5}
+  head();var ch=costoHora(),h=S.hora;
+  h2('Tu hora de trabajo');kv('Sueldo que queres cobrar por mes',pf(n0(h.sueldo)));kv('Gastos fijos del mes',pf(ch.fijos));kv('Horas por mes que trabajas para vender',fq(ch.horas)+' hs');kv('Tu hora de trabajo cuesta',pf(ch.hora));y+=4;
+  h2('Precios sugeridos');
+  var cx=[M,76,118,142,168,W-M];
+  function th(){chk(9);d.setFillColor(240,232,222);d.rect(M,y-4.5,W-2*M,7,'F');d.setFont('helvetica','bold');d.setFontSize(8.5);d.setTextColor(60,60,60);d.text('Producto',cx[0]+1,y);d.text('Se vende por',cx[1],y);d.text('Costo',cx[2],y,{align:'right'});d.text('Precio',cx[3],y,{align:'right'});d.text('Ganancia',cx[4],y,{align:'right'});d.text('Minimo',cx[5]-1,y,{align:'right'});y+=6}
+  th();var any=false;
+  S.items.forEach(function(it){var o=calc(it);if(isNaN(o.price))return;any=true;var nm=d.splitTextToSize(it.n||'(sin nombre)',58);chk(nm.length*4.6+2);
+   d.setFont('helvetica','normal');d.setFontSize(9);d.setTextColor(30,30,30);d.text(nm,cx[0]+1,y);d.text(String(it.uni||(it.tipo==='receta'?'unidad':'trabajo')).slice(0,18),cx[1],y);d.text(pf(o.cu),cx[2],y,{align:'right'});d.setFont('helvetica','bold');d.text(pf(o.price),cx[3],y,{align:'right'});d.setFont('helvetica','normal');d.text(pf(o.gain),cx[4],y,{align:'right'});d.text(pf(o.minimo),cx[5]-1,y,{align:'right'});
+   y+=nm.length*4.6+1;d.setDrawColor(225,218,208);d.line(M,y-3,W-M,y-3);y+=1.5});
+  if(!any){d.setFont('helvetica','italic');d.setFontSize(9);d.text('Todavia no hay recetas ni trabajos con precio.',M,y);y+=8}
+  y+=4;var r=resumen();
+  if(r.n){h2('Resumen del mes');kv('Ventas del mes',pf(r.ing));kv('Insumos',pf(r.mat));kv('Comisiones e impuestos',pf(r.ci));kv('Tu sueldo y gastos fijos',pf(r.fix));kv('Te queda, ya cobrado tu sueldo',pf(r.queda));kv('Horas de trabajo que usas',fq(r.hrs)+' de '+fq(r.cap)+' hs')}
+  foot();var nombre='DOMino-Ganancias-por-Servicio-'+new Date().toISOString().slice(0,10)+'.pdf';d.save(nombre);m.className='msg good';m.textContent='Listo: se descargo el PDF ('+nombre+').'}catch(e){fail()}}
+ if(window.jspdf){go();return}
+ var sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';sc.onload=go;sc.onerror=fail;document.head.appendChild(sc)}
 S=load()||blank();render();
 </script>
 </body></html>
