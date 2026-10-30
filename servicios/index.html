@@ -153,9 +153,10 @@ footer{display:grid;gap:6px;border-top:1px solid var(--line);padding-top:14px}
 Insumo | Cantidad del paquete | Unidad | Precio pagado por ese paquete
 Reglas: las unidades permitidas son g, kg, ml, l, unidad, docena y metro. "Harina x 1 kg $1.200" se escribe: Harina | 1 | kg | 1200. Si compré 2,5 kg y la línea cuesta $9.000, escribí 2,5 | kg | 9000. Usá números sin signo $ y sin puntos de miles. No agregues explicaciones ni títulos: solo la tabla. Si algo no se lee bien, poné ? en esa celda para que yo lo revise.</pre>
 <pre id="p-rec" hidden>Te paso la foto de una receta. Devolvela como una tabla de texto con columnas separadas por barra vertical ( | ).
-Primera línea: RECETA | nombre de la receta | cuántas unidades rinde (un número)
+Primera línea: RECETA | nombre de la receta | cuántas porciones o unidades rinde (un número; si no lo dice, poné ?)
+Segunda línea, solo si la receta indica tiempos de cocción u horno: COCCION | total de horas (sumá todas las etapas, ej. 1 hora fuerte + 2 h y media suave = 3,5)
 Después, una línea por ingrediente: Ingrediente | Cantidad | Unidad
-Reglas: las unidades permitidas son g, kg, ml, l, cucharada, cucharadita, taza, unidad y docena. Si la receta usa tazas de ingredientes secos, convertilas a gramos cuando puedas (ej. 1 taza de harina = 120 g, de azúcar = 200 g). No inventes cantidades: si la receta no la dice, poné ?. No agregues explicaciones: solo la tabla.</pre>
+Reglas: las unidades permitidas son g, kg, ml, l, cucharada, cucharadita, taza, unidad y docena. Si dice "a gusto", "c/n" o no trae cantidad, poné ? en la cantidad. "Una cabeza de ajo" o "un tomate" se escribe 1 | unidad (media cabeza: 0,5 | unidad). Si la receta usa tazas de ingredientes secos, convertilas a gramos cuando puedas (ej. 1 taza de harina = 120 g, de azúcar = 200 g). No inventes cantidades: si la receta no la dice, poné ?. No agregues explicaciones: solo la tabla.</pre>
 <script>
 "use strict";
 var UN={g:['g',1,'g'],kg:['g',1000,'kg'],ml:['ml',1,'ml'],l:['ml',1000,'litro'],cda:['ml',15,'cucharada (15 ml)'],cdita:['ml',5,'cucharadita (5 ml)'],taza:['ml',240,'taza (240 ml)'],u:['u',1,'unidad'],doc:['u',12,'docena'],m:['m',1,'metro']};
@@ -180,17 +181,17 @@ function norm(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[�
 function up(n,step){return Math.ceil(n/step-1e-9)*step}
 function insBy(id){for(var i=0;i<S.ins.length;i++)if(S.ins[i].id===id)return S.ins[i];return null}
 /* ===== Cálculo ===== */
-function costoHora(){var h=S.hora,fx=0;h.fijos.forEach(function(f){fx+=n0(f.v)});var tot=n0(h.sueldo)+fx,hs=n0(h.horas);return{total:tot,fijos:fx,horas:hs,hora:hs>0?tot/hs:NaN}}
+function costoHora(){var h=S.hora,fx=0;h.fijos.forEach(function(f){fx+=n0(f.v)});var tot=n0(h.sueldo)+fx,hs=n0(h.horas);return{total:tot,fijos:fx,horas:hs,hora:hs>0?tot/hs:NaN,fh:hs>0?fx/hs:NaN}}
 function costoBase(i){var c=n0(i.cant),p=num(i.precio);if(!(c>0)||isNaN(p)||p<=0)return null;var m=Math.min(n0(i.merma),90);return p/(c*UN[i.u][1])/(1-m/100)}
-function lineaCosto(l){var i=insBy(l.ins);if(!i)return{c:0,err:'sin insumo'};var cb=costoBase(i);if(UN[l.u][0]!==UN[i.u][0])return{c:0,err:'unidad'};if(cb==null)return{c:0,err:'precio'};return{c:n0(l.cant)*UN[l.u][1]*cb}}
+function lineaCosto(l){var i=insBy(l.ins);if(!i)return{c:0,err:'sin insumo'};if(!(n0(l.cant)>0))return{c:0,err:'cant'};var cb=costoBase(i);if(UN[l.u][0]!==UN[i.u][0])return{c:0,err:'unidad'};if(cb==null)return{c:0,err:'precio'};return{c:n0(l.cant)*UN[l.u][1]*cb}}
 function pct(it,k){var v=num(it[k]);if(isNaN(v)||String(it[k]).trim()==='')v=num(S.hora[k]);return isNaN(v)?0:v}
 function calc(it){
  var ch=costoHora(),mat=0,err=[];
  it.lineas.forEach(function(l){var r=lineaCosto(l);mat+=r.c;if(r.err)err.push(r.err)});
  it.otros.forEach(function(o){mat+=n0(o.v)});
- var hrs=n0(it.horas),lab=isNaN(ch.hora)?0:hrs*ch.hora,cost=mat+lab,rinde=Math.max(1,n0(it.rinde)||1);
+ var hrs=n0(it.horas),coc=n0(it.horasCoc),lab=(isNaN(ch.hora)?0:hrs*ch.hora)+(isNaN(ch.fh)?0:coc*ch.fh),cost=mat+lab,rinde=Math.max(1,n0(it.rinde)||1);
  var m=pct(it,'margen'),c=pct(it,'com'),im=pct(it,'imp'),r=c+im,den=1-(m+r)/100,cu=cost/rinde,mu=mat/rinde,lu=lab/rinde;
- var o={mat:mat,lab:lab,cost:cost,rinde:rinde,cu:cu,mu:mu,lu:lu,m:m,r:r,err:err,horas:hrs,sinHora:isNaN(ch.hora)&&hrs>0};
+ var o={coc:coc,mat:mat,lab:lab,cost:cost,rinde:rinde,cu:cu,mu:mu,lu:lu,m:m,r:r,err:err,horas:hrs,sinHora:isNaN(ch.hora)&&hrs>0};
  if(den<=0.02||cu<=0){o.bad=den<=0.02;o.price=NaN;return o}
  var step=S.round||1,P=up(cu/den,step);o.price=P;o.gain=P-cu-P*r/100;o.mr=P?o.gain/P*100:NaN;
  o.minimo=up(cu/(1-r/100),step);o.nunca=up(mu/(1-r/100),step);o.pu=P*rinde;o.hEq=hrs>0?P*rinde/hrs:NaN;
@@ -223,7 +224,7 @@ function itemHTML(it){var isR=it.tipo==='receta',h=S.hora,
  '<div class="lab" style="margin:0">'+(isR?'Ingredientes de una tanda':'Materiales del trabajo')+'</div><div data-lines="'+it.id+'">'+it.lineas.map(function(l,i){return lineaHTML(it,l,i)}).join('')+'</div>'+
  '<div><button class="btn sm" type="button" data-addln="'+it.id+'">+ Agregar insumo</button></div>'+
  '<div><div class="lab">Otros costos directos'+(isR?' (bandeja, film, caja, etiqueta)':' (traslado, descarte, alquiler de una herramienta)')+'</div><p class="hint" style="margin:0 0 4px">Solo lo que se gasta por cada tanda o trabajo. <b>No pongas luz, gas, alquiler ni monotributo</b>: eso ya está repartido en el precio de tu hora (Paso 1).</p><div data-otros="'+it.id+'">'+it.otros.map(function(o,i){return'<div class="fix" style="margin-top:8px"><div class="fld"><input class="txt" aria-label="Concepto" data-it="'+it.id+'" data-ot="'+i+'" data-k="n" value="'+esc(o.n)+'" placeholder="Concepto"></div><div class="fld"><div class="in"><b>$</b><input aria-label="Costo" data-it="'+it.id+'" data-ot="'+i+'" data-k="v" inputmode="decimal" value="'+esc(o.v)+'" placeholder="0"></div></div><button class="x" type="button" data-delot="'+it.id+':'+i+'" aria-label="Quitar costo">✕</button></div>'}).join('')+'</div><button class="btn sm" type="button" data-addot="'+it.id+'" style="margin-top:8px">+ Agregar costo</button></div>'+
- '<div class="g3">'+(isR?f('rinde','Cuántas unidades rinde una tanda','1','','Ej. una tanda de 10 viandas.'):'')+f('horas',isR?'Horas de trabajo por tanda':'Horas de trabajo del trabajo','0','hs','Contá todo el tiempo que ocupás la cocina o el taller, cocción incluida: ahí se reparte el gas y la luz.')+f('porMes',isR?'Cuántas unidades vendés por mes':'Cuántos trabajos hacés por mes','0','')+'</div>'+
+ '<div class="g3">'+(isR?f('rinde','Cuántas unidades rinde una tanda','1','','Ej. una tanda de 10 viandas.'):'')+f('horas',isR?'Horas de tu trabajo por tanda':'Horas de tu trabajo','0','hs','Solo el tiempo en que vos trabajás: preparar, cortar, armar, vigilar.')+(isR?f('horasCoc','Horas de horno o cocción','0','hs','Cocina ocupada sin que vos trabajes: se cobra solo la parte de gas, luz y gastos fijos, no tu hora.'):'')+f('porMes',isR?'Cuántas unidades vendés por mes':'Cuántos trabajos hacés por mes','0','')+'</div>'+
  '<div class="g3">'+f('margen','Ganancia extra','Usa '+(h.margen||'0'),'%')+f('com','Comisión de cobro','Usa '+(h.com||'0'),'%')+f('imp','Impuestos','Usa '+(h.imp||'0'),'%')+'</div>'+
  '<div class="g2">'+f('comparar','Precio para comparar (opcional)','Tu precio de hoy o el de la competencia','$','Te dice cuánto ganás con ese precio.')+'</div>'+
  '<div class="res" data-res="'+it.id+'"></div>'+
@@ -232,10 +233,10 @@ function renderItems(){$('litems').innerHTML=S.items.length?S.items.map(itemHTML
 function resHTML(it,o){
  var uni=esc(it.uni||(it.tipo==='receta'?'unidad':'trabajo')),h='';
  if(o.sinHora)h+='<p class="warn">Completá el Paso 1 (sueldo y horas) para que cuente tu trabajo.</p>';
- if(o.err.length)h+='<p class="warn">Revisá la receta: '+(o.err.indexOf('precio')>-1?'hay insumos sin precio. ':'')+(o.err.indexOf('unidad')>-1?'hay una unidad que no coincide con la del insumo (peso vs. volumen vs. unidades). ':'')+(o.err.indexOf('sin insumo')>-1?'hay una línea sin insumo elegido.':'')+'</p>';
+ if(o.err.length)h+='<p class="warn">Revisá la receta: '+(o.err.indexOf('precio')>-1?'hay insumos sin precio. ':'')+(o.err.indexOf('unidad')>-1?'hay una unidad que no coincide con la del insumo (peso vs. volumen vs. unidades). ':'')+(o.err.indexOf('cant')>-1?'hay ingredientes sin cantidad (sal, pimienta o «a gusto»): ponele cantidad o quitalos. ':'')+(o.err.indexOf('sin insumo')>-1?'hay una línea sin insumo elegido.':'')+'</p>';
  if(o.bad)return h+'<p class="warn">Margen, comisión e impuestos suman casi 100 %: no se puede calcular un precio.</p>';
  if(isNaN(o.price))return h+'<p class="hint">Cargá los insumos y las horas para ver el precio.</p>';
- var tot=o.cu+o.price*o.r/100+Math.max(o.gain,0)||1,segs=[['Insumos',o.mu,'var(--c1)'],['Tu trabajo (hora, sueldo y gastos)',o.lu,'var(--c2)'],['Comisión e impuestos',o.price*o.r/100,'var(--c3)'],['Ganancia extra',Math.max(o.gain,0),'var(--c4)']];
+ var tot=o.cu+o.price*o.r/100+Math.max(o.gain,0)||1,segs=[['Insumos',o.mu,'var(--c1)'],['Tu trabajo y uso de la cocina',o.lu,'var(--c2)'],['Comisión e impuestos',o.price*o.r/100,'var(--c3)'],['Ganancia extra',Math.max(o.gain,0),'var(--c4)']];
  h+='<div><span class="lab" style="margin:0">Precio sugerido por '+uni+'</span><div class="big">'+fm(o.price)+'</div></div>';
  if(o.rinde>1)h+='<p class="hint" style="margin:0">Una tanda cuesta '+fm(o.cost)+' y rinde '+fq(o.rinde)+'. Se cobraría '+fm(o.pu)+' por la tanda completa.</p>';
  h+='<div class="sub"><div><span>Ganancia extra</span><b class="'+(o.gain>=0?'okc':'warn')+'">'+(o.gain>=0?'✓ ':'✕ ')+fm(o.gain)+' ('+fp(o.mr)+')</b></div><div><span>Costo de insumos</span><b>'+fm(o.mu)+'</b></div><div><span>Tu trabajo</span><b>'+fm(o.lu)+'</b></div><div><span>Precio mínimo para no perder</span><b>'+fm(o.minimo)+'</b></div><div><span>Nunca cobres menos de</span><b>'+fm(o.nunca)+'</b></div>'+(isFinite(o.hEq)?'<div><span>Equivale a cobrar la hora a</span><b>'+fm(o.hEq)+'</b></div>':'')+'</div>';
@@ -246,7 +247,7 @@ function refresh(){
  var ch=costoHora();$('o-hora').textContent=isNaN(ch.hora)?'Completá sueldo y horas':fm(ch.hora)+' por hora';
  S.ins.forEach(function(i){var e=document.querySelector('[data-o="ins:'+i.id+'"]');if(e)e.innerHTML=insOutText(i);var r=document.querySelector('[data-ins="'+i.id+'"]');if(r)r.classList.toggle('falta',costoBase(i)==null)});
  S.items.forEach(function(it){var o=calc(it);
-  it.lineas.forEach(function(l,i){var e=document.querySelector('[data-o="ln:'+it.id+':'+i+'"]');if(e){var r=lineaCosto(l);e.innerHTML=r.err?'<span class="warn">'+(r.err==='precio'?'falta precio':r.err==='unidad'?'revisá unidad':'elegí insumo')+'</span>':fm(r.c,2)}});
+  it.lineas.forEach(function(l,i){var e=document.querySelector('[data-o="ln:'+it.id+':'+i+'"]');if(e){var r=lineaCosto(l);e.innerHTML=r.err?'<span class="warn">'+(r.err==='precio'?'falta precio':r.err==='unidad'?'revisá unidad':r.err==='cant'?'falta cantidad':'elegí insumo')+'</span>':fm(r.c,2)}});
   var sp=document.querySelector('[data-o="sp:'+it.id+'"]'),sm=document.querySelector('[data-o="sum:'+it.id+'"]');
   if(sp)sp.textContent=isNaN(o.price)?'—':fm(o.price);
   if(sm)sm.textContent=(it.tipo==='receta'?'Receta':'Trabajo')+(isNaN(o.price)?'':' · ganás '+fm(o.gain)+' ('+fp(o.mr)+')');
@@ -264,7 +265,7 @@ function render(){renderHoraVals();renderFijos();renderIns();renderItems();var o
 /* ===== Ejemplos ===== */
 function mk(id,n,c,u,p,m){return{id:id,n:n,cant:String(c),u:u,precio:String(p),merma:m?String(m):''}}
 function L(ins,c,u){return{ins:ins,cant:String(c),u:u}}
-function IT(o){return Object.assign({id:uid(),n:'',tipo:'receta',uni:'',rinde:'1',horas:'',porMes:'',margen:'',com:'',imp:'',comparar:'',lineas:[],otros:[]},o)}
+function IT(o){return Object.assign({id:uid(),n:'',tipo:'receta',uni:'',rinde:'1',horas:'',horasCoc:'',porMes:'',margen:'',com:'',imp:'',comparar:'',lineas:[],otros:[]},o)}
 function exPasteleria(){var s=blank();s.ejemplo='pasteleria';s.hora={sueldo:'600000',horas:'120',fijos:[{n:'Monotributo',v:'100000'},{n:'Gas y luz de la cocina',v:'70000'},{n:'Otros gastos',v:'30000'}],margen:'20',com:'',imp:''};s.round=50;
  s.ins=[mk('harina','Harina 000',1,'kg',1200),mk('azucar','Azúcar',1,'kg',1300),mk('manteca','Manteca',200,'g',2600),mk('huevos','Huevos',1,'doc',4200),mk('cacao','Cacao amargo',100,'g',3000),mk('leche','Leche',1,'l',1500),mk('choco','Chocolate de cobertura',500,'g',9500),mk('maicena','Maicena',500,'g',1800),mk('ddl','Dulce de leche repostero',400,'g',2800),mk('coco','Coco rallado',250,'g',3000),mk('polvo','Polvo de hornear',100,'g',1200),mk('vainilla','Esencia de vainilla',100,'ml',2500)];
  s.items=[IT({id:'torta',n:'Torta de chocolate',uni:'torta',rinde:'1',horas:'2.5',porMes:'28',margen:'25',lineas:[L('harina',300,'g'),L('azucar',250,'g'),L('manteca',150,'g'),L('huevos',4,'u'),L('cacao',40,'g'),L('leche',250,'ml'),L('choco',200,'g'),L('polvo',10,'g'),L('vainilla',1,'cdita')],otros:[{n:'Caja y base',v:'900'}],comparar:'18000'}),
@@ -290,13 +291,15 @@ function importIns(txt){var add=0,upd=0,bad=0;
   if(isNaN(cant)||isNaN(p))bad++});
  return{add:add,upd:upd,bad:bad}}
 function findIns(name){var n=norm(name),f=null;S.ins.forEach(function(i){if(!f&&norm(i.n)===n)f=i});if(f)return f;S.ins.forEach(function(i){var m=norm(i.n);if(!f&&m&&n&&(m.indexOf(n)>-1||n.indexOf(m)>-1))f=i});return f}
-function importRec(txt){var it=IT({n:'Receta importada',tipo:'receta',uni:'unidad',rinde:'1'}),nuevos=0,bad=0,ok=0;
+function importRec(txt){var it=IT({n:'Receta importada',tipo:'receta',uni:'unidad',rinde:'1'}),nuevos=0,bad=0,ok=0,sinq=[];
  txt.split(/\r?\n/).forEach(function(l){l=l.trim();if(!l)return;var c=splitL(l);
+  if(/^(horas|trabajo)$/i.test(c[0])){if(!isNaN(num(c[1])))it.horas=String(num(c[1]));return}
+  if(/^(coccion|cocción|horno)$/i.test(c[0])){if(!isNaN(num(c[1])))it.horasCoc=String(num(c[1]));return}
   if(/^receta$/i.test(c[0])){if(c[1])it.n=c[1];if(!isNaN(num(c[2]))&&num(c[2])>0)it.rinde=String(num(c[2]));return}
-  if(c.length<3){bad++;return}var cant=num(c[1]),u=ukey(c[2]);if(!u){bad++;return}
+  if(c.length<2){bad++;return}var cant=num(c[1]),u=ukey(c[2]||'');if(!u){if(isNaN(cant)&&c[0]){u='g'}else{bad++;return}}
   var ins=findIns(c[0]);if(!ins){ins={id:uid(),n:c[0],cant:'1',u:UN[u][0]==='g'?'kg':UN[u][0]==='ml'?'l':u,precio:'',merma:''};S.ins.push(ins);nuevos++}
-  it.lineas.push({ins:ins.id,cant:isNaN(cant)?'':String(cant),u:u});ok++;if(isNaN(cant))bad++});
- if(!ok)return null;S.items.unshift(it);S.open=it.id;return{n:ok,nuevos:nuevos,bad:bad,nombre:it.n}}
+  var ex=it.lineas.filter(function(x){return x.ins===ins.id&&x.u===u})[0];if(ex&&!isNaN(cant)){ex.cant=String((n0(ex.cant)||0)+cant)}else it.lineas.push({ins:ins.id,cant:isNaN(cant)?'':String(cant),u:u});ok++;if(isNaN(cant)&&sinq.indexOf(c[0])<0)sinq.push(c[0])});
+ if(!ok)return null;S.items.unshift(it);S.open=it.id;return{n:it.lineas.length,nuevos:nuevos,bad:bad,sinq:sinq,nombre:it.n}}
 /* ===== Eventos ===== */
 function arm(k,btn,txt,fn){if(armKey===k){clearTimeout(armT);armKey=null;fn();return}armKey=k;btn.dataset.t=btn.textContent;btn.textContent=txt;clearTimeout(armT);armT=setTimeout(function(){armKey=null;btn.textContent=btn.dataset.t},4000)}
 function copyTxt(t,msgEl,okm){var done=function(){msgEl.className='msg good';msgEl.textContent=okm};var fail=function(){msgEl.className='msg bad';msgEl.textContent='No se pudo copiar. Mantené apretado el texto y copialo a mano.'};
@@ -333,7 +336,7 @@ document.addEventListener('click',function(e){var t=e.target.closest('button');i
  if(t.id==='do-ins'){var r=importIns($('t-ins').value),m=$('m-ins');if(!r.add&&!r.upd){m.className='msg bad';m.textContent='No encontré filas con el formato: Insumo | Cantidad | Unidad | Precio.';return}
   m.className='msg good';m.textContent='Listo: '+r.add+' nuevos'+(r.upd?', '+r.upd+' actualizados':'')+(r.bad?'. Revisá '+r.bad+' fila(s) con datos que faltan o no se entendieron.':'.');$('t-ins').value='';qIns='';$('q-ins').value='';renderIns();return}
  if(t.id==='do-rec'){var r2=importRec($('t-rec').value),m2=$('m-rec');if(!r2){m2.className='msg bad';m2.textContent='No encontré ingredientes con el formato: Ingrediente | Cantidad | Unidad.';return}
-  m2.className='msg good';m2.textContent='Receta «'+r2.nombre+'» cargada con '+r2.n+' ingredientes'+(r2.nuevos?'. '+r2.nuevos+' insumo(s) son nuevos: ponele el precio en el Paso 2 (están marcados en rojo).':'.')+(r2.bad?' Revisá '+r2.bad+' línea(s) sin cantidad clara.':'');$('t-rec').value='';renderIns();renderItems();return}
+  m2.className='msg good';m2.textContent='Receta «'+r2.nombre+'» cargada con '+r2.n+' ingredientes'+(r2.nuevos?'. '+r2.nuevos+' insumo(s) son nuevos: ponele el precio en el Paso 2 (están marcados en rojo).':'.')+(r2.sinq.length?' Sin cantidad (a gusto o ilegible): '+r2.sinq.join(', ')+'. Ponele cantidad o quitalas.':'')+(r2.bad?' Revisá '+r2.bad+' línea(s) que no se entendieron.':'');$('t-rec').value='';renderIns();renderItems();return}
  if(t.id==='doau'){var a=num($('au').value),m3=$('m-au');if(isNaN(a)||a<=0||a>500){m3.className='msg bad';m3.textContent='Escribí un porcentaje entre 1 y 500.';return}
   arm('au',t,'Tocá de nuevo para subir '+fq(a)+' %',function(){var c=0;S.ins.forEach(function(i){var p=num(i.precio);if(!isNaN(p)&&p>0){i.precio=String(Math.round(p*(1+a/100)*100)/100);c++}});renderIns();refresh();m3.className='msg good';m3.textContent='Subieron '+c+' insumos un '+fq(a)+' %. Los precios de las recetas ya se recalcularon.'});return}
  if(t.id==='cp-res'){var rr=resumen(),tx='DOMino Ganancias por Servicio\nTu hora de trabajo: '+fm(costoHora().hora)+'\nVentas del mes: '+fm(rr.ing)+'\nInsumos: '+fm(rr.mat)+'\nComisiones e impuestos: '+fm(rr.ci)+'\nTu sueldo y gastos fijos: '+fm(rr.fix)+'\nTe queda: '+fm(rr.queda)+'\nHoras usadas: '+fq(rr.hrs)+' de '+fq(rr.cap);copyTxt(tx,$('m-cp'),'Resumen copiado.');return}
