@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Demos | The DOM Studio Web</title>
+<meta name="description" content="Pruebe las aplicaciones de The DOM Studio Web con datos de ejemplo, sin cuenta y desde el celular.">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="icon" type="image/png" href="../imagenes/favicon-64.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Kit de marca The DOM Studio Web — Premium-Noir */
+:root{
+  --bg:#0a0a0a; --surface:#16181c; --raised:#1f2227;
+  --ink:#f4f1ea; --muted:#a8a396;
+  --gold:#d4af37; --gold-light:#e8c766; --gold-text:#d4af37;
+  --hairline:#d4af3740; --on-gold:#0a0a0a;
+  --display:"Cinzel","Trajan Pro",Georgia,serif;
+  --sans:"Montserrat",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --glow:0 0 24px #d4af3733;
+  color-scheme:dark;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font:400 16px/26px var(--sans);-webkit-font-smoothing:antialiased}
+a{color:var(--gold-text)}
+:focus-visible{outline:2px solid var(--gold-text);outline-offset:3px}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{border-bottom:1px solid var(--hairline);background:var(--bg)}
+header.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:14px}
+.logo{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--ink);font:700 16px var(--display);letter-spacing:.06em}
+.back{font:500 13px/20px var(--sans);text-decoration:none;letter-spacing:.04em}
+.back:hover{text-decoration:underline}
+.intro{padding-block:48px 24px}
+.caption{font:500 12px/16px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--gold-text)}
+h1{font:600 clamp(28px,6vw,44px)/1.15 var(--display);margin:12px 0 16px;text-wrap:balance}
+h1 span{color:var(--gold-text)}
+.lead{max-width:60ch;color:var(--muted)}
+.how{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:20px;font:500 13px/20px var(--sans);color:var(--muted)}
+.how b{color:var(--gold-text);font-weight:600}
+section.grupo{padding-block:32px 8px}
+h2{font:600 clamp(20px,4vw,26px)/1.3 var(--display);color:var(--gold-text);margin-bottom:6px}
+.sub{color:var(--muted);font-size:15px;margin-bottom:20px;max-width:62ch}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:16px}
+.card{display:flex;flex-direction:column;gap:10px;background:var(--surface);border:1px solid var(--hairline);border-radius:6px;padding:20px;min-width:0}
+.card h3{font:600 18px/1.3 var(--display);letter-spacing:.02em}
+.chip{align-self:flex-start;font:500 11px/16px var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--gold-text);border:1px solid var(--hairline);padding:2px 8px;border-radius:2px}
+.card p{color:var(--muted);font-size:14.5px;line-height:23px}
+.card .nota{font-size:13px;color:var(--ink);opacity:.85}
+.card .acc{margin-top:auto;padding-top:8px;display:flex;flex-wrap:wrap;gap:8px}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:10px 22px;font:600 13px/18px var(--sans);letter-spacing:.08em;text-transform:uppercase;text-decoration:none;color:var(--gold-text);border:1px solid var(--gold);border-radius:2px;background:transparent}
+.btn:hover{background:var(--gold);color:var(--on-gold);box-shadow:var(--glow)}
+.btn-solid{background:var(--gold);color:var(--on-gold)}
+.btn-solid:hover{background:var(--gold-light)}
+.cta{margin-block:48px 32px;padding:28px;border:1px solid var(--hairline);background:var(--surface);border-radius:6px;display:flex;flex-wrap:wrap;gap:16px 24px;align-items:center;justify-content:space-between}
+.cta h2{margin:0 0 4px}
+.cta p{color:var(--muted);max-width:52ch;font-size:15px}
+footer{border-top:1px solid var(--hairline);padding-block:24px calc(24px + env(safe-area-inset-bottom,0px));text-align:center;font-size:13px;color:var(--muted)}
+footer b{display:block;font:500 11px/16px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--gold-text);margin-bottom:4px}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="../"><img src="../imagenes/medallon-192.webp" alt="" width="36" height="36">THE DOM</a>
+    <a class="back" href="../">← Volver al sitio</a>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div class="intro">
+      <span class="caption">Demos</span>
+      <h1>No se lo contamos: <span>pruébelo.</span></h1>
+      <p class="lead">Cada aplicación se puede recorrer desde el celular, sin cuenta y con datos inventados. Lo que usted cargue queda solo en su dispositivo.</p>
+      <div class="how"><span><b>1.</b> Elija una aplicación</span><span><b>2.</b> Entre con el nivel que quiera ver</span><span><b>3.</b> Cargue, cambie y mire cómo responde</span></div>
+    </div>
+
+    <section class="grupo" aria-labelledby="g1">
+      <h2 id="g1">Aplicaciones DOMino por rubro</h2>
+      <p class="sub">Una misma base, adaptada a cada oficio: personas atendidas, tareas con vencimiento, documentos y equipo con distintos niveles de acceso.</p>
+      <div class="grid">
+        <article class="card">
+          <span class="chip">Inmobiliarias</span>
+          <h3>DOMino Inmobiliaria</h3>
+          <p>Capte propiedades con la cámara del celular, asígnelas a su equipo, atienda consultas y avise al propietario por WhatsApp.</p>
+          <p class="nota">Toque «Recorrer la demostración» en la pantalla de ingreso.</p>
+          <div class="acc"><a class="btn btn-solid" href="https://thedomstudioweb.github.io/Domino-Inmobiliaria/" target="_blank" rel="noopener">Probar la demo</a></div>
+        </article>
+        <article class="card">
+          <span class="chip">Estudios y profesionales</span>
+          <h3>DOMino Profesional</h3>
+          <p>Clientes, tareas con vencimiento, tablero de seguimiento, calendario, documentos y equipo por niveles. Pensado para estudios contables, jurídicos y escribanías.</p>
+          <p class="nota">Elija entrar como Senior, Mid Senior o Asistente.</p>
+          <div class="acc"><a class="btn btn-solid" href="https://thedomstudioweb.github.io/domino-profesional/login.html?demo" target="_blank" rel="noopener">Probar la demo</a></div>
+        </article>
+        <article class="card">
+          <span class="chip">Veterinarias</span>
+          <h3>DOMino Veterinaria</h3>
+          <p>Dueños y mascotas, seguimientos de vacunas y controles, calendario de vencimientos y documentos del paciente.</p>
+          <p class="nota">Elija entrar como Dirección, Veterinario/a o Recepción.</p>
+          <div class="acc"><a class="btn btn-solid" href="https://thedomstudioweb.github.io/domino-veterinaria/login.html?demo" target="_blank" rel="noopener">Probar la demo</a></div>
+        </article>
+        <article class="card">
+          <span class="chip">Gimnasios, spa y estética</span>
+          <h3>DOMino Bienestar</h3>
+          <p>Socios, cuotas y aptos médicos por vencer, seguimientos, calendario y equipo del centro.</p>
+          <p class="nota">Elija entrar como Dirección, Profesor/a o Recepción.</p>
+          <div class="acc"><a class="btn btn-solid" href="https://thedomstudioweb.github.io/domino-bienestar/login.html?demo" target="_blank" rel="noopener">Probar la demo</a></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="grupo" aria-labelledby="g2">
+      <h2 id="g2">Hub comercial y herramientas</h2>
+      <p class="sub">Piezas que se suman a la estructura de ventas. Se prueban en la página principal, con datos ficticios.</p>
+      <div class="grid">
+        <article class="card">
+          <span class="chip">Equipos de ventas</span>
+          <h3>Hub comercial</h3>
+          <p>Cada consulta que llega queda en un tablero. Avance cada una por el embudo y vea cómo cambian los números del equipo.</p>
+          <div class="acc"><a class="btn" href="../#herramientas">Probar la demo</a></div>
+        </article>
+        <article class="card">
+          <span class="chip">Agenda</span>
+          <h3>Calendario</h3>
+          <p>La agenda del día de un vistazo, con vista de mes y de semana. La versión real se sincroniza con el calendario de Google.</p>
+          <div class="acc"><a class="btn" href="../#herramientas">Probar la demo</a></div>
+        </article>
+        <article class="card">
+          <span class="chip">Asistente de voz</span>
+          <h3>Claudio</h3>
+          <p>Un asistente personal que conoce su agenda y su negocio. En la demo, elija una pregunta y vea cómo responde.</p>
+          <div class="acc"><a class="btn" href="../#herramientas">Probar la demo</a></div>
+        </article>
+        <article class="card">
+          <span class="chip">Inversión</span>
+          <h3>Simulador de inversión y brecha</h3>
+          <p>Calcule cuánto avanza lo aportado frente al valor del bien y cuánto falta para llegar a obtenerlo.</p>
+          <div class="acc"><a class="btn" href="../#herramientas">Probar la demo</a></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="grupo" aria-labelledby="g3">
+      <h2 id="g3">Calculadoras gratuitas</h2>
+      <p class="sub">Funcionan en el dispositivo: no guardan ni envían los datos que usted carga.</p>
+      <div class="grid">
+        <article class="card">
+          <span class="chip">Comercios</span>
+          <h3>DOMino Ganancias</h3>
+          <p>Calcule precios y punto de equilibrio para negocios con productos físicos, con costos fijos, variables e IVA.</p>
+          <div class="acc"><a class="btn btn-solid" href="../precios/">Abrir la calculadora</a></div>
+        </article>
+        <article class="card">
+          <span class="chip">Elaboración y servicios</span>
+          <h3>DOMino Ganancias por servicio</h3>
+          <p>Para pastelería, viandas, mecánica, gas, electricidad y obra: cargue ingredientes o materiales, tiempo y costos, y obtenga el valor final.</p>
+          <div class="acc"><a class="btn btn-solid" href="../servicios/">Abrir la calculadora</a></div>
+        </article>
+      </div>
+    </section>
+
+    <div class="cta">
+      <div>
+        <h2>¿Quiere una así para su negocio?</h2>
+        <p>La adaptamos a su rubro, su marca y su forma de trabajar. Escríbanos y le contamos cómo empezar con una semana de prueba.</p>
+      </div>
+      <a class="btn btn-solid" href="https://wa.me/5492613431216?text=Hola%20Daniel,%20prob%C3%A9%20las%20demos%20y%20quiero%20consultar." target="_blank" rel="noopener">Escribir por WhatsApp</a>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <b>Estructura y potencia digital</b>
+    Desarrollado por <a href="https://thedomstudioweb.github.io/">The DOM Studio Web</a><br>
+    WhatsApp 261-3431216 · thedomstudioweb@gmail.com
+  </div>
+</footer>
+</body>
+</html>
