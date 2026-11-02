@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bicisendas Mendoza</title>
+<meta name="theme-color" content="#0A0A0A">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="libs/leaflet.css">
+<style>
+:root{--bg:#0A0A0A;--panel:#16181C;--panel2:#101215;--tx:#F4F1EA;--mut:#B9B4A8;--gold:#D4AF37;--ok:#4CC38A;--warn:#E8A33D;--er:#FF6B61;--line:#2E2A1E;
+  --serif:'Cinzel',Georgia,serif;--sans:'Montserrat',system-ui,-apple-system,'Segoe UI',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none!important}
+html,body{height:100%;background:var(--bg);color:var(--tx);font:400 15px/1.5 var(--sans);overflow:hidden}
+#map{position:fixed;inset:0;bottom:var(--sheet,300px);background:#1b1d21}
+.top{position:fixed;z-index:500;top:0;left:0;right:0;padding:max(10px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) 10px max(12px,env(safe-area-inset-left,0px));display:flex;align-items:center;justify-content:space-between;gap:8px;pointer-events:none}
+.top>*{pointer-events:auto}
+.logo{font:600 .95rem var(--serif);letter-spacing:.12em;background:#0A0A0Acc;border:1px solid var(--line);border-radius:4px;padding:8px 12px;color:var(--gold)}
+.chip{font:600 .68rem var(--sans);letter-spacing:.08em;text-transform:uppercase;background:#0A0A0Acc;border:1px solid var(--line);border-radius:999px;padding:8px 12px;color:var(--mut);min-height:36px}
+.sheet{position:fixed;z-index:600;left:0;right:0;bottom:0;height:var(--sheet,300px);background:var(--panel);border-top:1px solid var(--gold);border-radius:14px 14px 0 0;display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)}
+.grip{flex:none;height:26px;display:grid;place-items:center;cursor:ns-resize;touch-action:none}
+.grip i{width:44px;height:4px;border-radius:2px;background:#4a463a}
+.cont{flex:1;overflow:auto;padding:0 max(14px,env(safe-area-inset-right,0px)) 14px max(14px,env(safe-area-inset-left,0px));-webkit-overflow-scrolling:touch}
+.fila{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.pt{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font:700 .72rem var(--sans);color:#0A0A0A}
+.pt.a{background:var(--ok)}.pt.b{background:var(--gold)}
+input[type=search],input[type=text]{flex:1;min-width:0;min-height:46px;padding:0 12px;background:var(--panel2);border:1px solid #3a372c;border-radius:4px;color:var(--tx);font:inherit}
+input:focus{outline:2px solid var(--gold);outline-offset:1px}
+button,.btn{font:inherit;cursor:pointer}
+.mini{flex:none;min-width:46px;min-height:46px;background:var(--panel2);border:1px solid #3a372c;border-radius:4px;color:var(--gold);font:700 .75rem var(--sans);letter-spacing:.06em}
+.sug{display:grid;gap:4px;margin:-4px 0 8px 34px}
+.sug button{text-align:left;min-height:44px;padding:8px 10px;background:var(--panel2);border:1px solid #3a372c;border-radius:4px;color:var(--tx);font-size:.82rem}
+.modos{display:flex;gap:8px;margin:6px 0 10px}
+.modo{flex:1;min-height:56px;padding:8px;background:var(--panel2);border:1px solid #3a372c;border-radius:6px;color:var(--mut);text-align:left;font-size:.74rem;line-height:1.3}
+.modo b{display:block;color:var(--tx);font-size:.8rem}
+.modo[aria-pressed="true"]{border-color:var(--gold);background:#1f1d14}
+.nivel{display:inline-block;font:700 .66rem var(--sans);letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:999px;border:1px solid}
+.n-ok{color:var(--ok);border-color:var(--ok)}.n-warn{color:var(--warn);border-color:var(--warn)}.n-er{color:var(--er);border-color:var(--er)}
+.res h3{font:600 1.05rem var(--sans);margin:2px 0}
+.barra{display:flex;height:10px;border-radius:5px;overflow:hidden;background:#2a2820;margin:8px 0}
+.barra i{display:block;height:100%}
+.msg{font-size:.85rem;color:var(--mut);margin:6px 0}.msg.er{color:var(--er)}.msg.ok{color:var(--ok)}
+.acc{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:0 16px;border:1px solid var(--gold);border-radius:4px;background:var(--gold);color:#0A0A0A;font:700 .74rem var(--sans);letter-spacing:.1em;text-transform:uppercase;text-decoration:none}
+.btn.line{background:transparent;color:var(--gold)}
+ol.pasos{margin:8px 0 0 20px;font-size:.84rem;color:var(--mut)}ol.pasos li{margin:3px 0}
+details summary{cursor:pointer;color:var(--gold);font:600 .72rem var(--sans);letter-spacing:.1em;text-transform:uppercase;min-height:40px;display:flex;align-items:center}
+.leyenda{display:flex;gap:12px;flex-wrap:wrap;font-size:.72rem;color:var(--mut);margin:6px 0}
+.leyenda span::before{content:"";display:inline-block;width:18px;height:4px;border-radius:2px;margin-right:6px;vertical-align:middle;background:var(--c)}
+.foot{font-size:.66rem;color:#8E897E;text-align:center;margin-top:14px;line-height:1.6}.foot a{color:var(--gold)}
+.pin{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:700 .8rem var(--sans);color:#0A0A0A;border:2px solid #fff;box-shadow:0 1px 6px #0008}
+.leaflet-container{font-family:var(--sans)}
+</style>
+</head>
+<body>
+<div id="map" aria-label="Mapa"></div>
+<div class="top"><div class="logo">BICI MENDOZA</div><button class="chip" id="capa" aria-pressed="true">Bicisendas: cargando…</button></div>
+
+<section class="sheet" id="sheet" aria-label="Armar recorrido">
+  <div class="grip" id="grip" role="separator" aria-label="Agrandar o achicar el panel"><i></i></div>
+  <div class="cont">
+    <div class="fila"><span class="pt a">A</span><input id="qa" type="search" placeholder="Desde: dirección o toque el mapa" autocomplete="off"><button class="mini" id="gps" type="button" aria-label="Usar mi ubicación">GPS</button></div>
+    <div class="sug" id="sa" hidden></div>
+    <div class="fila"><span class="pt b">B</span><input id="qb" type="search" placeholder="Hasta: dirección o toque el mapa" autocomplete="off"><button class="mini" id="inv" type="button" aria-label="Invertir recorrido">⇅</button></div>
+    <div class="sug" id="sb" hidden></div>
+
+    <div id="res" class="res" hidden>
+      <div class="modos" role="group" aria-label="Tipo de recorrido">
+        <button class="modo" id="m0" type="button" aria-pressed="true"><b>Más segura</b><span id="t0">—</span></button>
+        <button class="modo" id="m1" type="button" aria-pressed="false"><b>Más directa</b><span id="t1">—</span></button>
+      </div>
+      <h3 id="rt"></h3>
+      <span class="nivel" id="rn"></span>
+      <div class="barra" id="rb" aria-hidden="true"></div>
+      <p class="msg" id="rd"></p>
+      <div class="leyenda"><span style="--c:#4CC38A">Ciclovía separada</span><span style="--c:#9BE3B8">Carril bici</span><span style="--c:#7FB8FF">Bici compartida</span><span style="--c:#E8A33D">Calle común</span></div>
+      <div class="acc"><a class="btn" id="gm" target="_blank" rel="noopener">Abrir en Google Maps</a></div>
+      <details><summary>Paso a paso</summary><ol class="pasos" id="pasos"></ol></details>
+    </div>
+    <p class="msg" id="aviso" role="status">Elija el punto de partida y el de llegada.</p>
+    <p class="msg">Los datos vienen de OpenStreetMap: puede haber tramos faltantes. Mire siempre el tránsito real.</p>
+    <p class="foot">Prototipo · Desarrollado por <a href="https://thedomstudioweb.github.io/" target="_blank" rel="noopener">The DOM Studio Web</a> · WhatsApp 261-3431216 · thedomstudioweb@gmail.com</p>
+  </div>
+</section>
+
+<script src="libs/leaflet.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
