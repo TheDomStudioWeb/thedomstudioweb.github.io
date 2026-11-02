@@ -184,7 +184,7 @@ footer b{color:var(--ink);font-weight:600}
       <a class="btn main" id="scorePdf" target="_blank" rel="noopener" aria-disabled="true">Abrir partitura (PDF)</a>
       <a class="btn" id="scoreXml" aria-disabled="true">Bajar para MuseScore</a>
     </div>
-    <p class="notice" id="scoreNote">Transcripción automática de las voces: las notas son confiables, el ritmo conviene revisarlo. El archivo para MuseScore se abre y se corrige en esa app (gratis en computadora y celular).</p>
+    <p class="notice" id="scoreNote">Transcripción automática de las voces: las notas son confiables, el ritmo conviene revisarlo. El archivo para MuseScore se corrige en la computadora con MuseScore Studio (gratis, musescore.org).</p>
   </section>
 
   <section style="display:grid;gap:10px">
@@ -296,7 +296,7 @@ function setScore(g, files){
     if(files&&files[ext]){ const u=URL.createObjectURL(files[ext]); scoreUrls.push(u); a.href=u; a.download=base+' - '+label; a.setAttribute('aria-disabled','false'); }
     else { a.removeAttribute('href'); a.setAttribute('aria-disabled','true'); }
   }
-  $('scoreNote').textContent = files&&files.pdf ? 'Transcripción automática de las voces: las notas son confiables, el ritmo conviene revisarlo. El archivo para MuseScore se abre y se corrige en esa app (gratis en computadora y celular).' : 'Abrí el paquete de la canción para ver y descargar la partitura.';
+  $('scoreNote').textContent = files&&files.pdf ? 'Transcripción automática de las voces: las notas son confiables, el ritmo conviene revisarlo. El archivo para MuseScore se corrige en la computadora con MuseScore Studio (gratis, musescore.org).' : 'Abrí el paquete de la canción para ver y descargar la partitura.';
 }
 
 // ---------------- mezclador ----------------
