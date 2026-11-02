@@ -1,5 +1,5 @@
 // Ensayo de Voces: guarda la app para que abra rápido y sin conexión.
-const CACHE = 'ensayo-v1';
+const CACHE = 'ensayo-v2';
 const BASE = ['./', './index.html', './manifest.webmanifest', './icono-192.png', './icono-512.png'];
 const EXTRA = ['https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'];
 self.addEventListener('install', e => {
