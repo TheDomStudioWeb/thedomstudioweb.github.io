@@ -100,6 +100,8 @@
     capaInfra.clearLayers(); var r = L.canvas({ padding: 0.3 });
     infra.forEach(function (w) { L.polyline(w.p, { color: COLOR[w.t], weight: w.t === 'sep' ? 4 : 3, opacity: 0.9, renderer: r, interactive: false }).addTo(capaInfra); });
   }
+  // Con un recorrido dibujado, las demás bicisendas pasan a un segundo plano para que no confundan.
+  function atenuar(on) { capaInfra.eachLayer(function (l) { l.setStyle({ opacity: on ? 0.14 : 0.9, weight: on ? 2 : (l.options.color === COLOR.sep ? 4 : 3) }); }); }
   function km(lat1, lon1, lat2, lon2) { var a = xy(lat1, lon1), b = xy(lat2, lon2); return Math.hypot(a[0] - b[0], a[1] - b[1]) / 1000; }
   function totalKm() { var s = 0; infra.forEach(function (w) { for (var k = 0; k < w.p.length - 1; k++) s += km(w.p[k][0], w.p[k][1], w.p[k + 1][0], w.p[k + 1][1]); }); return s; }
   function estadoCapa(txt) { $('capa').textContent = txt; }
@@ -191,16 +193,32 @@
     var pct = function (x) { return total ? Math.round(100 * x / total) : 0; };
     return { tramos: tramos, total: total, sep: pct(acum.sep), carril: pct(acum.carril), comp: pct(acum.comp), calle: pct(acum.calle), enInfra: pct(acum.sep + acum.carril) };
   }
+  // Google Maps recalcula por su cuenta entre origen y destino. Para que siga el mismo camino se le pasan puntos intermedios:
+  // se eligen los que más se apartan de una recta (las esquinas y desvíos que definen la ruta), hasta WAY_MAX.
+  var WAY_MAX = 8;
+  function puntosClave(pts, max) {
+    var P = pts.map(function (p) { return xy(p[0], p[1]); }), sel = [0, pts.length - 1];
+    while (sel.length < max + 2) {
+      var mejor = 0, bi = -1;
+      for (var s = 0; s < sel.length - 1; s++) for (var i = sel[s] + 1; i < sel[s + 1]; i++) { var d = distSeg(P[i][0], P[i][1], [0, P[sel[s]][0], P[sel[s]][1], P[sel[s + 1]][0], P[sel[s + 1]][1]]); if (d > mejor) { mejor = d; bi = i; } }
+      if (bi < 0 || mejor < 20) break; sel.push(bi); sel.sort(function (x, y) { return x - y; });
+    }
+    return sel.slice(1, -1).map(function (i) { return pts[i]; });
+  }
+  function enlaceGoogle(r) {
+    var w = puntosClave(r.pts, WAY_MAX), f = function (p) { return p[0].toFixed(5) + ',' + p[1].toFixed(5); };
+    return 'https://www.google.com/maps/dir/?api=1&origin=' + pA.lat.toFixed(5) + ',' + pA.lon.toFixed(5) + '&destination=' + pB.lat.toFixed(5) + ',' + pB.lon.toFixed(5) + '&travelmode=bicycling' + (w.length ? '&waypoints=' + w.map(f).join('%7C') : '');
+  }
   function nivel(a) { var p = a.sep + a.carril; return p >= 70 ? ['Muy segura', 'n-ok'] : p >= 40 ? ['Con tramos de calle', 'n-warn'] : ['Mucha calle compartida', 'n-er']; }
   async function calcular() {
-    if (!pA || !pB) return; var t = ++ticket; aviso('Calculando recorridos…'); $('res').hidden = true; capaRuta.clearLayers();
+    if (!pA || !pB) return; var t = ++ticket; aviso('Calculando recorridos…'); $('res').hidden = true; capaRuta.clearLayers(); atenuar(false);
     var rs = await Promise.allSettled(MODOS.map(pedirRuta)); if (t !== ticket) return;
     if (rs.every(function (r) { return r.status === 'rejected'; })) { return aviso('No se pudo calcular el recorrido (' + (rs[0].reason && rs[0].reason.message || 'sin conexión') + '). Pruebe de nuevo en un momento.', 'er'); }
     rutas = rs.map(function (r) { if (r.status !== 'fulfilled') return null; var tr = r.value, pts = decodificar(tr.legs[0].shape); return { pts: pts, km: tr.summary.length, min: Math.round(tr.summary.time / 60), pasos: tr.legs[0].maneuvers || [], a: analizar(pts) }; });
     activa = rutas[0] ? 0 : 1; $('aviso').textContent = ''; mostrar(); map.fitBounds(L.latLngBounds([[pA.lat, pA.lon], [pB.lat, pB.lon]]).pad(0.3));
   }
   function mostrar() {
-    var r = rutas[activa]; if (!r) return; $('res').hidden = false; capaRuta.clearLayers();
+    var r = rutas[activa]; if (!r) return; $('res').hidden = false; capaRuta.clearLayers(); atenuar(true);
     // la ruta se dibuja con un trazo blanco debajo para que resalte, y de color según el tipo de infraestructura
     L.polyline(r.pts, { color: '#fff', weight: 9, opacity: 0.9, interactive: false }).addTo(capaRuta);
     r.a.tramos.forEach(function (u) { L.polyline(u.p, { color: COLOR[u.t], weight: 6, opacity: 1, interactive: false }).addTo(capaRuta); });
@@ -208,7 +226,7 @@
     var n = nivel(r.a); $('rt').textContent = r.km.toFixed(1).replace('.', ',') + ' km · ' + r.min + ' min en bici'; var e = $('rn'); e.textContent = n[0]; e.className = 'nivel ' + n[1];
     $('rb').innerHTML = [['sep', r.a.sep], ['carril', r.a.carril], ['comp', r.a.comp], ['calle', r.a.calle]].map(function (x) { return '<i style="width:' + x[1] + '%;background:' + COLOR[x[0]] + '"></i>'; }).join('');
     $('rd').textContent = r.a.sep + '% por ciclovía separada, ' + r.a.carril + '% por carril bici, ' + r.a.comp + '% por calle con bici compartida y ' + r.a.calle + '% por calle común.' + (infra.length ? '' : ' (Sin datos de bicisendas cargados.)');
-    $('gm').href = 'https://www.google.com/maps/dir/?api=1&origin=' + pA.lat + ',' + pA.lon + '&destination=' + pB.lat + ',' + pB.lon + '&travelmode=bicycling';
+    $('gm').href = enlaceGoogle(r);
     var ol = $('pasos'); ol.innerHTML = ''; r.pasos.forEach(function (p) { var li = document.createElement('li'); li.textContent = p.instruction + (p.length ? ' (' + Math.round(p.length * 1000) + ' m)' : ''); ol.appendChild(li); });
   }
   $('m0').onclick = function () { if (rutas[0]) { activa = 0; mostrar(); } };
