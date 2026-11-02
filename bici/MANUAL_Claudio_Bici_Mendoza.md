@@ -19,3 +19,12 @@
 - Depende de servicios públicos gratuitos con límites de uso. Para uso masivo habría que armar un servidor propio de rutas.
 - No guarda recorridos favoritos ni reportes de puntos peligrosos; son ideas para una versión siguiente.
 - Solo cubre el Gran Mendoza (recuadro desde Luján de Cuyo hasta Las Heras).
+
+## Recorrido en vivo («Iniciar recorrido»)
+- Después de calcular el recorrido, el botón «Iniciar recorrido» activa el GPS del teléfono (el navegador pide permiso de ubicación) y pasa a una pantalla de navegación: arriba la próxima maniobra con su flecha y la distancia, en el mapa el punto azul de la posición, y abajo los kilómetros y minutos que faltan.
+- El mapa sigue la posición. Si se arrastra el mapa con el dedo aparece «Centrar» para volver a seguir.
+- Si la persona se sale del camino (más de 40 metros durante unos segundos), la app recalcula desde la posición actual con el mismo tipo de recorrido (segura o directa).
+- «Voz» lee en voz alta las indicaciones cuando faltan unos 100 metros. Queda recordada en el teléfono. Depende de la voz en español que tenga el teléfono.
+- Mantiene la pantalla encendida mientras dura el recorrido (donde el navegador lo permite). Si se bloquea la pantalla o se pasa a otra app, el navegador puede detener el GPS y el seguimiento se corta.
+- Al llegar (a menos de unos 25 metros del destino) termina solo. «Terminar» lo corta cuando se quiera.
+- Es un prototipo: conviene mirar siempre el tránsito real y no depender solo de la pantalla mientras se pedalea. Usar el teléfono en un soporte de manubrio.

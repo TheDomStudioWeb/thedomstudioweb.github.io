@@ -58,12 +58,28 @@ details summary{cursor:pointer;color:var(--gold);font:600 .72rem var(--sans);let
 .foot{font-size:.66rem;color:#8E897E;text-align:center;margin-top:14px;line-height:1.6}.foot a{color:var(--gold)}
 .pin{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:700 .8rem var(--sans);color:#0A0A0A;border:2px solid #fff;box-shadow:0 1px 6px #0008}
 .leaflet-container{font-family:var(--sans)}
+.yo{width:22px;height:22px;border-radius:50%;background:#2F7DE1;border:3px solid #fff;box-shadow:0 0 0 2px #2F7DE155,0 1px 6px #0009}
+body.nav .top,body.nav .sheet,body.nav .leaflet-control-zoom{display:none}
+body.nav .leaflet-bottom{margin-bottom:92px}
+#nav{position:fixed;z-index:700;inset:0;pointer-events:none}
+.nv-top{pointer-events:auto;position:absolute;top:0;left:0;right:0;display:flex;gap:14px;align-items:center;background:#0A0A0Af2;border-bottom:2px solid var(--gold);padding:max(12px,env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-right,0px)) 12px max(14px,env(safe-area-inset-left,0px))}
+.nv-ico{flex:none;width:64px;height:64px;border-radius:12px;background:var(--gold);color:#0A0A0A;display:grid;place-items:center;font:700 2.2rem/1 var(--sans)}
+.nv-tx{min-width:0}.nv-dist{font:700 1.5rem/1.1 var(--sans);color:var(--gold)}.nv-txt{font-size:.95rem;line-height:1.3;margin-top:2px}
+.nv-bot{pointer-events:auto;position:absolute;left:0;right:0;bottom:0;display:flex;gap:8px;align-items:center;background:#0A0A0Af2;border-top:2px solid var(--gold);padding:10px max(14px,env(safe-area-inset-right,0px)) max(10px,env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px))}
+.nv-res{flex:1;min-width:0}.nv-res b{display:block;font:700 1.25rem/1.1 var(--sans)}.nv-res small{color:var(--mut)}
+.nv-bot button{min-height:48px;padding:0 14px;border:1px solid var(--gold);border-radius:4px;background:transparent;color:var(--gold);font:700 .72rem var(--sans);letter-spacing:.08em;text-transform:uppercase}
+.nv-bot button[aria-pressed="true"]{background:var(--gold);color:#0A0A0A}
+.nv-bot .fin{background:var(--er);border-color:var(--er);color:#0A0A0A}
 </style>
 </head>
 <body>
 <div id="map" aria-label="Mapa"></div>
 <div class="top"><div class="logo">BICI MENDOZA</div><button class="chip" id="capa" aria-pressed="true">Bicisendas: cargando…</button></div>
 
+<div id="nav" hidden>
+  <div class="nv-top" role="status" aria-live="polite"><div class="nv-ico" id="nvi">↑</div><div class="nv-tx"><div class="nv-dist" id="nvd">—</div><div class="nv-txt" id="nvt">—</div></div></div>
+  <div class="nv-bot"><div class="nv-res"><b id="nvr">—</b><small id="nvm"></small></div><button type="button" id="nvc" hidden>Centrar</button><button type="button" id="nvv" aria-pressed="false">Voz</button><button type="button" id="nvx" class="fin">Terminar</button></div>
+</div>
 <section class="sheet" id="sheet" aria-label="Armar recorrido">
   <div class="grip" id="grip" role="separator" aria-label="Agrandar o achicar el panel"><i></i></div>
   <div class="cont">
@@ -82,7 +98,7 @@ details summary{cursor:pointer;color:var(--gold);font:600 .72rem var(--sans);let
       <div class="barra" id="rb" aria-hidden="true"></div>
       <p class="msg" id="rd"></p>
       <div class="leyenda"><span style="--c:#0E9F5A">Ciclovía separada</span><span style="--c:#5CCB8C">Carril bici</span><span style="--c:#2F7DE1">Bici compartida</span><span style="--c:#E8710A">Calle común</span></div>
-      <div class="acc"><a class="btn" id="gm" target="_blank" rel="noopener">Abrir en Google Maps</a></div>
+      <div class="acc"><button class="btn" id="go" type="button">Iniciar recorrido</button><a class="btn line" id="gm" target="_blank" rel="noopener">Abrir en Google Maps</a></div>
       <details><summary>Paso a paso</summary><ol class="pasos" id="pasos"></ol></details>
     </div>
     <p class="msg" id="aviso" role="status">Elija el punto de partida y el de llegada.</p>

@@ -174,8 +174,8 @@
     }
     return out;
   }
-  async function pedirRuta(m) {
-    var cuerpo = { locations: [{ lat: pA.lat, lon: pA.lon }, { lat: pB.lat, lon: pB.lon }], costing: 'bicycle', costing_options: { bicycle: { bicycle_type: 'Hybrid', cycling_speed: 16, use_roads: m.use_roads, use_hills: 0.3, avoid_bad_surfaces: 0.5 } }, directions_options: { language: 'es-ES', units: 'kilometers' } };
+  async function pedirRuta(m, desde) {
+    var o = desde || pA, cuerpo = { locations: [{ lat: o.lat, lon: o.lon }, { lat: pB.lat, lon: pB.lon }], costing: 'bicycle', costing_options: { bicycle: { bicycle_type: 'Hybrid', cycling_speed: 16, use_roads: m.use_roads, use_hills: 0.3, avoid_bad_surfaces: 0.5 } }, directions_options: { language: 'es-ES', units: 'kilometers' } };
     var c = new AbortController(), to = setTimeout(function () { c.abort(); }, 25000);
     try { var r = await fetch(VALHALLA + '?json=' + encodeURIComponent(JSON.stringify(cuerpo)), { signal: c.signal }); var j = await r.json(); if (!r.ok || !j.trip) throw new Error((j && (j.error || j.status_message)) || 'http ' + r.status); return j.trip; } finally { clearTimeout(to); }
   }
@@ -209,19 +209,29 @@
     var w = puntosClave(r.pts, WAY_MAX), f = function (p) { return p[0].toFixed(5) + ',' + p[1].toFixed(5); };
     return 'https://www.google.com/maps/dir/?api=1&origin=' + pA.lat.toFixed(5) + ',' + pA.lon.toFixed(5) + '&destination=' + pB.lat.toFixed(5) + ',' + pB.lon.toFixed(5) + '&travelmode=bicycling' + (w.length ? '&waypoints=' + w.map(f).join('%7C') : '');
   }
+  // Distancia acumulada a lo largo de la ruta y posición de cada maniobra (para el modo en vivo).
+  function preparar(r) {
+    r.cum = [0]; for (var i = 0; i < r.pts.length - 1; i++) r.cum.push(r.cum[i] + km(r.pts[i][0], r.pts[i][1], r.pts[i + 1][0], r.pts[i + 1][1]) * 1000);
+    r.total = r.cum[r.cum.length - 1];
+    r.man = r.pasos.map(function (p) { return { txt: p.instruction, at: r.cum[Math.min(p.begin_shape_index || 0, r.cum.length - 1)], tipo: p.type }; });
+    return r;
+  }
   function nivel(a) { var p = a.sep + a.carril; return p >= 70 ? ['Muy segura', 'n-ok'] : p >= 40 ? ['Con tramos de calle', 'n-warn'] : ['Mucha calle compartida', 'n-er']; }
   async function calcular() {
     if (!pA || !pB) return; var t = ++ticket; aviso('Calculando recorridos…'); $('res').hidden = true; capaRuta.clearLayers(); atenuar(false);
     var rs = await Promise.allSettled(MODOS.map(pedirRuta)); if (t !== ticket) return;
     if (rs.every(function (r) { return r.status === 'rejected'; })) { return aviso('No se pudo calcular el recorrido (' + (rs[0].reason && rs[0].reason.message || 'sin conexión') + '). Pruebe de nuevo en un momento.', 'er'); }
-    rutas = rs.map(function (r) { if (r.status !== 'fulfilled') return null; var tr = r.value, pts = decodificar(tr.legs[0].shape); return { pts: pts, km: tr.summary.length, min: Math.round(tr.summary.time / 60), pasos: tr.legs[0].maneuvers || [], a: analizar(pts) }; });
+    rutas = rs.map(function (r) { if (r.status !== 'fulfilled') return null; var tr = r.value, pts = decodificar(tr.legs[0].shape); return preparar({ pts: pts, km: tr.summary.length, min: Math.round(tr.summary.time / 60), pasos: tr.legs[0].maneuvers || [], a: analizar(pts) }); });
     activa = rutas[0] ? 0 : 1; $('aviso').textContent = ''; mostrar(); map.fitBounds(L.latLngBounds([[pA.lat, pA.lon], [pB.lat, pB.lon]]).pad(0.3));
+  }
+  function dibujarRuta(r) {
+    capaRuta.clearLayers(); L.polyline(r.pts, { color: '#fff', weight: 9, opacity: 0.9, interactive: false }).addTo(capaRuta);
+    r.a.tramos.forEach(function (u) { L.polyline(u.p, { color: COLOR[u.t], weight: 6, opacity: 1, interactive: false }).addTo(capaRuta); });
   }
   function mostrar() {
     var r = rutas[activa]; if (!r) return; $('res').hidden = false; capaRuta.clearLayers(); atenuar(true);
     // la ruta se dibuja con un trazo blanco debajo para que resalte, y de color según el tipo de infraestructura
-    L.polyline(r.pts, { color: '#fff', weight: 9, opacity: 0.9, interactive: false }).addTo(capaRuta);
-    r.a.tramos.forEach(function (u) { L.polyline(u.p, { color: COLOR[u.t], weight: 6, opacity: 1, interactive: false }).addTo(capaRuta); });
+    dibujarRuta(r);
     [0, 1].forEach(function (i) { var q = rutas[i]; $('m' + i).setAttribute('aria-pressed', i === activa); $('t' + i).textContent = q ? q.km.toFixed(1).replace('.', ',') + ' km · ' + q.min + ' min · ' + (q.a.sep + q.a.carril) + '% bici' : 'No disponible'; $('m' + i).disabled = !q; });
     var n = nivel(r.a); $('rt').textContent = r.km.toFixed(1).replace('.', ',') + ' km · ' + r.min + ' min en bici'; var e = $('rn'); e.textContent = n[0]; e.className = 'nivel ' + n[1];
     $('rb').innerHTML = [['sep', r.a.sep], ['carril', r.a.carril], ['comp', r.a.comp], ['calle', r.a.calle]].map(function (x) { return '<i style="width:' + x[1] + '%;background:' + COLOR[x[0]] + '"></i>'; }).join('');
@@ -229,6 +239,70 @@
     $('gm').href = enlaceGoogle(r);
     var ol = $('pasos'); ol.innerHTML = ''; r.pasos.forEach(function (p) { var li = document.createElement('li'); li.textContent = p.instruction + (p.length ? ' (' + Math.round(p.length * 1000) + ' m)' : ''); ol.appendChild(li); });
   }
+  // ── Modo en vivo ─────────────────────────────────────────────
+  var nav = null;
+  var FLECHA = { 1: '↑', 2: '↑', 3: '↑', 4: '⚑', 5: '⚑', 6: '⚑', 8: '↑', 9: '↗', 10: '→', 11: '↘', 12: '↩', 13: '↩', 14: '↙', 15: '←', 16: '↖', 26: '↻', 27: '↻' };
+  var voz = false; try { voz = localStorage.getItem('bici_voz') === '1'; } catch (e) {}
+  function hablar(t) { if (!voz || !window.speechSynthesis) return; try { var u = new SpeechSynthesisUtterance(t); u.lang = 'es-AR'; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) {} }
+  function fmtDist(m) { return m >= 1000 ? (m / 1000).toFixed(1).replace('.', ',') + ' km' : (m < 30 ? Math.round(m) : Math.round(m / 10) * 10) + ' m'; }
+  function proyectar(r, lat, lon, desde) {
+    var p = xy(lat, lon), mejor = null, n = r.pts.length - 1;
+    function probar(i0, i1) {
+      for (var i = Math.max(0, i0); i <= Math.min(n - 1, i1); i++) {
+        var a = xy(r.pts[i][0], r.pts[i][1]), b = xy(r.pts[i + 1][0], r.pts[i + 1][1]), dx = b[0] - a[0], dy = b[1] - a[1], l2 = dx * dx + dy * dy, t = l2 ? ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / l2 : 0; t = Math.max(0, Math.min(1, t));
+        var qx = a[0] + t * dx - p[0], qy = a[1] + t * dy - p[1], d = Math.sqrt(qx * qx + qy * qy);
+        if (!mejor || d < mejor.d) mejor = { d: d, s: r.cum[i] + t * (r.cum[i + 1] - r.cum[i]), seg: i };
+      }
+    }
+    probar(desde - 3, desde + 80); if (!mejor || mejor.d > 60) probar(0, n - 1); // si se aleja, busca en toda la ruta
+    return mejor;
+  }
+  function pedirPantalla() { try { if (navigator.wakeLock) navigator.wakeLock.request('screen').then(function (l) { nav && (nav.lock = l); }).catch(function () {}); } catch (e) {} }
+  function iniciarNav() {
+    var r = rutas[activa]; if (!r) return;
+    if (!navigator.geolocation) return aviso('Este teléfono no permite ubicarlo desde el navegador.', 'er');
+    nav = { r: r, modo: activa, seg: 0, fuera: 0, hablado: {}, libre: false, recalc: 0, calculando: false, ultimo: null, lock: null };
+    document.body.classList.add('nav'); $('nav').hidden = false; document.documentElement.style.setProperty('--sheet', '0px'); setTimeout(function () { map.invalidateSize(); }, 50);
+    $('nvv').setAttribute('aria-pressed', voz); $('nvi').textContent = '…'; $('nvd').textContent = 'Buscando GPS'; $('nvt').textContent = 'Salga a un lugar abierto si tarda.';
+    map.dragging.enable(); map.on('dragstart', alejar); pedirPantalla();
+    nav.watch = navigator.geolocation.watchPosition(onPos, function (e) { $('nvt').textContent = e.code === 1 ? 'Falta el permiso de ubicación del navegador.' : 'Se perdió la señal GPS.'; }, { enableHighAccuracy: true, maximumAge: 1000, timeout: 20000 });
+    hablar('Recorrido iniciado.');
+  }
+  function alejar() { if (nav) { nav.libre = true; $('nvc').hidden = false; } }
+  function terminarNav(msg) {
+    if (!nav) return; navigator.geolocation.clearWatch(nav.watch); try { nav.lock && nav.lock.release(); } catch (e) {} map.off('dragstart', alejar);
+    if (nav.punto) { map.removeLayer(nav.punto); map.removeLayer(nav.circulo); }
+    nav = null; document.body.classList.remove('nav'); $('nav').hidden = true; setAlto(alto); if (msg) aviso(msg, 'ok');
+  }
+  async function recalcular(lat, lon) {
+    nav.calculando = true; $('nvt').textContent = 'Se salió del recorrido. Recalculando…'; $('nvi').textContent = '…'; hablar('Recalculando.');
+    try {
+      var tr = await pedirRuta(MODOS[nav.modo], { lat: lat, lon: lon }), pts = decodificar(tr.legs[0].shape);
+      if (!nav) return; var r = preparar({ pts: pts, km: tr.summary.length, min: Math.round(tr.summary.time / 60), pasos: tr.legs[0].maneuvers || [], a: analizar(pts) });
+      nav.r = r; nav.seg = 0; nav.fuera = 0; nav.hablado = {}; dibujarRuta(r);
+    } catch (e) { if (nav) $('nvt').textContent = 'No se pudo recalcular. Siga las indicaciones del mapa.'; }
+    if (nav) { nav.calculando = false; nav.recalc = Date.now(); }
+  }
+  function onPos(pos) {
+    if (!nav) return; var c = pos.coords, lat = c.latitude, lon = c.longitude, ll = L.latLng(lat, lon);
+    if (!nav.punto) { nav.circulo = L.circle(ll, { radius: c.accuracy, color: '#2F7DE1', weight: 1, fillOpacity: 0.12, interactive: false }).addTo(map); nav.punto = L.marker(ll, { icon: L.divIcon({ className: '', html: '<div class="yo"></div>', iconSize: [22, 22], iconAnchor: [11, 11] }), interactive: false, zIndexOffset: 1000 }).addTo(map); }
+    else { nav.punto.setLatLng(ll); nav.circulo.setLatLng(ll).setRadius(c.accuracy); }
+    if (!nav.libre) map.setView(ll, Math.max(map.getZoom(), 17), { animate: true });
+    if (nav.calculando) return;
+    var r = nav.r, pr = proyectar(r, lat, lon, nav.seg);
+    if (pr.d > Math.max(40, c.accuracy) && c.accuracy < 80) { nav.fuera++; if (nav.fuera >= 3 && Date.now() - nav.recalc > 15000) return recalcular(lat, lon); } else { nav.fuera = 0; if (pr.d < 40) nav.seg = pr.seg; }
+    var resta = Math.max(0, r.total - pr.s); $('nvr').textContent = fmtDist(resta); $('nvm').textContent = Math.max(1, Math.round(r.min * resta / (r.total || 1))) + ' min';
+    if (resta <= 25) { hablar('Llegó a su destino.'); return terminarNav('Llegó a su destino.'); }
+    var k = -1; for (var i = 0; i < r.man.length; i++) if (r.man[i].at > pr.s + 5) { k = i; break; }
+    if (k < 0) k = r.man.length - 1; var m = r.man[k], dm = Math.max(0, m.at - pr.s);
+    $('nvi').textContent = FLECHA[m.tipo] || '↑'; $('nvd').textContent = pr.d > 40 ? 'Fuera del recorrido' : 'En ' + fmtDist(dm); $('nvt').textContent = m.txt;
+    if (dm < 110 && !nav.hablado[k + ':' + r.total]) { nav.hablado[k + ':' + r.total] = 1; hablar('En ' + fmtDist(Math.max(dm, 10)).replace(' m', ' metros').replace(' km', ' kilómetros') + ', ' + m.txt); }
+  }
+  document.addEventListener('visibilitychange', function () { if (nav && document.visibilityState === 'visible') pedirPantalla(); });
+  $('go').onclick = iniciarNav; $('nvx').onclick = function () { terminarNav('Recorrido terminado.'); };
+  $('nvc').onclick = function () { if (nav) { nav.libre = false; $('nvc').hidden = true; if (nav.punto) map.setView(nav.punto.getLatLng(), Math.max(map.getZoom(), 17)); } };
+  $('nvv').onclick = function () { voz = !voz; try { localStorage.setItem('bici_voz', voz ? '1' : '0'); } catch (e) {} this.setAttribute('aria-pressed', voz); if (voz) hablar('Voz activada.'); else if (window.speechSynthesis) speechSynthesis.cancel(); };
+
   $('m0').onclick = function () { if (rutas[0]) { activa = 0; mostrar(); } };
   $('m1').onclick = function () { if (rutas[1]) { activa = 1; mostrar(); } };
   function aviso(t, k) { var a = $('aviso'); a.className = 'msg ' + (k || ''); a.textContent = t; }
