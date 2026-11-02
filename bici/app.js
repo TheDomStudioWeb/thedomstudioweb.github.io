@@ -8,12 +8,12 @@
   var VALHALLA = 'https://valhalla1.openstreetmap.de/route';
   var NOMINATIM = 'https://nominatim.openstreetmap.org/search';
   var CACHE_KEY = 'bici_infra_v1', CACHE_DIAS = 14;
-  var COLOR = { sep: '#4CC38A', carril: '#9BE3B8', comp: '#7FB8FF', calle: '#E8A33D' };
+  var COLOR = { sep: '#0E9F5A', carril: '#5CCB8C', comp: '#2F7DE1', calle: '#E8710A' };
 
   // ── Mapa ─────────────────────────────────────────────────────
   var map = L.map('map', { zoomControl: false, preferCanvas: true }).setView([-32.8908, -68.8272], 13);
   L.control.zoom({ position: 'bottomright' }).addTo(map);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 19, subdomains: 'abcd', attribution: '© OpenStreetMap · © CARTO' }).addTo(map);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
   var capaInfra = L.layerGroup().addTo(map), capaRuta = L.layerGroup().addTo(map);
 
   // ── Hoja inferior (se arrastra) ──────────────────────────────
