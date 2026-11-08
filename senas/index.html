@@ -66,7 +66,6 @@ body.fsmode{overflow:hidden}
 .stage.full .prov{top:calc(60px + env(safe-area-inset-top,0px));left:auto;right:12px}
 </style>
 
-</head><body>
 <div class="wrap">
   <header>
     <h1>DOMino <b>Señas</b></h1>
@@ -128,8 +127,8 @@ scene.add(key);
 var fill=new THREE.DirectionalLight(0xb9c8ff,.35);fill.position.set(-3,1.5,2.5);scene.add(fill);
 var rim=new THREE.DirectionalLight(0xD4AF37,0.55);rim.position.set(-2.5,2.4,-2.5);scene.add(rim);
 function mat(c,r,m){return new THREE.MeshStandardMaterial({color:c,roughness:r==null?.7:r,metalness:m||0})}
-var SKINC=0xd5a07d;
-var mSkin=mat(SKINC,.58),mHeadSkin=new THREE.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.55}),mCloth=mat(0x17191e,.82),mCloth2=mat(0x1d2026,.8),mGold=mat(0xD4AF37,.35,.6),mHair=mat(0x2a1f19,.78),mNail=mat(0xe7b9a4,.35),mLip=mat(0xb5655f,.5),mLip2=mat(0xa65a55,.5);
+var SKINC=0xc59270;
+var mSkin=mat(SKINC,.58),mHeadSkin=new THREE.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.55}),mCloth=mat(0x17191e,.82),mCloth2=mat(0x1d2026,.8),mGold=mat(0xD4AF37,.35,.6),mHair=mat(0x38373a,.85),mBrow=mat(0x2c2a29,.8),mNail=mat(0xe7b9a4,.35),mLip=mat(0xb5655f,.5),mLip2=mat(0xa65a55,.5);
 function ball(r,m){return new THREE.Mesh(new THREE.SphereGeometry(r,20,14),m)}
 function ell(rx,ry,rz,m){var e=ball(1,m);e.scale.set(rx,ry,rz);return e}
 function unitCyl(r0,r1,m){var g=new THREE.CylinderGeometry(r1,r0,1,20);g.translate(0,.5,0);return new THREE.Mesh(g,m)}
@@ -147,12 +146,12 @@ var neck=unitCyl(.1,.082,mSkin);neck.scale.y=.3;neck.position.set(0,1.62,0);sign
 // Cabeza
 var head=new THREE.Group();head.position.set(0,1.99,0);signer.add(head);
 (function(){
-  var g=new THREE.SphereGeometry(1,64,48),p=g.attributes.position,col=new Float32Array(p.count*3);
+  var g=new THREE.SphereGeometry(1,160,120),p=g.attributes.position,col=new Float32Array(p.count*3);
   var base=new THREE.Color(SKINC),pink=new THREE.Color(0xd98f80),dark=new THREE.Color(0xb98466),fore=new THREE.Color(0xdcae8c);
   for(var i=0;i<p.count;i++){
     var x=p.getX(i),y=p.getY(i),z=p.getZ(i);
-    var t=Math.max(0,-y);var k=1-.34*Math.pow(t,1.25);
-    var xx=x*k*.245,zz=z*k*.255,yy=y*.285;
+    var t=Math.max(0,-y);var k=1-.27*Math.pow(t,1.25);
+    var xx=x*k*.255,zz=z*k*.255,yy=y*.29;
     if(z<0)zz*=.9;
     if(t>.72&&z>0)zz+=.018*(t-.72)/.28; // mentón
     if(y>0.55)xx*=1-.08*(y-.55);
@@ -161,12 +160,38 @@ var head=new THREE.Group();head.position.set(0,1.99,0);signer.add(head);
     var cx=Math.abs(xx);
     var dc=Math.hypot(cx-.11,yy+.03,zz-.2);if(dc<.1)c.lerp(pink,.5*(1-dc/.1));
     var de=Math.hypot(cx-.09,yy-.025,zz-.215);if(de<.075&&zz>0)c.lerp(dark,.18*(1-de/.075));
-    if(yy>.1&&zz>.05)c.lerp(fore,.1);
+    
     var dn=Math.hypot(cx-.0,yy+.07,zz-.23);if(dn<.06)c.lerp(pink,.1*(1-dn/.06));
     col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b;
   }
   g.setAttribute('color',new THREE.BufferAttribute(col,3));g.computeVertexNormals();
   head.add(new THREE.Mesh(g,mHeadSkin));
+  // Barba entrecana (solo triángulos de la zona de barba)
+  var idx=g.index.array,nr=g.attributes.normal,flag=new Uint8Array(p.count);
+  function rnd(n){var v=Math.sin(n*127.1+311.7)*43758.5453;return v-Math.floor(v)}
+  for(var i2=0;i2<p.count;i2++){
+    var X=p.getX(i2),Y=p.getY(i2),Z=p.getZ(i2),cx=Math.abs(X);
+    var sm=Math.min(1,Math.max(0,(cx-.05)/.12));sm=sm*sm*(3-2*sm);var inb=(Y<-.078+.13*sm)&&Z>-.12;
+    if(cx<.045&&Y>-.125&&Y<-.09&&Z>.17)inb=false;
+    flag[i2]=inb?1:0;
+  }
+  var bi=[];for(var t2=0;t2<idx.length;t2+=3){if(flag[idx[t2]]&&flag[idx[t2+1]]&&flag[idx[t2+2]])bi.push(idx[t2],idx[t2+1],idx[t2+2])}
+  var bg=new THREE.BufferGeometry(),bp=new Float32Array(p.count*3),bc=new Float32Array(p.count*3);
+  var dk=new THREE.Color(0x2a2726),gr=new THREE.Color(0xa3a3a1);
+  for(var i3=0;i3<p.count;i3++){
+    var j=.007+.004*rnd(i3);
+    bp[i3*3]=p.getX(i3)+nr.getX(i3)*j;bp[i3*3+1]=p.getY(i3)+nr.getY(i3)*j;bp[i3*3+2]=p.getZ(i3)+nr.getZ(i3)*j;
+    var Xb=Math.abs(p.getX(i3)),Yb=p.getY(i3),Zb=p.getZ(i3);
+    var gm=.26+.26*rnd(i3+9);
+    if(Yb<-.15&&Zb>.1&&Xb<.085)gm=.55+.3*rnd(i3+5);
+    else if(Yb<-.15&&Zb>.0&&Xb<.13)gm=Math.max(gm,.3);
+    if(Yb>-.1&&Yb<-.07&&Xb<.06)gm=.3+.2*rnd(i3+3);
+    var cc=dk.clone().lerp(gr,Math.min(1,gm));
+    bc[i3*3]=cc.r;bc[i3*3+1]=cc.g;bc[i3*3+2]=cc.b;
+  }
+  bg.setAttribute('position',new THREE.BufferAttribute(bp,3));bg.setAttribute('color',new THREE.BufferAttribute(bc,3));
+  bg.setIndex(bi);bg.computeVertexNormals();
+  head.add(new THREE.Mesh(bg,new THREE.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.95})));
 })();
 // Orejas
 [-1,1].forEach(function(s){var ear=ell(.016,.045,.03,mSkin);ear.position.set(s*.238,0,-.01);ear.rotation.z=s*.12;head.add(ear);var in2=ell(.008,.028,.018,mat(0xb98466,.6));in2.position.set(s*.246,0,-.008);head.add(in2)});
@@ -182,23 +207,25 @@ var eyes=[];
   var lash=new THREE.Mesh(new THREE.TorusGeometry(.0305,.0016,6,20,Math.PI),mat(0x1c140f,.6));lash.rotation.x=0;lid.add(lash);lash.rotation.x=Math.PI/2;
   eyes.push({E:E,lid:lid});
   // ceja
-  var curve=new THREE.CatmullRomCurve3([new THREE.Vector3(s*.04,.098,.222),new THREE.Vector3(s*.085,.112,.224),new THREE.Vector3(s*.132,.1,.205)]);
-  var br=new THREE.Mesh(new THREE.TubeGeometry(curve,12,.0075,8,false),mHair);br.scale.z=.7;head.add(br);
+  var curve=new THREE.CatmullRomCurve3([new THREE.Vector3(s*.04,.098,.246),new THREE.Vector3(s*.085,.112,.248),new THREE.Vector3(s*.135,.098,.222)]);
+  var br=new THREE.Mesh(new THREE.TubeGeometry(curve,12,.0105,8,false),mBrow);head.add(br);
 });
 // Nariz
 var nb=unitCyl(.017,.022,mSkin);place(nb,new THREE.Vector3(0,.05,.222),new THREE.Vector3(0,-.045,.262));head.add(nb);
-var ntip=ell(.024,.02,.022,mSkin);ntip.position.set(0,-.052,.272);head.add(ntip);
+var ntip=ell(.028,.022,.025,mSkin);ntip.position.set(0,-.052,.272);head.add(ntip);
 [-1,1].forEach(function(s){var w=ell(.016,.014,.014,mSkin);w.position.set(s*.021,-.054,.258);head.add(w);var nos=ell(.006,.004,.005,mat(0x4a2a22,.8));nos.position.set(s*.012,-.066,.278);head.add(nos)});
 // Boca
 var upL=ell(.034,.0085,.012,mLip);upL.position.set(0,-.1,.236);head.add(upL);
 var loL=ell(.031,.0105,.012,mLip2);loL.position.set(0,-.116,.236);head.add(loL);
 var mline=new THREE.Mesh(new THREE.BoxGeometry(.062,.0024,.004),mat(0x5a2420,.8));mline.position.set(0,-.1075,.2465);head.add(mline);
+// Bigote
+[-1,1].forEach(function(s){var mu=ell(.03,.0115,.016,mat(0x4a4745,.95));mu.position.set(s*.026,-.086,.249);mu.rotation.z=s*.28;head.add(mu)});
 // Pelo
 var hairG=new THREE.Group();head.add(hairG);
-var hc=new THREE.Mesh(new THREE.SphereGeometry(.272,40,28,0,Math.PI*2,0,Math.PI*.44),mHair);hc.scale.set(.98,1.13,1.02);hc.position.set(0,.005,-.025);hc.rotation.x=-.12;hairG.add(hc);
+var hc=new THREE.Mesh(new THREE.SphereGeometry(.272,40,28,0,Math.PI*2,0,Math.PI*.44),mHair);hc.scale.set(.98,1.13,1.02);hc.position.set(0,.005,-.025);hc.rotation.x=-.17;hairG.add(hc);
 var hback=ell(.245,.27,.2,mHair);hback.position.set(0,-.01,-.07);hairG.add(hback);
-for(var q=0;q<7;q++){var fr=ell(.05,.03,.03,mHair);var a=(q-3)/3;fr.position.set(a*.17,.218-Math.abs(a)*.04,.17-Math.abs(a)*.075);fr.rotation.z=-a*.5;fr.rotation.x=.9;hairG.add(fr)}
-[-1,1].forEach(function(s){var sb=ell(.018,.07,.035,mHair);sb.position.set(s*.228,.03,.075);hairG.add(sb)});
+// entradas: sin flequillo
+[-1,1].forEach(function(s){var sb=ell(.02,.085,.05,mHair);sb.position.set(s*.236,.0,.03);hairG.add(sb)});
 
 // ---------- Mano ----------
 var FL=[[.047,.03,.023],[.052,.033,.025],[.048,.03,.022],[.038,.024,.019]];
