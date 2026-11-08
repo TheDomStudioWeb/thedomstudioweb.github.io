@@ -398,7 +398,7 @@ var full=false,showSubs=true;
 function say(t){estadoEl.textContent=t;if($('fsmsg')){$('fsmsg').textContent=t;$('fsmsg').classList.toggle('on',!!t)}}
 function go(t){if(!t||!t.trim())return;spell(t)}
 $('go').onclick=function(){go($('txt').value)};
-function stopRec(){try{if(rec)rec.abort()}catch(e){}setMic(false)}
+var userStop=false;function stopRec(){userStop=true;try{if(rec)rec.abort()}catch(e){}setMic(false)}
 $('stop').onclick=function(){stop();stopRec();toRest();letEl.textContent='';provEl.classList.remove('on')};
 $('vel').oninput=function(){speed=parseFloat(this.value)};
 var close=false;
@@ -411,16 +411,32 @@ LETRAS.forEach(function(l){var b=document.createElement('button');b.textContent=
 // Dictado (sirve en los dos modos)
 var SR=window.SpeechRecognition||window.webkitSpeechRecognition,rec=null,recOn=false;
 function setMic(on){recOn=on;['mic','fsmic'].forEach(function(id){var b=$(id);if(!b)return;b.classList.toggle('on',on);b.textContent=on?'Escuchando… tocá para parar':(id==='fsmic'?'Dictar':'Dictar con la voz')})}
-function mic(){
-  if(!SR){say('Este navegador no permite dictar. Podés escribir el texto.');return}
-  if(recOn){stopRec();return}
+var micOk=false,retried=false;
+function startRec(){
   try{
-    rec=new SR();rec.lang='es-AR';rec.interimResults=false;rec.maxAlternatives=1;setMic(true);say('');
-    rec.onresult=function(e){var t=e.results[0][0].transcript;if(!full)$('txt').value=t;go(t)};
-    rec.onerror=function(e){setMic(false);say((e.error==='not-allowed'||e.error==='service-not-allowed')?'Esta vista no permite usar el micrófono. Escribí el texto y usá el micrófono del teclado del celular.':'No pude escuchar ('+e.error+'). Probá de nuevo o escribí el texto.')};
+    userStop=false;rec=new SR();rec.lang='es-AR';rec.interimResults=false;rec.maxAlternatives=1;rec.continuous=false;setMic(true);say('');
+    var got=false;
+    rec.onresult=function(e){got=true;var t=e.results[0][0].transcript;if(!full)$('txt').value=t;go(t)};
+    rec.onerror=function(e){
+      if(userStop)return;
+      if(e.error==='aborted'&&!retried&&!got){retried=true;setMic(false);setTimeout(startRec,400);return}
+      setMic(false);
+      var m=(e.error==='not-allowed'||e.error==='service-not-allowed')?'El navegador no dio permiso al micrófono. Revisá el permiso del sitio (candado de la barra de direcciones) o escribí el texto.':e.error==='no-speech'?'No escuché nada. Tocá Dictar y hablá apenas aparezca "Escuchando".':e.error==='network'?'El dictado necesita conexión a internet.':'No pude escuchar ('+e.error+'). Probá de nuevo o escribí el texto.';
+      say(m)};
     rec.onend=function(){setMic(false)};
     rec.start();
   }catch(err){setMic(false);say('No se pudo iniciar el dictado. Podés escribir el texto.')}
+}
+function mic(){
+  if(!SR){say('Este navegador no permite dictar. Podés escribir el texto.');return}
+  if(recOn){stopRec();return}
+  retried=false;
+  if(micOk||!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)){startRec();return}
+  setMic(true);say('Permitiendo el micrófono…');
+  navigator.mediaDevices.getUserMedia({audio:true}).then(function(st){
+    st.getTracks().forEach(function(t){t.stop()});micOk=true;say('');
+    setTimeout(function(){setMic(false);startRec()},500);
+  }).catch(function(){setMic(false);say('El navegador no dio permiso al micrófono. Revisá el permiso del sitio (candado de la barra de direcciones) o escribí el texto.')});
 }
 $('mic').onclick=mic;$('fsmic').onclick=mic;
 // Pantalla completa: solo el avatar; lo que se escribe no queda a la vista
