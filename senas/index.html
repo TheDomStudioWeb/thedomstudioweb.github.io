@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex,nofollow">
+<style>html{color-scheme:dark}body{margin:0}img{max-width:100%}</style>
+<title>DOMino Señas</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Montserrat:wght@400;500;700&display=swap">
+<style>
+:root{--bg:#0A0A0A;--panel:#16181C;--fg:#F4F1EA;--mut:#A9A596;--gold:#D4AF37;--gold2:#E8C766;--line:rgba(212,175,55,.35);--ok:#4CC38A;--warn:#E8C766}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#F1EEE3;--panel:#FFFFFF;--fg:#0A0A0A;--mut:#5C584B;--gold:#7A5F0E;--gold2:#7A5F0E;--line:rgba(122,95,14,.4);--ok:#1B6E3C;--warn:#7A5F0E;color-scheme:light}}
+:root[data-theme="light"]{--bg:#F1EEE3;--panel:#FFFFFF;--fg:#0A0A0A;--mut:#5C584B;--gold:#7A5F0E;--gold2:#7A5F0E;--line:rgba(122,95,14,.4);--ok:#1B6E3C;--warn:#7A5F0E;color-scheme:light}
+:root{color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:Montserrat,system-ui,sans-serif;font-size:16px;line-height:1.5;padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1{font-family:Cinzel,serif;font-weight:700;font-size:clamp(26px,6vw,38px);letter-spacing:.04em;line-height:1.1;text-wrap:balance}
+h1 b{color:var(--gold)}
+.sub{color:var(--mut);font-size:15px;max-width:60ch}
+.aviso{border:1px solid var(--line);border-left:4px solid var(--warn);background:var(--panel);padding:12px 14px;border-radius:6px;font-size:14px;color:var(--fg)}
+.aviso b{color:var(--gold)}
+.stage{position:relative;background:radial-gradient(120% 90% at 50% 20%,#262a33 0%,#14161b 60%,#0b0c0f 100%);border:1px solid var(--line);border-radius:8px;overflow:hidden;aspect-ratio:4/4.4;max-width:100%}
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.sub-bar{position:absolute;left:0;right:0;bottom:0;padding:12px 14px;background:linear-gradient(transparent,rgba(0,0,0,.78));color:#F4F1EA;font-size:clamp(18px,4.6vw,26px);font-weight:700;letter-spacing:.06em;text-align:center;min-height:64px;display:flex;align-items:flex-end;justify-content:center;flex-wrap:wrap;gap:0 2px}
+.sub-bar span{opacity:.55;white-space:pre}
+.sub-bar span.hecho{opacity:.9}
+.sub-bar span.act{opacity:1;color:#E8C766;text-shadow:0 0 14px rgba(232,199,102,.7)}
+.letra{position:absolute;top:10px;right:12px;font-family:Cinzel,serif;font-weight:700;font-size:44px;color:var(--gold);opacity:.95;min-width:1ch;text-align:right}
+.prov{position:absolute;top:14px;left:12px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;background:rgba(0,0,0,.55);color:#E8C766;border:1px solid rgba(232,199,102,.5);padding:3px 8px;border-radius:4px;opacity:0}
+.prov.on{opacity:1}
+.ctl{display:flex;flex-direction:column;gap:10px}
+textarea{width:100%;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:12px 14px;font:inherit;font-size:17px;resize:vertical;min-height:84px}
+textarea:focus{outline:2px solid var(--gold);outline-offset:1px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button{font:inherit;font-weight:700;font-size:15px;letter-spacing:.04em;border-radius:6px;border:1px solid var(--gold);background:transparent;color:var(--gold);padding:11px 16px;cursor:pointer;min-height:44px}
+button.p{background:var(--gold);color:#0A0A0A}
+button:hover{filter:brightness(1.1)}
+button:disabled{opacity:.45;cursor:default}
+button.on{background:rgba(212,175,55,.18)}
+label{font-size:14px;color:var(--mut);display:flex;align-items:center;gap:8px}
+input[type=range]{accent-color:var(--gold);width:140px}
+.estado{font-size:14px;color:var(--mut);min-height:20px}
+h2{font-family:Cinzel,serif;font-size:20px;letter-spacing:.06em;color:var(--gold)}
+.alfa{display:grid;grid-template-columns:repeat(auto-fill,minmax(54px,1fr));gap:6px}
+.alfa button{padding:8px 0;min-height:44px;font-family:Cinzel,serif;font-size:20px;position:relative}
+.alfa button.prov{opacity:1;position:relative;top:auto;left:auto;font-size:20px;letter-spacing:0;text-transform:none;background:transparent;color:var(--gold);padding:8px 0;border:1px solid var(--gold);border-radius:6px}
+.alfa button.pend::after{content:"";position:absolute;top:4px;right:4px;width:7px;height:7px;border-radius:50%;background:var(--warn)}
+.nota{font-size:13px;color:var(--mut)}
+.nota i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--warn);margin-right:6px}
+
+.stage.full{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;aspect-ratio:auto;border:0;border-radius:0;z-index:60;max-width:none}
+body.fsmode{overflow:hidden}
+.fsbar{display:none;position:absolute;left:0;right:0;bottom:0;padding:10px 12px calc(12px + env(safe-area-inset-bottom,0px));gap:8px;flex-wrap:wrap;justify-content:center;z-index:5;background:linear-gradient(transparent,rgba(0,0,0,.72))}
+.stage.full .fsbar{display:flex}
+.fsbar button{background:rgba(10,10,10,.72);backdrop-filter:blur(4px);color:#E8C766;border-color:rgba(232,199,102,.7);min-height:46px}
+.fsbar button.on{background:rgba(212,175,55,.3)}
+.fsout{display:none;position:absolute;top:calc(10px + env(safe-area-inset-top,0px));left:12px;z-index:6;background:rgba(10,10,10,.72);color:#E8C766;border-color:rgba(232,199,102,.7)}
+.stage.full .fsout{display:block}
+.fsin{display:none;position:absolute;left:12px;right:12px;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:7;gap:8px}
+.fsin.on{display:flex}
+.fsin input{flex:1;min-width:0;background:rgba(10,10,10,.88);color:#F4F1EA;border:1px solid rgba(232,199,102,.7);border-radius:6px;padding:12px 14px;font:inherit;font-size:17px}
+.fsin button{background:#D4AF37;color:#0A0A0A}
+.fsmsg{display:none;position:absolute;left:12px;right:12px;top:calc(60px + env(safe-area-inset-top,0px));z-index:6;color:#F4F1EA;background:rgba(10,10,10,.8);border:1px solid rgba(232,199,102,.5);border-radius:6px;padding:8px 12px;font-size:14px}
+.fsmsg.on{display:block}
+.stage.full .sub-bar{bottom:calc(70px + env(safe-area-inset-bottom,0px));background:none}
+.stage.nosubs .sub-bar,.stage.nosubs .letra,.stage.nosubs .prov{display:none}
+.stage.full .letra{top:calc(12px + env(safe-area-inset-top,0px))}
+.stage.full .prov{top:calc(60px + env(safe-area-inset-top,0px));left:auto;right:12px}
+</style>
+
+</head><body>
+<div class="wrap">
+  <header>
+    <h1>DOMino <b>Señas</b></h1>
+    <p class="sub">Etapa 1 (demostración): escribí o dictá una frase y el personaje la deletrea con el alfabeto manual. Abajo se ve el texto, letra por letra.</p>
+  </header>
+
+  <div class="aviso"><b>Esto es una demostración, no un traductor.</b> Deletrea letra por letra; no traduce frases a lengua de señas. Las formas de las manos están <b>en revisión</b>: faltan validarlas con personas sordas usuarias de LSA antes de usarlo con clientes.</div>
+
+  <div class="stage" id="stage">
+    <canvas id="cv" aria-label="Personaje 3D que deletrea con el alfabeto manual"></canvas>
+    <div class="letra" id="letra"></div>
+    <div class="prov" id="prov">En revisión</div>
+    <div class="sub-bar" id="subs" aria-live="polite"></div>
+    <button class="fsout" id="fsout">Salir</button>
+    <div class="fsmsg" id="fsmsg"></div>
+    <div class="fsin" id="fsin"><input id="fstxt" type="text" placeholder="Escribí y tocá Enter" autocomplete="off" autocapitalize="off" aria-label="Texto a deletrear"><button id="fssend">Enviar</button></div>
+    <div class="fsbar"><button id="fswrite">Escribir</button><button id="fsmic">Dictar</button><button id="fsstop">Detener</button><button id="fssubs" class="on">Subtítulos: sí</button><button id="fszoom">Acercar</button></div>
+  </div>
+
+  <div class="ctl">
+    <textarea id="txt" placeholder="Escribí acá una palabra o frase" aria-label="Texto a deletrear">Hola, me llamo Daniel</textarea>
+    <div class="row">
+      <button class="p" id="go">Deletrear</button>
+      <button id="mic">Dictar con la voz</button>
+      <button id="stop">Detener</button>
+      <button id="full">Pantalla completa</button>
+    </div>
+    <div class="row">
+      <label>Velocidad <input type="range" id="vel" min="0.5" max="4" step="0.1" value="1.8"></label>
+      <button id="zoom">Acercar</button>
+      <button id="lado">Mano izquierda</button>
+    </div>
+    <div class="estado" id="estado"></div>
+  </div>
+
+  <section>
+    <h2>Alfabeto</h2>
+    <p class="nota" style="margin:6px 0 10px"><i></i>Basado en el alfabeto manual argentino de la Confederación Argentina de Sordos (CAS). Todas las letras están en revisión. Tocá una letra para verla.</p>
+    <div class="alfa" id="alfa"></div>
+  </section>
+
+  <p class="nota">Pensado como idea de accesibilidad de The DOM Studio Web. Siguiente paso: incorporar señas completas de uso cotidiano, validadas con la comunidad sorda.</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+var D2R=Math.PI/180;
+var cv=document.getElementById('cv'),stage=document.getElementById('stage');
+var renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true,preserveDrawingBuffer:true});
+renderer.setPixelRatio(Math.min(2,window.devicePixelRatio||1));
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+var scene=new THREE.Scene();
+var cam=new THREE.PerspectiveCamera(30,1,0.05,50);
+scene.add(new THREE.HemisphereLight(0xfff0dd,0x20180f,0.75));
+var key=new THREE.DirectionalLight(0xfff4e6,.8);key.position.set(1.8,3.2,3.6);key.castShadow=true;
+key.shadow.mapSize.set(1024,1024);key.shadow.camera.left=-1.6;key.shadow.camera.right=1.6;key.shadow.camera.top=3;key.shadow.camera.bottom=-.5;key.shadow.camera.near=.5;key.shadow.camera.far=12;key.shadow.bias=-.0006;key.shadow.radius=4;
+scene.add(key);
+var fill=new THREE.DirectionalLight(0xb9c8ff,.35);fill.position.set(-3,1.5,2.5);scene.add(fill);
+var rim=new THREE.DirectionalLight(0xD4AF37,0.55);rim.position.set(-2.5,2.4,-2.5);scene.add(rim);
+function mat(c,r,m){return new THREE.MeshStandardMaterial({color:c,roughness:r==null?.7:r,metalness:m||0})}
+var SKINC=0xd5a07d;
+var mSkin=mat(SKINC,.58),mHeadSkin=new THREE.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.55}),mCloth=mat(0x17191e,.82),mCloth2=mat(0x1d2026,.8),mGold=mat(0xD4AF37,.35,.6),mHair=mat(0x2a1f19,.78),mNail=mat(0xe7b9a4,.35),mLip=mat(0xb5655f,.5),mLip2=mat(0xa65a55,.5);
+function ball(r,m){return new THREE.Mesh(new THREE.SphereGeometry(r,20,14),m)}
+function ell(rx,ry,rz,m){var e=ball(1,m);e.scale.set(rx,ry,rz);return e}
+function unitCyl(r0,r1,m){var g=new THREE.CylinderGeometry(r1,r0,1,20);g.translate(0,.5,0);return new THREE.Mesh(g,m)}
+var UP=new THREE.Vector3(0,1,0);
+function place(mesh,a,b){var d=new THREE.Vector3().subVectors(b,a),l=d.length();mesh.position.copy(a);mesh.scale.y=l;mesh.quaternion.setFromUnitVectors(UP,d.normalize())}
+
+var signer=new THREE.Group();scene.add(signer);
+// Torso con perfil (saco oscuro) y hombros
+var prof=[[0.001,0],[.40,0],[.42,.3],[.40,.75],[.44,1.1],[.49,1.36],[.47,1.5],[.34,1.6],[.13,1.66],[.001,1.67]].map(function(p){return new THREE.Vector2(p[0],p[1])});
+var torso=new THREE.Mesh(new THREE.LatheGeometry(prof,48),mCloth);torso.scale.z=.58;signer.add(torso);
+var yoke=ell(.60,.17,.32,mCloth);yoke.position.set(0,1.5,0);signer.add(yoke);
+var col=new THREE.Mesh(new THREE.TorusGeometry(.13,.014,10,32),mGold);col.position.set(0,1.64,.07);col.rotation.x=Math.PI/2.2;signer.add(col);
+// Cuello
+var neck=unitCyl(.1,.082,mSkin);neck.scale.y=.3;neck.position.set(0,1.62,0);signer.add(neck);
+// Cabeza
+var head=new THREE.Group();head.position.set(0,1.99,0);signer.add(head);
+(function(){
+  var g=new THREE.SphereGeometry(1,64,48),p=g.attributes.position,col=new Float32Array(p.count*3);
+  var base=new THREE.Color(SKINC),pink=new THREE.Color(0xd98f80),dark=new THREE.Color(0xb98466),fore=new THREE.Color(0xdcae8c);
+  for(var i=0;i<p.count;i++){
+    var x=p.getX(i),y=p.getY(i),z=p.getZ(i);
+    var t=Math.max(0,-y);var k=1-.34*Math.pow(t,1.25);
+    var xx=x*k*.245,zz=z*k*.255,yy=y*.285;
+    if(z<0)zz*=.9;
+    if(t>.72&&z>0)zz+=.018*(t-.72)/.28; // mentón
+    if(y>0.55)xx*=1-.08*(y-.55);
+    p.setXYZ(i,xx,yy,zz);
+    var c=base.clone();
+    var cx=Math.abs(xx);
+    var dc=Math.hypot(cx-.11,yy+.03,zz-.2);if(dc<.1)c.lerp(pink,.5*(1-dc/.1));
+    var de=Math.hypot(cx-.09,yy-.025,zz-.215);if(de<.075&&zz>0)c.lerp(dark,.18*(1-de/.075));
+    if(yy>.1&&zz>.05)c.lerp(fore,.1);
+    var dn=Math.hypot(cx-.0,yy+.07,zz-.23);if(dn<.06)c.lerp(pink,.1*(1-dn/.06));
+    col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b;
+  }
+  g.setAttribute('color',new THREE.BufferAttribute(col,3));g.computeVertexNormals();
+  head.add(new THREE.Mesh(g,mHeadSkin));
+})();
+// Orejas
+[-1,1].forEach(function(s){var ear=ell(.016,.045,.03,mSkin);ear.position.set(s*.238,0,-.01);ear.rotation.z=s*.12;head.add(ear);var in2=ell(.008,.028,.018,mat(0xb98466,.6));in2.position.set(s*.246,0,-.008);head.add(in2)});
+// Ojos
+var eyes=[];
+[-1,1].forEach(function(s){
+  var E=new THREE.Group();E.position.set(s*.085,.035,.212);E.scale.setScalar(1.18);head.add(E);
+  var white=ell(.03,.026,.026,mat(0xf2efe8,.3));white.position.z=.004;E.add(white);
+  var iris=new THREE.Mesh(new THREE.SphereGeometry(.0268,20,12,0,Math.PI*2,0,.62),mat(0x5b3a22,.35));iris.rotation.x=Math.PI/2;iris.position.z=.006;iris.scale.set(1,1,1.0);E.add(iris);
+  var pup=new THREE.Mesh(new THREE.SphereGeometry(.0275,16,10,0,Math.PI*2,0,.27),mat(0x050505,.3));pup.rotation.x=Math.PI/2;pup.position.z=.006;E.add(pup);
+  var hl=ball(.0042,new THREE.MeshBasicMaterial({color:0xffffff}));hl.position.set(s*.007,.009,.0305);E.add(hl);
+  var lid=new THREE.Mesh(new THREE.SphereGeometry(.0305,20,12,0,Math.PI*2,0,Math.PI/2),mSkin);lid.position.z=.004;lid.rotation.x=-1.25;E.add(lid);
+  var lash=new THREE.Mesh(new THREE.TorusGeometry(.0305,.0016,6,20,Math.PI),mat(0x1c140f,.6));lash.rotation.x=0;lid.add(lash);lash.rotation.x=Math.PI/2;
+  eyes.push({E:E,lid:lid});
+  // ceja
+  var curve=new THREE.CatmullRomCurve3([new THREE.Vector3(s*.04,.098,.222),new THREE.Vector3(s*.085,.112,.224),new THREE.Vector3(s*.132,.1,.205)]);
+  var br=new THREE.Mesh(new THREE.TubeGeometry(curve,12,.0075,8,false),mHair);br.scale.z=.7;head.add(br);
+});
+// Nariz
+var nb=unitCyl(.017,.022,mSkin);place(nb,new THREE.Vector3(0,.05,.222),new THREE.Vector3(0,-.045,.262));head.add(nb);
+var ntip=ell(.024,.02,.022,mSkin);ntip.position.set(0,-.052,.272);head.add(ntip);
+[-1,1].forEach(function(s){var w=ell(.016,.014,.014,mSkin);w.position.set(s*.021,-.054,.258);head.add(w);var nos=ell(.006,.004,.005,mat(0x4a2a22,.8));nos.position.set(s*.012,-.066,.278);head.add(nos)});
+// Boca
+var upL=ell(.034,.0085,.012,mLip);upL.position.set(0,-.1,.236);head.add(upL);
+var loL=ell(.031,.0105,.012,mLip2);loL.position.set(0,-.116,.236);head.add(loL);
+var mline=new THREE.Mesh(new THREE.BoxGeometry(.062,.0024,.004),mat(0x5a2420,.8));mline.position.set(0,-.1075,.2465);head.add(mline);
+// Pelo
+var hairG=new THREE.Group();head.add(hairG);
+var hc=new THREE.Mesh(new THREE.SphereGeometry(.272,40,28,0,Math.PI*2,0,Math.PI*.44),mHair);hc.scale.set(.98,1.13,1.02);hc.position.set(0,.005,-.025);hc.rotation.x=-.12;hairG.add(hc);
+var hback=ell(.245,.27,.2,mHair);hback.position.set(0,-.01,-.07);hairG.add(hback);
+for(var q=0;q<7;q++){var fr=ell(.05,.03,.03,mHair);var a=(q-3)/3;fr.position.set(a*.17,.218-Math.abs(a)*.04,.17-Math.abs(a)*.075);fr.rotation.z=-a*.5;fr.rotation.x=.9;hairG.add(fr)}
+[-1,1].forEach(function(s){var sb=ell(.018,.07,.035,mHair);sb.position.set(s*.228,.03,.075);hairG.add(sb)});
+
+// ---------- Mano ----------
+var FL=[[.047,.03,.023],[.052,.033,.025],[.048,.03,.022],[.038,.024,.019]];
+var FXp=[.034,.011,-.011,-.033],FR=[.0105,.0105,.0100,.0092];
+function seg(len,r,m,nail){var g=new THREE.CylinderGeometry(r*.8,r,len,12);g.translate(0,len/2,0);var me=new THREE.Mesh(g,m);
+  if(nail){var n=ell(r*.62,len*.34,r*.2,mNail);n.position.set(0,len*.62,-r*.72);me.add(n)}return me}
+function makeHand(mirror){
+  var H={root:new THREE.Group()};signer.add(H.root);
+  var inner=new THREE.Group();H.root.add(inner);inner.scale.setScalar(1.8);if(mirror)inner.scale.x=-1.8;
+  var palm=ell(.054,.06,.021,mSkin);palm.position.set(0,.056,0);inner.add(palm);
+  var heel=ell(.044,.03,.019,mSkin);heel.position.set(-.002,.018,.0);inner.add(heel);
+  var thenar=ell(.025,.03,.016,mSkin);thenar.position.set(.032,.04,.01);thenar.rotation.z=-.4;inner.add(thenar);
+  var cuff=new THREE.Mesh(new THREE.CylinderGeometry(.024,.026,.09,18),mSkin);cuff.position.set(0,-.02,0);inner.add(cuff);
+  H.fingers=[];
+  for(var f=0;f<4;f++){
+    var base=new THREE.Group();base.position.set(FXp[f],.108,0);inner.add(base);
+    base.add(seg(FL[f][0],FR[f],mSkin));base.add(ball(FR[f]*1.0,mSkin));
+    var j2=new THREE.Group();j2.position.y=FL[f][0];base.add(j2);j2.add(ball(FR[f]*.82,mSkin));j2.add(seg(FL[f][1],FR[f]*.8,mSkin));
+    var j3=new THREE.Group();j3.position.y=FL[f][1];j2.add(j3);j3.add(ball(FR[f]*.72,mSkin));j3.add(seg(FL[f][2],FR[f]*.72,mSkin,true));
+    var tip=ball(FR[f]*.62,mSkin);tip.position.y=FL[f][2];j3.add(tip);
+    H.fingers.push([base,j2,j3]);
+  }
+  H.thB=new THREE.Group();H.thB.position.set(.05,.03,.004);inner.add(H.thB);
+  H.thB.add(seg(.04,.0135,mSkin));H.thB.add(ball(.0135,mSkin));
+  H.tj2=new THREE.Group();H.tj2.position.y=.04;H.thB.add(H.tj2);H.tj2.add(ball(.0118,mSkin));H.tj2.add(seg(.032,.0115,mSkin));
+  H.tj3=new THREE.Group();H.tj3.position.y=.032;H.tj2.add(H.tj3);H.tj3.add(ball(.0102,mSkin));H.tj3.add(seg(.026,.0102,mSkin,true));
+  var tt=ball(.0092,mSkin);tt.position.y=.026;H.tj3.add(tt);
+  return H;
+}
+// ---------- Brazo (IK de 2 huesos) ----------
+function makeArm(side,hand){
+  var A={side:side,hand:hand,S:new THREE.Vector3(side*.56,1.52,0)};
+  A.sh=ball(.098,mCloth);A.sh.position.copy(A.S);signer.add(A.sh);
+  A.up=unitCyl(.082,.066,mCloth);signer.add(A.up);
+  A.el=ball(.068,mCloth);signer.add(A.el);
+  A.fo=unitCyl(.066,.05,mCloth);signer.add(A.fo);
+  A.cf=new THREE.Mesh(new THREE.TorusGeometry(.052,.008,8,20),mGold);signer.add(A.cf);
+  A.u=.62;A.f=.52;return A;
+}
+var UPV=new THREE.Vector3(0,1,0);
+function ik(A,T){
+  var S=A.S,d=new THREE.Vector3().subVectors(T,S),dist=d.length();
+  var maxd=(A.u+A.f)*.995,mind=Math.abs(A.u-A.f)+.02;
+  if(dist>maxd){d.setLength(maxd);dist=maxd;T=S.clone().add(d)}else if(dist<mind){d.setLength(mind);dist=mind;T=S.clone().add(d)}
+  var a=d.clone().normalize();
+  var x1=(A.u*A.u-A.f*A.f+dist*dist)/(2*dist),h=Math.sqrt(Math.max(0,A.u*A.u-x1*x1));
+  var hint=new THREE.Vector3(A.side*.7,-.8,-.25);hint.sub(a.clone().multiplyScalar(hint.dot(a)));if(hint.length()<1e-4)hint.set(A.side,0,0);hint.normalize();
+  var E=S.clone().add(a.clone().multiplyScalar(x1)).add(hint.multiplyScalar(h));
+  place(A.up,S,E);A.el.position.copy(E);place(A.fo,E,T);
+  var fd=new THREE.Vector3().subVectors(T,E).normalize();A.cf.position.copy(T).addScaledVector(fd,-.01);A.cf.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),fd);
+  return T;
+}
+var HR=makeHand(false),HL=makeHand(true);
+var AR=makeArm(-1,HR),AL=makeArm(1,HL);
+signer.traverse(function(o){if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
+
+// ---------- Poses ----------
+// vector por mano: [im,ip,id, mm,mp,md, rm,rp,rd, pm,pp,pd, spI,spM,spR,spP, thEx,thEy,thEz,thF1,thF2, oRx,oRy,oRz, px,py,pz]
+var OPEN=[0,0,0],FIST=[88,105,62],CURVE=[38,42,28],SEMI=[22,30,20],HOOK=[0,75,50];
+var TH_TUCK=[30,-5,60,25,25],TH_SIDE=[0,0,12,4,4],TH_OUT=[0,0,-62,0,0],TH_UP=[0,0,-8,0,0],TH_PINCH=[28,-20,12,34,30],TH_CROSS=[38,-5,48,30,25];
+function Hd(o){
+  var f=o.f||[OPEN,OPEN,OPEN,OPEN],v=[];
+  f.forEach(function(x){v.push(x[0],x[1],x[2])});
+  v=v.concat(o.sp||[0,0,0,0],o.th||TH_SIDE,o.o||[0,0,0],o.p||[0,1.3,.4]);
+  return v;
+}
+var RESTR=Hd({f:[SEMI,SEMI,SEMI,SEMI],th:[0,0,10,10,10],o:[0,-90,180],p:[-.62,.62,.08]});
+var RESTL=Hd({f:[SEMI,SEMI,SEMI,SEMI],th:[0,0,10,10,10],o:[0,90,180],p:[.62,.62,.08]});
+var REST=RESTR.concat(RESTL);
+var NR=[-.30,1.30,.42],NL=[.30,1.30,.42];
+function one(r,l){return [[r.concat(l||RESTL),1]]}
+var Lt={};
+// A: puño con el pulgar apoyado al costado
+Lt.A=one(Hd({f:[FIST,FIST,FIST,FIST],th:[0,0,18,4,4],o:[0,-90,0],p:NR}));
+// B: tres dedos (índice, mayor, anular) juntos hacia arriba; meñique y pulgar doblados
+Lt.B=one(Hd({f:[OPEN,OPEN,OPEN,FIST],th:TH_CROSS,o:[0,0,0],p:NR}));
+// C: índice curvo y pulgar abiertos en forma de C; el resto cerrado
+Lt.C=one(Hd({f:[CURVE,FIST,FIST,FIST],th:[18,-14,-42,8,8],o:[0,-70,0],p:NR}));
+// CH: mano plana de costado con las yemas juntas, giro de muñeca
+var CHp=function(rx,px){return Hd({f:[[24,24,18],[24,24,18],[24,24,18],[24,24,18]],th:[20,-10,25,26,18],o:[rx,0,90],p:[px,1.30,.42]})};
+Lt.CH=[[CHp(0,-.30).concat(RESTL),1],[CHp(110,-.30).concat(RESTL),.8],[CHp(0,-.30).concat(RESTL),.8],[CHp(110,-.30).concat(RESTL),.8]];
+// D: círculo con pulgar e índice, mayor, anular y meñique extendidos
+var Dh=Hd({f:[[58,62,32],OPEN,OPEN,OPEN],sp:[0,6,12,18],th:TH_PINCH,o:[0,-20,0],p:NR});
+Lt.D=one(Dh);
+// E: junto al ojo, índice extendido sobre la ceja y pulgar bajo el ojo
+Lt.E=one(Hd({f:[OPEN,FIST,FIST,FIST],th:[10,0,-20,20,20],o:[0,0,-40],p:[-.40,1.70,.30]}));
+// F: mano plana, palma arriba, sobre el pecho apuntando hacia el otro lado
+Lt.F=one(Hd({f:[OPEN,OPEN,OPEN,OPEN],th:[0,0,12,4,4],o:[-80,0,-72],p:[-.18,1.44,.30]}));
+// G: puño en la oreja, pellizcando el lóbulo con pulgar e índice
+Lt.G=one(Hd({f:[[62,72,48],FIST,FIST,FIST],th:TH_PINCH,o:[0,-80,0],p:[-.30,1.84,.12]}));
+// H: pulgar, índice y mayor abiertos frente al rostro, bajando en diagonal
+var Hh=function(p){return Hd({f:[OPEN,OPEN,FIST,FIST],sp:[16,10,0,0],th:[0,0,-40,0,0],o:[0,180,0],p:p})};
+Lt.H=[[Hh([-.12,2.00,.36]).concat(RESTL),.7],[Hh([-.04,1.88,.36]).concat(RESTL),.6],[Hh([.04,1.72,.36]).concat(RESTL),.6]];
+// I: índice vertical sobre la nariz
+Lt.I=one(Hd({f:[OPEN,FIST,FIST,FIST],th:TH_CROSS,o:[0,180,0],p:[-.03,1.58,.34]}));
+// J: mano plana en el cuello, se desliza de lado a lado
+var Jh=function(x,y){return Hd({f:[OPEN,OPEN,OPEN,OPEN],th:[0,0,10,4,4],o:[-30,180,-70],p:[x,y,.22]})};
+Lt.J=[[Jh(-.22,1.56).concat(RESTL),.7],[Jh(-.02,1.58).concat(RESTL),.8],[Jh(.20,1.56).concat(RESTL),.4]];
+// K: índice arriba en diagonal, mayor horizontal hacia un costado, pulgar apoyado
+Lt.K=one(Hd({f:[OPEN,OPEN,FIST,FIST],sp:[-10,78,0,0],th:[30,-10,30,18,12],o:[0,0,12],p:NR}));
+// L: índice arriba, pulgar abierto
+Lt.L=one(Hd({f:[OPEN,FIST,FIST,FIST],th:TH_OUT,o:[0,0,0],p:NR}));
+// M: tres dedos hacia abajo sobre el pulgar
+Lt.M=one(Hd({f:[OPEN,OPEN,OPEN,FIST],th:TH_CROSS,o:[0,0,180],p:[-.30,1.42,.42]}));
+// N: dos dedos hacia abajo
+Lt.N=one(Hd({f:[OPEN,OPEN,FIST,FIST],th:TH_CROSS,o:[0,0,180],p:[-.30,1.42,.42]}));
+// Ñ: una mano en N y la otra con el índice cruzado
+Lt["Ñ"]=one(Hd({f:[OPEN,OPEN,FIST,FIST],th:TH_CROSS,o:[0,0,180],p:[-.24,1.44,.42]}),Hd({f:[OPEN,FIST,FIST,FIST],th:[10,0,20,10,10],o:[0,0,90],p:[.28,1.30,.46]}));
+// O: círculo grande con pulgar e índice, otros dedos curvos
+Lt.O=one(Hd({f:[[50,58,36],[24,34,24],[24,34,24],[26,34,24]],sp:[0,10,16,22],th:TH_PINCH,o:[0,-30,12],p:NR}));
+// P: puño con el índice hacia abajo
+Lt.P=one(Hd({f:[OPEN,FIST,FIST,FIST],th:[10,0,40,18,18],o:[0,0,170],p:[-.30,1.42,.42]}));
+// Q: una mano en círculo y la otra con el índice apuntando al círculo
+Lt.Q=one(Hd({f:[OPEN,FIST,FIST,FIST],th:[10,0,20,10,10],o:[0,0,-80],p:[-.16,1.30,.42]}),Hd({f:[[58,62,32],OPEN,OPEN,OPEN],sp:[0,6,12,18],th:TH_PINCH,o:[0,10,0],p:[.20,1.34,.42]}));
+// R: índice y mayor cruzados hacia arriba
+Lt.R=one(Hd({f:[OPEN,OPEN,FIST,FIST],sp:[-12,12,0,0],th:TH_CROSS,o:[0,0,0],p:NR}));
+// S: índice en el mentón
+Lt.S=one(Hd({f:[OPEN,FIST,FIST,FIST],th:TH_UP,o:[-10,0,-78],p:[-.20,1.54,.30]}));
+// T: índice sobre los labios
+Lt.T=one(Hd({f:[OPEN,FIST,FIST,FIST],th:TH_CROSS,o:[0,180,0],p:[-.03,1.50,.34]}));
+// U: índice y meñique arriba
+Lt.U=one(Hd({f:[OPEN,FIST,FIST,OPEN],th:TH_CROSS,o:[0,0,0],p:NR}));
+// V: índice y mayor abiertos
+Lt.V=one(Hd({f:[OPEN,OPEN,FIST,FIST],sp:[16,12,0,0],th:TH_CROSS,o:[0,0,0],p:NR}));
+// W: dos manos con los índices cruzados, manos erguidas
+Lt.W=one(Hd({f:[OPEN,FIST,FIST,FIST],th:TH_OUT,o:[0,0,-28],p:[-.22,1.26,.44]}),Hd({f:[OPEN,FIST,FIST,FIST],th:TH_OUT,o:[0,0,28],p:[.22,1.26,.48]}));
+// X: dos manos con los índices en cruz
+Lt.X=one(Hd({f:[OPEN,FIST,FIST,FIST],th:TH_UP,o:[0,0,-62],p:[-.26,1.18,.44]}),Hd({f:[OPEN,FIST,FIST,FIST],th:TH_UP,o:[0,0,62],p:[.26,1.18,.48]}));
+// Y: pulgar y meñique extendidos junto al ojo
+Lt.Y=one(Hd({f:[FIST,FIST,FIST,OPEN],th:TH_OUT,o:[0,0,-8],p:[-.42,1.74,.24]}));
+// Z: índice que dibuja una Z en el aire
+var Zh=function(x,y){return Hd({f:[OPEN,FIST,FIST,FIST],th:[18,-5,30,18,12],o:[0,0,-30],p:[x,y,.46]})};
+Lt.Z=[[Zh(-.42,1.52).concat(RESTL),.7],[Zh(-.14,1.52).concat(RESTL),.45],[Zh(-.42,1.24).concat(RESTL),.45],[Zh(-.14,1.24).concat(RESTL),.45]];
+var LETRAS=['A','B','C','CH','D','E','F','G','H','I','J','K','L','M','N','Ñ','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
+var L={};
+Object.keys(Lt).forEach(function(k){L[k]=Lt[k]});
+
+
+// ---------- Aplicar ----------
+function applyHand(H,A,v){
+  for(var f=0;f<4;f++){
+    var b=f*3,F=H.fingers[f];
+    F[0].rotation.x=v[b]*D2R;F[1].rotation.x=v[b+1]*D2R;F[2].rotation.x=v[b+2]*D2R;
+    F[0].rotation.z=([-1,-1,1,1][f])*v[12+f]*D2R;
+  }
+  H.thB.rotation.set(v[16]*D2R,v[17]*D2R,v[18]*D2R,'XYZ');H.tj2.rotation.x=v[19]*D2R;H.tj3.rotation.x=v[20]*D2R;
+  H.root.rotation.set(v[21]*D2R,v[22]*D2R,v[23]*D2R,'YXZ');
+  var T=new THREE.Vector3(v[24],v[25],v[26]);T=ik(A,T);H.root.position.copy(T);
+}
+function apply(v){applyHand(HR,AR,v.slice(0,27));applyHand(HL,AL,v.slice(27,54))}
+var cur=REST.slice();
+function mix(a,b,t){var o=new Array(a.length);for(var i=0;i<a.length;i++)o[i]=a[i]+(b[i]-a[i])*t;return o}
+function ease(t){return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2}
+
+// ---------- Cola de animación ----------
+var tween=null,speed=1.8,runId=0;
+var subsEl=document.getElementById('subs'),letEl=document.getElementById('letra'),provEl=document.getElementById('prov'),estadoEl=document.getElementById('estado');
+var spans=[];
+function norm(s){return s.toUpperCase().replace(/[ÁÀÄ]/g,'A').replace(/[ÉÈË]/g,'E').replace(/[ÍÌÏ]/g,'I').replace(/[ÓÒÖ]/g,'O').replace(/[ÚÙÜ]/g,'U')}
+function tokens(text){
+  var s=norm(text),out=[],i=0;
+  while(i<s.length){
+    var c=s[i],n=s[i+1];
+    if(c==='C'&&n==='H'){out.push({k:'CH',show:'CH'});i+=2;continue}
+    if(L[c])out.push({k:c,show:c});
+    else if(/\s/.test(c))out.push({k:' ',show:' '});
+    i++;
+  }
+  return out;
+}
+function buildSubs(toks){subsEl.innerHTML='';spans=[];toks.forEach(function(t){var sp=document.createElement('span');sp.textContent=t.show===' '?'  ':t.show;subsEl.appendChild(sp);spans.push(sp)})}
+function marks(i){spans.forEach(function(s,j){s.className=j<i?'hecho':(j===i?'act':'')})}
+function toRest(done){var a=cur.slice(),st=performance.now();tween=function(now){var k=Math.min(1,(now-st)/(550/speed));cur=mix(a,REST,ease(k));apply(cur);if(k>=1){tween=null;if(done)done()}}}
+function spell(text,done){
+  var toks=tokens(text);if(!toks.length){estadoEl.textContent='Escribí una palabra con letras.';return}
+  stop();var my=++runId;buildSubs(toks);estadoEl.textContent='';
+  var steps=toks.map(function(t,i){return t.k===' '?{i:i,frames:[[REST,1]],hold:.15,space:true}:{i:i,frames:L[t.k],hold:.4,key:t.k}});
+  var si=0,fi=0;
+  function next(){
+    if(my!==runId)return;
+    if(si>=steps.length){marks(spans.length);letEl.textContent='';provEl.classList.remove('on');toRest(done);return}
+    var s=steps[si];
+    if(fi===0){marks(s.i);letEl.textContent=s.key||'';provEl.classList.add('on');if(s.space)provEl.classList.remove('on')}
+    var fr=s.frames[fi],from=cur.slice(),to=fr[0],dur=(fi===0?300:170*fr[1]+50)/speed,st=performance.now();
+    tween=function(now){
+      var k=Math.min(1,(now-st)/dur);cur=mix(from,to,ease(k));apply(cur);
+      if(k>=1){tween=null;var wait=(fi===s.frames.length-1?s.hold*1000:40)/speed;
+        setTimeout(function(){if(my!==runId)return;fi++;if(fi>=s.frames.length){fi=0;si++}next()},wait)}
+    };
+  }
+  next();
+}
+
+function stop(){runId++;tween=null}
+var $=function(i){return document.getElementById(i)};
+var full=false,showSubs=true;
+function say(t){estadoEl.textContent=t;if($('fsmsg')){$('fsmsg').textContent=t;$('fsmsg').classList.toggle('on',!!t)}}
+function go(t){if(!t||!t.trim())return;spell(t)}
+$('go').onclick=function(){go($('txt').value)};
+function stopRec(){try{if(rec)rec.abort()}catch(e){}setMic(false)}
+$('stop').onclick=function(){stop();stopRec();toRest();letEl.textContent='';provEl.classList.remove('on')};
+$('vel').oninput=function(){speed=parseFloat(this.value)};
+var close=false;
+function setClose(v){close=v;$('zoom').classList.toggle('on',close);$('zoom').textContent=close?'Ver personaje completo':'Acercar'}
+$('zoom').onclick=function(){setClose(!close)};
+var lefty=false;
+$('lado').onclick=function(){lefty=!lefty;this.classList.toggle('on',lefty);this.textContent=lefty?'Mano derecha':'Mano izquierda';signer.scale.x=lefty?-1:1};
+var alfa=$('alfa');
+LETRAS.forEach(function(l){var b=document.createElement('button');b.textContent=l;b.className='pend';b.title='Ver la letra '+l;b.onclick=function(){$('txt').value=l;spell(l)};alfa.appendChild(b)});
+// Dictado (sirve en los dos modos)
+var SR=window.SpeechRecognition||window.webkitSpeechRecognition,rec=null,recOn=false;
+function setMic(on){recOn=on;['mic','fsmic'].forEach(function(id){var b=$(id);if(!b)return;b.classList.toggle('on',on);b.textContent=on?'Escuchando… tocá para parar':(id==='fsmic'?'Dictar':'Dictar con la voz')})}
+function mic(){
+  if(!SR){say('Este navegador no permite dictar. Podés escribir el texto.');return}
+  if(recOn){stopRec();return}
+  try{
+    rec=new SR();rec.lang='es-AR';rec.interimResults=false;rec.maxAlternatives=1;setMic(true);say('');
+    rec.onresult=function(e){var t=e.results[0][0].transcript;if(!full)$('txt').value=t;go(t)};
+    rec.onerror=function(e){setMic(false);say((e.error==='not-allowed'||e.error==='service-not-allowed')?'Esta vista no permite usar el micrófono. Escribí el texto y usá el micrófono del teclado del celular.':'No pude escuchar ('+e.error+'). Probá de nuevo o escribí el texto.')};
+    rec.onend=function(){setMic(false)};
+    rec.start();
+  }catch(err){setMic(false);say('No se pudo iniciar el dictado. Podés escribir el texto.')}
+}
+$('mic').onclick=mic;$('fsmic').onclick=mic;
+// Pantalla completa: solo el avatar; lo que se escribe no queda a la vista
+function applySubs(){stage.classList.toggle('nosubs',full&&!showSubs);$('fssubs').classList.toggle('on',showSubs);$('fssubs').textContent=showSubs?'Subtítulos: sí':'Subtítulos: no'}
+function enterFull(){
+  full=true;stage.classList.add('full');document.body.classList.add('fsmode');applySubs();setClose(false);
+  try{var el=document.documentElement;if(el.requestFullscreen)el.requestFullscreen().catch(function(){})}catch(e){}
+  resize();
+}
+function exitFull(){
+  full=false;stage.classList.remove('full','nosubs');document.body.classList.remove('fsmode');$('fsin').classList.remove('on');
+  try{if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen().catch(function(){})}catch(e){}
+  resize();
+}
+$('full').onclick=enterFull;$('fsout').onclick=exitFull;
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&full)exitFull()});
+document.addEventListener('fullscreenchange',function(){if(!document.fullscreenElement&&full)exitFull()});
+$('fswrite').onclick=function(){var b=$('fsin');b.classList.toggle('on');if(b.classList.contains('on'))setTimeout(function(){$('fstxt').focus()},50)};
+function sendFs(){var t=$('fstxt').value;$('fstxt').value='';$('fsin').classList.remove('on');$('fstxt').blur();go(t)}
+$('fssend').onclick=sendFs;$('fstxt').onkeydown=function(e){if(e.key==='Enter'){e.preventDefault();sendFs()}};
+$('fssubs').onclick=function(){showSubs=!showSubs;applySubs()};
+$('fsstop').onclick=function(){stop();stopRec();toRest();letEl.textContent='';provEl.classList.remove('on')};
+$('fszoom').onclick=function(){setClose(!close);$('fszoom').textContent=close?'Alejar':'Acercar'};
+// Cámara
+var camP=new THREE.Vector3(0,1.5,4),camT=new THREE.Vector3(0,1.5,0);
+function resize(){var w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}
+window.addEventListener('resize',resize);if(window.ResizeObserver)new ResizeObserver(resize).observe(stage);
+function goalView(){
+  var t=Math.tan(cam.fov*D2R/2),asp=cam.aspect||1;
+  var halfW=close?.42:.68,halfH=close?.62:1.0;
+  var dist=Math.max(halfW/(t*asp),halfH/t);
+  var cy=close?1.7:1.5;
+  return {p:[close?-.04:0,cy+(close?.02:.0),dist],t:[close?-.04:0,cy,0]};
+}
+resize();apply(cur);
+var t00=performance.now(),nextBlink=2200,blinkT=-1;
+var gp=new THREE.Vector3(),gt=new THREE.Vector3();
+function loop(now){
+  if(tween)tween(now);
+  var tt=(now-t00)/1000;
+  head.rotation.y=Math.sin(tt*.45)*.04;head.rotation.x=Math.sin(tt*.6)*.015;head.rotation.z=Math.sin(tt*.33)*.01;
+  yoke.scale.y=.17*(1+Math.sin(tt*1.3)*.012);signer.position.y=Math.sin(tt*1.3)*.003;
+  // parpadeo
+  if(blinkT<0&&now-t00>nextBlink){blinkT=now}
+  var o=-1.25;if(blinkT>=0){var k=(now-blinkT)/180;if(k>=1){blinkT=-1;nextBlink=now-t00+2500+Math.random()*3000}else{var q=k<.5?k*2:2-k*2;o=-1.25+q*(1.25+1.45)}}
+  eyes.forEach(function(e){e.lid.rotation.x=o});
+  var g=goalView();gp.fromArray(g.p);gt.fromArray(g.t);camP.lerp(gp,.12);camT.lerp(gt,.12);
+  var sx=lefty?-1:1;cam.position.set(camP.x*sx,camP.y,camP.z);cam.lookAt(camT.x*sx,camT.y,camT.z);
+  renderer.render(scene,cam);requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+window.__senas={spell:spell,L:L,REST:REST,setCur:function(v){cur=v;apply(v)},zoom:function(){setClose(!close)},full:enterFull,out:exitFull,snap:function(){camP.fromArray(goalView().p);camT.fromArray(goalView().t)}};
+
+})();
+</script>
+
+</body></html>
