@@ -17,13 +17,13 @@ h1 b{color:var(--gold)}
 .sub{color:var(--mut);font-size:15px;max-width:60ch}
 .aviso{border:1px solid var(--line);border-left:4px solid var(--warn);background:var(--panel);padding:12px 14px;border-radius:6px;font-size:14px;color:var(--fg)}
 .aviso b{color:var(--gold)}
-.stage{position:relative;background:radial-gradient(120% 90% at 50% 20%,#262a33 0%,#14161b 60%,#0b0c0f 100%);border:1px solid var(--line);border-radius:8px;overflow:hidden;aspect-ratio:4/4.4;max-width:100%}
+.stage{position:relative;background:radial-gradient(120% 90% at 50% 20%,#F6F3EA 0%,#E4DFD2 62%,#D2CBBB 100%);border:1px solid var(--line);border-radius:8px;overflow:hidden;aspect-ratio:4/4.4;max-width:100%}
 #cv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
-.sub-bar{position:absolute;left:0;right:0;bottom:0;padding:12px 14px;background:linear-gradient(transparent,rgba(0,0,0,.78));color:#F4F1EA;font-size:clamp(18px,4.6vw,26px);font-weight:700;letter-spacing:.06em;text-align:center;min-height:64px;display:flex;align-items:flex-end;justify-content:center;flex-wrap:wrap;gap:0 2px}
-.sub-bar span{opacity:.55;white-space:pre}
+.sub-bar{position:absolute;left:0;right:0;bottom:0;padding:12px 14px;background:linear-gradient(transparent,rgba(246,243,234,.92));color:#14161B;font-size:clamp(18px,4.6vw,26px);font-weight:700;letter-spacing:.06em;text-align:center;min-height:64px;display:flex;align-items:flex-end;justify-content:center;flex-wrap:wrap;gap:0 2px}
+.sub-bar span{opacity:.5;white-space:pre}
 .sub-bar span.hecho{opacity:.9}
-.sub-bar span.act{opacity:1;color:#E8C766;text-shadow:0 0 14px rgba(232,199,102,.7)}
-.letra{position:absolute;top:10px;right:12px;font-family:Cinzel,serif;font-weight:700;font-size:44px;color:var(--gold);opacity:.95;min-width:1ch;text-align:right}
+.sub-bar span.act{opacity:1;color:#7A5F0E;text-shadow:0 0 10px rgba(255,255,255,.9)}
+.letra{position:absolute;top:10px;right:12px;font-family:Cinzel,serif;font-weight:700;font-size:44px;color:#7A5F0E;opacity:.95;min-width:1ch;text-align:right}
 .prov{position:absolute;top:14px;left:12px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;background:rgba(0,0,0,.55);color:#E8C766;border:1px solid rgba(232,199,102,.5);padding:3px 8px;border-radius:4px;opacity:0}
 .prov.on{opacity:1}
 .ctl{display:flex;flex-direction:column;gap:10px}
@@ -285,13 +285,14 @@ var Dh=Hd({f:[[58,62,32],OPEN,OPEN,OPEN],sp:[0,6,12,18],th:TH_PINCH,o:[0,-20,0],
 Lt.D=one(Dh);
 // E: junto al ojo, índice extendido sobre la ceja y pulgar bajo el ojo
 Lt.E=one(Hd({f:[OPEN,FIST,FIST,FIST],th:[10,0,-20,20,20],o:[0,0,-40],p:[-.40,1.70,.30]}));
-// F: mano plana, palma arriba, sobre el pecho apuntando hacia el otro lado
-Lt.F=one(Hd({f:[OPEN,OPEN,OPEN,OPEN],th:[0,0,12,4,4],o:[-80,0,-72],p:[-.18,1.44,.30]}));
-// G: puño en la oreja, pellizcando el lóbulo con pulgar e índice
-Lt.G=one(Hd({f:[[62,72,48],FIST,FIST,FIST],th:TH_PINCH,o:[0,-80,0],p:[-.30,1.84,.12]}));
-// H: pulgar, índice y mayor abiertos frente al rostro, bajando en diagonal
+// F: mano plana con la palma hacia arriba, apoyada en el hombro
+Lt.F=one(Hd({f:[OPEN,OPEN,OPEN,OPEN],th:[0,0,12,4,4],o:[-70,0,-100],p:[-.60,1.44,.14]}));
+// G: la mano toma el lóbulo de la oreja con pulgar e índice
+Lt.G=one(Hd({f:[[80,90,55],FIST,FIST,FIST],th:[40,-10,-20,40,40],o:[0,-60,0],p:[-.27,1.67,.05]}));
+// H: pulgar, índice y mayor abiertos; la mano rodea el rostro en un círculo completo
 var Hh=function(p){return Hd({f:[OPEN,OPEN,FIST,FIST],sp:[16,10,0,0],th:[0,0,-40,0,0],o:[0,180,0],p:p})};
-Lt.H=[[Hh([-.12,2.00,.36]).concat(RESTL),.7],[Hh([-.04,1.88,.36]).concat(RESTL),.6],[Hh([.04,1.72,.36]).concat(RESTL),.6]];
+Lt.H=[];(function(){var cx=0,cy=1.76,rx=.40,ry=.44,n=8;for(var k=0;k<=n;k++){var t=Math.PI-k*(2*Math.PI/n);
+  Lt.H.push([Hh([cx+rx*Math.cos(t),cy+ry*Math.sin(t),.40]).concat(RESTL),.28]);}})();
 // I: índice vertical sobre la nariz
 Lt.I=one(Hd({f:[OPEN,FIST,FIST,FIST],th:TH_CROSS,o:[0,180,0],p:[-.03,1.58,.34]}));
 // J: mano plana en el cuello, se desliza de lado a lado
@@ -301,10 +302,10 @@ Lt.J=[[Jh(-.22,1.56).concat(RESTL),.7],[Jh(-.02,1.58).concat(RESTL),.8],[Jh(.20,
 Lt.K=one(Hd({f:[OPEN,OPEN,FIST,FIST],sp:[-10,78,0,0],th:[30,-10,30,18,12],o:[0,0,12],p:NR}));
 // L: índice arriba, pulgar abierto
 Lt.L=one(Hd({f:[OPEN,FIST,FIST,FIST],th:TH_OUT,o:[0,0,0],p:NR}));
-// M: tres dedos hacia abajo sobre el pulgar
-Lt.M=one(Hd({f:[OPEN,OPEN,OPEN,FIST],th:TH_CROSS,o:[0,0,180],p:[-.30,1.42,.42]}));
-// N: dos dedos hacia abajo
-Lt.N=one(Hd({f:[OPEN,OPEN,FIST,FIST],th:TH_CROSS,o:[0,0,180],p:[-.30,1.42,.42]}));
+// M: dorso de la mano hacia delante, tres dedos (índice, mayor, anular) colgando sobre el pulgar
+Lt.M=one(Hd({f:[[12,10,6],[12,10,6],[12,10,6],FIST],th:TH_CROSS,o:[0,180,180],p:[-.30,1.42,.42]}));
+// N: dorso de la mano hacia delante, dos dedos (índice y mayor) colgando sobre el pulgar
+Lt.N=one(Hd({f:[[12,10,6],[12,10,6],FIST,FIST],th:TH_CROSS,o:[0,180,180],p:[-.30,1.42,.42]}));
 // Ñ: una mano en N y la otra con el índice cruzado
 Lt["Ñ"]=one(Hd({f:[OPEN,OPEN,FIST,FIST],th:TH_CROSS,o:[0,0,180],p:[-.24,1.44,.42]}),Hd({f:[OPEN,FIST,FIST,FIST],th:[10,0,20,10,10],o:[0,0,90],p:[.28,1.30,.46]}));
 // O: círculo grande con pulgar e índice, otros dedos curvos
@@ -601,7 +602,7 @@ var AVR={ready:false};signer.visible=false;
 })();
 
 requestAnimationFrame(loop);
-window.__senas={AVR:AVR,spell:spell,L:L,REST:REST,setCur:function(v){cur=v;apply(v)},zoom:function(){setClose(!close)},full:enterFull,out:exitFull,snap:function(){camP.fromArray(goalView().p);camT.fromArray(goalView().t)}};
+window.__senas={K:{Hd:Hd,OPEN:OPEN,FIST:FIST,CURVE:CURVE,SEMI:SEMI,HOOK:HOOK,TH_TUCK:TH_TUCK,TH_SIDE:TH_SIDE,TH_OUT:TH_OUT,TH_UP:TH_UP,TH_PINCH:TH_PINCH,TH_CROSS:TH_CROSS,RESTL:RESTL,RESTR:RESTR,NR:NR},AVR:AVR,spell:spell,L:L,REST:REST,setCur:function(v){cur=v;apply(v)},zoom:function(){setClose(!close)},full:enterFull,out:exitFull,snap:function(){camP.fromArray(goalView().p);camT.fromArray(goalView().t)}};
 
 })();
 </script>
