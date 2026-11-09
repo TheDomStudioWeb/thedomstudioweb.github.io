@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex,nofollow">
+<title>DOMino Señas · Lector</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Montserrat:wght@400;500;700&display=swap">
+<style>
+:root{--bg:#0A0A0A;--panel:#16181C;--fg:#F4F1EA;--mut:#A8A398;--gold:#D4AF37;--line:rgba(212,175,55,.4);--ok:#4CC38A;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 Montserrat,system-ui,sans-serif;padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1{font:700 28px/1.2 Cinzel,Georgia,serif;margin:0;text-wrap:balance}h1 span{color:var(--gold)}
+p{margin:0;color:var(--mut)}
+.aviso{border-left:3px solid var(--gold);background:var(--panel);padding:12px 14px;font-size:14px;color:var(--fg)}
+.stage{position:relative;background:#000;border:1px solid var(--line);border-radius:6px;overflow:hidden;aspect-ratio:4/3;max-width:100%}
+video,canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.espejo{transform:scaleX(-1)}
+.hud{position:absolute;left:10px;bottom:10px;right:10px;display:flex;align-items:flex-end;justify-content:space-between;gap:8px;pointer-events:none}
+.letra{font:700 56px/1 Cinzel,Georgia,serif;color:var(--gold);text-shadow:0 2px 8px #000;min-width:1.2em}
+.barra{height:6px;background:rgba(255,255,255,.15);border-radius:3px;flex:1;max-width:160px;overflow:hidden}.barra i{display:block;height:100%;width:0;background:var(--gold)}
+.estado{position:absolute;top:10px;left:10px;font-size:13px;background:rgba(0,0,0,.6);padding:4px 8px;border-radius:4px}
+.vacio{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;color:var(--mut)}
+.fila{display:flex;flex-wrap:wrap;gap:10px}
+button{font:700 15px Montserrat,sans-serif;background:transparent;color:var(--gold);border:1px solid var(--gold);border-radius:4px;padding:12px 16px;min-height:44px;cursor:pointer}
+button.p{background:var(--gold);color:#0A0A0A}
+button:disabled{opacity:.4;cursor:default}
+.texto{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px;min-height:96px;font-size:22px;line-height:1.4;word-break:break-word}
+.texto small{display:block;color:var(--mut);font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+.cur{display:inline-block;width:2px;height:1em;background:var(--gold);vertical-align:-3px;animation:b 1s steps(1) infinite}@keyframes b{50%{opacity:0}}
+label.o{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--mut)}
+label.o input{width:20px;height:20px;accent-color:var(--gold)}
+.debug{font:12px/1.4 ui-monospace,monospace;color:var(--mut);white-space:pre-wrap}
+footer{border-top:1px solid var(--line);padding-top:14px;font-size:12px;color:var(--mut)}
+</style></head><body><main>
+<header><h1>DOMino <span>Señas</span> · Lector</h1>
+<p>Apuntá la cámara a una persona que deletrea con el alfabeto manual y escribí lo que va señalando. Después podés escucharlo en voz alta.</p><p style="font-size:.85em;opacity:.8"><b>Prototipo.</b> Aprendió con un avatar 3D, no con personas reales: acierta cerca del 77 % en pruebas y confunde letras parecidas (I/T, S/Q, V/R, N/Ñ). No lee H, J, Z, CH, LL, RR (llevan movimiento) ni palabras o frases. Todo se procesa en el teléfono: el video no se envía a ningún lado.</p></header>
+<div class="aviso"><b>Prueba experimental.</b> Lee <b>letras con una mano</b> y algunas de dos manos; todavía no reconoce las letras con movimiento (H, J, Z, CH, LL, RR) ni palabras o frases. Puede equivocarse: no lo use como único medio en situaciones importantes. El video se procesa en su teléfono y no se envía a ningún servidor.</div>
+<div class="stage" id="stage">
+  <video id="v" playsinline muted></video><canvas id="c"></canvas>
+  <div class="vacio" id="vacio">Tocá “Activar cámara” para empezar.<br>Mantené la mano de la persona bien a la vista, con buena luz.</div>
+  <div class="estado" id="estado" hidden></div>
+  <div class="hud"><div class="letra" id="letra"></div><div class="barra"><i id="conf"></i></div></div>
+</div>
+<div class="fila">
+  <button class="p" id="bcam">Activar cámara</button>
+  <button id="bflip" disabled>Cambiar cámara</button>
+</div>
+<div class="texto"><small>Texto reconocido</small><span id="txt"></span><span class="cur"></span></div>
+<div class="fila">
+  <button class="p" id="bvoz">Leer en voz alta</button>
+  <button id="besp">Espacio</button>
+  <button id="bdel">Borrar letra</button>
+  <button id="bclr">Borrar todo</button>
+</div>
+<label class="o"><input type="checkbox" id="auto" checked> Leer cada palabra al terminarla</label>
+<label class="o"><input type="checkbox" id="dbg"> Mostrar detalles técnicos</label>
+<div class="debug" id="debug" hidden></div>
+<footer>Desarrollado por The DOM Studio Web · WhatsApp 261-3431216 · thedomstudioweb@gmail.com</footer>
+</main>
+<script src="mediapipe/hands.js"></script>
+<script>
+(function(){
+var $=function(i){return document.getElementById(i)};
+var v=$('v'),cv=$('c'),ctx=cv.getContext('2d');
+var MODEL=null,hands=null,stream=null,facing='environment',busy=false,running=false;
+var text='',wordStart=0,lastHandT=0,lastSeenLabel='',needRelease=false;
+var hist=[],HN=10;
+var STABLE_MS=800,REST_MS=450,SPACE_MS=1800,CONF_MIN=.62;
+var stableSince=0,stableLabel='',restSince=0,spaceDone=false;
+
+function softmax(z){var m=Math.max.apply(null,z),e=z.map(function(x){return Math.exp(x-m)}),s=e.reduce(function(a,b){return a+b},0);return e.map(function(x){return x/s})}
+function mlp(x){var a=x;for(var l=0;l<MODEL.W.length;l++){var W=MODEL.W[l],b=MODEL.b[l],o=new Array(b.length);
+  for(var j=0;j<b.length;j++){var s=b[j];for(var i=0;i<a.length;i++)s+=a[i]*W[i][j];o[j]=s}
+  a=(l<MODEL.W.length-1)?o.map(function(t){return t>0?t:0}):o}
+  return softmax(a)}
+function feat(lm,flip,w,h){
+  var P=lm.map(function(p){return [p.x*w*(flip?-1:1),p.y*h,p.z*w]});
+  var o=P[0],r=[];var s=Math.hypot(P[9][0]-o[0],P[9][1]-o[1])+1e-6;
+  P.forEach(function(p){r.push((p[0]-o[0])/s,(p[1]-o[1])/s,(p[2]-o[2])/s)});return r}
+function classify(res){
+  var best=null;
+  (res.multiHandLandmarks||[]).forEach(function(lm,i){
+    var pa=mlp(feat(lm,false,v.videoWidth,v.videoHeight)),pb=mlp(feat(lm,true,v.videoWidth,v.videoHeight)),p=pa.map(function(x,j){return Math.max(x,pb[j])});
+    var k=0;for(var j=1;j<p.length;j++)if(p[j]>p[k])k=j;
+    var rest=MODEL.classes.indexOf('_');var nr=1-p[rest];
+    if(!best||nr>best.nr)best={p:p,nr:nr};
+  });
+  return best;
+}
+function avgTop(){
+  var n=MODEL.classes.length,acc=new Array(n).fill(0);
+  hist.forEach(function(p){for(var j=0;j<n;j++)acc[j]+=p[j]/hist.length});
+  var k=0;for(var j=1;j<n;j++)if(acc[j]>acc[k])k=j;
+  return {label:MODEL.classes[k],conf:acc[k],acc:acc};
+}
+function show(){$('txt').textContent=text}
+function speak(t){
+  if(!t||!('speechSynthesis' in window))return;
+  try{speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t.toLowerCase());u.lang='es-AR';
+    var vs=speechSynthesis.getVoices(),vz=vs.find(function(x){return /es-AR/i.test(x.lang)})||vs.find(function(x){return /^es/i.test(x.lang)});
+    if(vz)u.voice=vz;u.rate=.9;speechSynthesis.speak(u)}catch(e){}
+}
+function lastWord(){var m=text.trim().split(/\s+/);return m[m.length-1]||''}
+function onResults(res){
+  var now=performance.now();
+  ctx.clearRect(0,0,cv.width,cv.height);
+  var hs=res.multiHandLandmarks||[];
+  hs.forEach(function(lm){
+    ctx.fillStyle='#D4AF37';ctx.strokeStyle='rgba(212,175,55,.7)';ctx.lineWidth=2;
+    [[0,1,2,3,4],[0,5,6,7,8],[9,10,11,12],[13,14,15,16],[0,17,18,19,20],[5,9,13,17]].forEach(function(ch){ctx.beginPath();ch.forEach(function(i,k){var x=lm[i].x*cv.width,y=lm[i].y*cv.height;k?ctx.lineTo(x,y):ctx.moveTo(x,y)});ctx.stroke()});
+    lm.forEach(function(p){ctx.beginPath();ctx.arc(p.x*cv.width,p.y*cv.height,3,0,7);ctx.fill()});
+  });
+  var c=hs.length?classify(res):null;
+  var isRest=!c||c.nr<.5;
+  if(c)hist.push(c.p);else hist.push(restVec());
+  if(hist.length>HN)hist.shift();
+  var top=avgTop();
+  var shown=(top.label==='_'||top.conf<CONF_MIN)?'':top.label;
+  $('letra').textContent=shown;$('conf').style.width=Math.round(top.conf*100)+'%';
+  if(hs.length)lastHandT=now;
+  if(shown){
+    restSince=0;spaceDone=false;
+    if(shown!==stableLabel){stableLabel=shown;stableSince=now}
+    else if(!needRelease&&now-stableSince>STABLE_MS){text+=shown;needRelease=true;show();$('letra').style.color='#4CC38A';setTimeout(function(){$('letra').style.color=''},250)}
+    else if(needRelease&&stableLabel!==lastSeenLabel){needRelease=false;stableSince=now}
+    lastSeenLabel=needRelease?shown:lastSeenLabel;
+  }else{
+    stableLabel='';needRelease=false;lastSeenLabel='';
+    if(!restSince)restSince=now;
+    if(!spaceDone&&text&&!/\s$/.test(text)&&now-restSince>SPACE_MS){text+=' ';spaceDone=true;show();if($('auto').checked)speak(lastWord())}
+  }
+  if($('dbg').checked){var idx=top.acc.map(function(a,i){return [a,i]}).sort(function(a,b){return b[0]-a[0]}).slice(0,3);
+    $('debug').textContent='manos: '+hs.length+'\n'+idx.map(function(t){return MODEL.classes[t[1]]+' '+t[0].toFixed(2)}).join('   ')}
+}
+function restVec(){var n=MODEL.classes.length,r=new Array(n).fill(0);r[MODEL.classes.indexOf('_')]=1;return r}
+async function loop(){
+  if(!running)return;
+  if(!busy&&v.readyState>=2){busy=true;try{await hands.send({image:v})}catch(e){}busy=false}
+  requestAnimationFrame(loop);
+}
+async function start(){
+  $('bcam').disabled=true;$('estado').hidden=false;$('estado').textContent='Cargando…';
+  try{
+    if(!MODEL){MODEL=await (await fetch('model.json')).json()}
+    if(!hands){
+      hands=new Hands({locateFile:function(f){return 'mediapipe/'+f}});
+      hands.setOptions({maxNumHands:2,modelComplexity:0,minDetectionConfidence:.5,minTrackingConfidence:.5,selfieMode:false});
+      hands.onResults(onResults);
+    }
+    if(stream)stream.getTracks().forEach(function(t){t.stop()});
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:facing},width:{ideal:1280},height:{ideal:720}},audio:false});
+    v.srcObject=stream;await v.play();
+    cv.width=v.videoWidth;cv.height=v.videoHeight;
+    v.classList.toggle('espejo',facing==='user');cv.classList.toggle('espejo',facing==='user');
+    $('vacio').hidden=true;$('estado').textContent=facing==='user'?'Cámara frontal':'Cámara trasera';
+    $('bcam').textContent='Cámara activa';$('bflip').disabled=false;
+    hist=[];running=true;loop();
+  }catch(e){
+    $('estado').textContent='No se pudo usar la cámara';$('vacio').hidden=false;$('vacio').textContent='No se pudo abrir la cámara. Revise el permiso del navegador y vuelva a intentar.';
+    $('bcam').disabled=false;
+  }
+}
+$('bcam').onclick=start;
+$('bflip').onclick=function(){facing=facing==='user'?'environment':'user';start()};
+$('bvoz').onclick=function(){speak(text.trim())};
+$('besp').onclick=function(){if(text&&!/\s$/.test(text)){text+=' ';show()}};
+$('bdel').onclick=function(){text=text.slice(0,-1);show()};
+$('bclr').onclick=function(){text='';show()};
+$('dbg').onchange=function(){$('debug').hidden=!this.checked};
+if('speechSynthesis' in window)speechSynthesis.getVoices();
+window.__lector={text:function(){return text},top:function(){return MODEL&&hist.length?avgTop():null}};
+})();
+</script></body></html>
