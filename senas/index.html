@@ -285,8 +285,9 @@ var Dh=Hd({f:[[58,62,32],OPEN,OPEN,OPEN],sp:[0,6,12,18],th:TH_PINCH,o:[0,-20,0],
 Lt.D=one(Dh);
 // E: junto al ojo, índice extendido sobre la ceja y pulgar bajo el ojo
 Lt.E=one(Hd({f:[OPEN,FIST,FIST,FIST],th:[10,0,-20,20,20],o:[0,0,-40],p:[-.40,1.70,.30]}));
-// F: mano plana con la palma hacia arriba, apoyada en el hombro
-Lt.F=one(Hd({f:[OPEN,OPEN,OPEN,OPEN],th:[0,0,12,4,4],o:[-70,0,-100],p:[-.60,1.44,.14]}));
+// F: la mano sube junto a la mejilla y cruza el pecho hasta el hombro contrario, con la palma hacia arriba
+var Fh=function(o,p){return Hd({f:[OPEN,OPEN,OPEN,OPEN],th:[0,0,12,4,4],o:o,p:p}).concat(RESTL)};
+Lt.F=[[Fh([0,90,0],[-.46,1.64,.40]),.5],[Fh([-70,0,-80],[.46,1.46,.20]),1]];
 // G: la mano toma el lóbulo de la oreja con pulgar e índice
 Lt.G=one(Hd({f:[[80,90,55],FIST,FIST,FIST],th:[40,-10,-20,40,40],o:[0,-60,0],p:[-.27,1.67,.05]}));
 // H: pulgar, índice y mayor abiertos; la mano rodea el rostro en un círculo completo
@@ -303,9 +304,9 @@ Lt.K=one(Hd({f:[OPEN,OPEN,FIST,FIST],sp:[-10,78,0,0],th:[30,-10,30,18,12],o:[0,0
 // L: índice arriba, pulgar abierto
 Lt.L=one(Hd({f:[OPEN,FIST,FIST,FIST],th:TH_OUT,o:[0,0,0],p:NR}));
 // M: dorso de la mano hacia delante, tres dedos (índice, mayor, anular) colgando sobre el pulgar
-Lt.M=one(Hd({f:[[12,10,6],[12,10,6],[12,10,6],FIST],th:TH_CROSS,o:[0,180,180],p:[-.30,1.42,.42]}));
+Lt.M=one(Hd({f:[[10,8,5],[10,8,5],[10,8,5],FIST],sp:[12,12,12,0],th:TH_CROSS,o:[0,180,180],p:[0,1.44,.55]}));
 // N: dorso de la mano hacia delante, dos dedos (índice y mayor) colgando sobre el pulgar
-Lt.N=one(Hd({f:[[12,10,6],[12,10,6],FIST,FIST],th:TH_CROSS,o:[0,180,180],p:[-.30,1.42,.42]}));
+Lt.N=one(Hd({f:[[10,8,5],[10,8,5],FIST,FIST],sp:[12,12,0,0],th:TH_CROSS,o:[0,180,180],p:[0,1.44,.55]}));
 // Ñ: una mano en N y la otra con el índice cruzado
 Lt["Ñ"]=one(Hd({f:[OPEN,OPEN,FIST,FIST],th:TH_CROSS,o:[0,0,180],p:[-.24,1.44,.42]}),Hd({f:[OPEN,FIST,FIST,FIST],th:[10,0,20,10,10],o:[0,0,90],p:[.28,1.30,.46]}));
 // O: círculo grande con pulgar e índice, otros dedos curvos
