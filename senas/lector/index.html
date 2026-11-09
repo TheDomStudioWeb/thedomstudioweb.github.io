@@ -63,7 +63,7 @@ var v=$('v'),cv=$('c'),ctx=cv.getContext('2d');
 var MODEL=null,hands=null,stream=null,facing='environment',busy=false,running=false;
 var text='',wordStart=0,lastHandT=0,lastSeenLabel='',needRelease=false;
 var hist=[],HN=10;
-var STABLE_MS=800,REST_MS=450,SPACE_MS=1800,CONF_MIN=.6;
+var STABLE_MS=800,REST_MS=450,SPACE_MS=1800,CONF_MIN=.85;
 var stableSince=0,stableLabel='',restSince=0,spaceDone=false;
 
 function softmax(z){var m=Math.max.apply(null,z),e=z.map(function(x){return Math.exp(x-m)}),s=e.reduce(function(a,b){return a+b},0);return e.map(function(x){return x/s})}
