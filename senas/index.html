@@ -111,6 +111,7 @@ body.fsmode{overflow:hidden}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="GLTFLoader.js"></script>
 <script>
 (function(){
 var D2R=Math.PI/180;
@@ -464,6 +465,7 @@ var camP=new THREE.Vector3(0,1.5,4),camT=new THREE.Vector3(0,1.5,0);
 function resize(){var w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}
 window.addEventListener('resize',resize);if(window.ResizeObserver)new ResizeObserver(resize).observe(stage);
 function goalView(){
+  if(typeof AVR!=='undefined'&&AVR.ready){var t0=Math.tan(cam.fov*D2R/2),as=cam.aspect||1,hw=close?.30:.5,hh=close?.34:.62,di=Math.max(hw/(t0*as),hh/t0),cy0=close?1.50:1.27;return {p:[0,cy0,di],t:[0,cy0,0]}}
   var t=Math.tan(cam.fov*D2R/2),asp=cam.aspect||1;
   var halfW=close?.42:.68,halfH=close?.62:1.0;
   var dist=Math.max(halfW/(t*asp),halfH/t);
@@ -486,10 +488,120 @@ function loop(now){
   var sx=lefty?-1:1;cam.position.set(camP.x*sx,camP.y,camP.z);cam.lookAt(camT.x*sx,camT.y,camT.z);
   renderer.render(scene,cam);requestAnimationFrame(loop);
 }
+// ---------- Avatar GLB (esqueleto MakeHuman: 5 dedos con 3 falanges) ----------
+var AVR={ready:false};signer.visible=false;
+(function(){
+  if(!THREE.GLTFLoader){signer.visible=true;return}
+  var Q=THREE.Quaternion,V=THREE.Vector3;
+  fetch('avatar.glb').then(function(r){if(!r.ok)throw new Error('avatar '+r.status);return r.arrayBuffer()}).then(function(buf){
+  return new Promise(function(ok,ko){new THREE.GLTFLoader().parse(buf,'',ok,ko)})}).then(function(g){
+    var m=g.scene,B={};
+    m.traverse(function(o){
+      if(o.isBone)B[o.name]=o;
+      if(o.isMesh){
+        o.frustumCulled=false;o.castShadow=true;o.receiveShadow=true;
+        var mt=o.material;
+        if(mt&&mt.name==='Skin'&&mt.color){mt.color.setRGB(.93,.8,.68)}
+        if(mt&&mt.name==='Beard'){mt.alphaTest=window.BEARD_AT||.8;mt.transparent=false;mt.needsUpdate=true;if(mt.color)mt.color.multiplyScalar(window.BEARD_C||1.35)}
+        if(mt&&/hair|eyelash|eyebrow/i.test(mt.name||'')){mt.transparent=true;mt.alphaTest=.4;mt.depthWrite=true;mt.side=THREE.DoubleSide}
+      }
+    });
+    scene.add(m);m.updateMatrixWorld(true);
+    var bindL={},bindW={},bindP={};
+    Object.keys(B).forEach(function(n){var b=B[n];bindL[n]=b.quaternion.clone();var q=new Q();b.getWorldQuaternion(q);bindW[n]=q;var p=new V();b.getWorldPosition(p);bindP[n]=p});
+    var side={};
+    ['R','L'].forEach(function(s){
+      var W=bindP['wrist'+s],y=bindP['finger3-1'+s].clone().sub(W).normalize();
+      var t=bindP['finger2-1'+s].clone().sub(bindP['finger5-1'+s]);t.addScaledVector(y,-t.dot(y)).normalize();
+      var n=new V().crossVectors(t,y);
+      var Mb=new THREE.Matrix4().makeBasis(t,y,n);
+      var tc=new V(s==='R'?1:-1,0,0),yc=new V(0,1,0),nc=new V().crossVectors(tc,yc);
+      var Mc=new THREE.Matrix4().makeBasis(tc,yc,nc);
+      var R=new THREE.Matrix4().multiplyMatrices(Mb,Mc.clone().transpose());
+      var Rq=new Q().setFromRotationMatrix(R);
+      var D={Rq:Rq,Rinv:Rq.clone().invert(),ax:{}};
+      // ejes canónicos (x: flexión, y, z: apertura) expresados en el marco local de cada hueso de la mano
+      var names=['finger1-1','finger1-2','finger1-3'];for(var f=2;f<=5;f++)for(var j=1;j<=3;j++)names.push('finger'+f+'-'+j);
+      names.forEach(function(nm){
+        var bn=nm+s,inv=bindW[bn].clone().invert();
+        D.ax[bn]={x:new V(1,0,0).applyQuaternion(Rq).applyQuaternion(inv),y:new V(0,1,0).applyQuaternion(Rq).applyQuaternion(inv),z:new V(0,0,1).applyQuaternion(Rq).applyQuaternion(inv)};
+      });
+      D.U=bindP['upperarm01'+s].distanceTo(bindP['lowerarm01'+s]);D.F=bindP['lowerarm01'+s].distanceTo(W);
+      D.S=bindP['upperarm01'+s].clone();D.E0=bindP['lowerarm01'+s].clone();D.W0=W.clone();
+      side[s]=D;
+    });
+    // mapa de posiciones: espacio del personaje original -> espacio del avatar (cabeza más chica y cuerpo más angosto)
+    function mapPt(P){
+      var y=P.y,yy=y>=1.62?1.50+.34*(y-1.62):1.50+.50*(y-1.62);
+      return new V(P.x*.34,yy,.04+.52*P.z);
+    }
+    var AX=new V(1,0,0),AY=new V(0,1,0),AZ=new V(0,0,1);
+    var q1=new Q(),q2=new Q(),q3=new Q();
+    function wq(n,out){B[n].getWorldQuaternion(out);return out}
+    function setLocalFromWorld(bone,qWorld){var pq=new Q();if(bone.parent)bone.parent.getWorldQuaternion(pq);bone.quaternion.copy(pq.invert().multiply(qWorld))}
+    function arm(s,Tw,Rdelta){
+      var D=side[s],sg=s==='R'?-1:1;
+      ['shoulder01','upperarm01','upperarm02','lowerarm01','lowerarm02','wrist'].forEach(function(n){B[n+s].quaternion.copy(bindL[n+s])});
+      B['shoulder01'+s].updateMatrixWorld(true);
+      var S=D.S,d=Tw.clone().sub(S),dist=d.length(),U=D.U,F=D.F,maxd=(U+F)*.995,mind=Math.abs(U-F)+.01;
+      if(dist>maxd){d.setLength(maxd);dist=maxd}else if(dist<mind){d.setLength(mind);dist=mind}
+      var T=S.clone().add(d),a=d.clone().normalize();
+      var x1=(U*U-F*F+dist*dist)/(2*dist),h=Math.sqrt(Math.max(0,U*U-x1*x1));
+      var hint=new V(sg*.5,-1,.15);hint.sub(a.clone().multiplyScalar(hint.dot(a)));if(hint.length()<1e-4)hint.set(sg,0,0);hint.normalize();
+      var E=S.clone().add(a.clone().multiplyScalar(x1)).add(hint.multiplyScalar(h));
+      // hombro -> codo
+      var up=B['upperarm01'+s],lo=B['lowerarm01'+s],wr=B['wrist'+s],l2=B['lowerarm02'+s];
+      var qS=new Q().setFromUnitVectors(D.E0.clone().sub(S).normalize(),E.clone().sub(S).normalize());
+      setLocalFromWorld(up,qS.multiply(bindW['upperarm01'+s]));up.updateMatrixWorld(true);
+      // codo -> muñeca
+      var Ec=new V().setFromMatrixPosition(lo.matrixWorld),Wc=new V().setFromMatrixPosition(wr.matrixWorld);
+      var qL=new Q().setFromUnitVectors(Wc.clone().sub(Ec).normalize(),T.clone().sub(Ec).normalize());
+      var cl=new Q();lo.getWorldQuaternion(cl);setLocalFromWorld(lo,qL.multiply(cl));lo.updateMatrixWorld(true);
+      // giro de la mano: la mitad en el antebrazo (hueso de torsión) y el resto en la muñeca
+      var Qw=Rdelta.clone().multiply(bindW['wrist'+s]),Qc=new Q();wr.getWorldQuaternion(Qc);
+      var rel=Qw.clone().multiply(Qc.clone().invert()),fa=new V().setFromMatrixPosition(wr.matrixWorld).sub(new V().setFromMatrixPosition(lo.matrixWorld)).normalize();
+      var tw=2*Math.atan2(rel.x*fa.x+rel.y*fa.y+rel.z*fa.z,rel.w);if(tw>Math.PI)tw-=2*Math.PI;if(tw<-Math.PI)tw+=2*Math.PI;
+      var qt=new Q().setFromAxisAngle(fa,tw*.5),c2=new Q();l2.getWorldQuaternion(c2);setLocalFromWorld(l2,qt.multiply(c2));l2.updateMatrixWorld(true);
+      setLocalFromWorld(wr,Qw);wr.updateMatrixWorld(true);
+      return T;
+    }
+    function rot(bn,s,ex,ey,ez){ // rotación Euler XYZ en el marco canónico de la mano, aplicada sobre el hueso
+      var a=side[s].ax[bn],q=new Q().setFromAxisAngle(a.x,ex);
+      if(ey)q.multiply(q2.setFromAxisAngle(a.y,ey));if(ez)q.multiply(q3.setFromAxisAngle(a.z,ez));
+      B[bn].quaternion.copy(bindL[bn]).multiply(q);
+    }
+    var SPR=[-1,-1,1,1];
+    AVR.apply=function(s,v,rootQ){
+      var mir=s==='L'?-1:1,D2=Math.PI/180;
+      if(Math.abs(v[24]-(s==='R'?-.62:.62))<.02&&Math.abs(v[25]-.62)<.02){ // reposo: brazo colgando y mano relajada
+        arm(s,new V(s==='R'?-.25:.25,.93,.03),new Q().setFromAxisAngle(AZ,s==='R'?.5:-.5));
+        var cu=[[10,14,8],[14,18,10],[18,22,12],[22,26,14]];
+        for(var f2=0;f2<4;f2++){for(var j2=0;j2<3;j2++)rot('finger'+(f2+2)+'-'+(j2+1)+s,s,cu[f2][j2]*D2,0,0)}
+        rot('finger1-1'+s,s,0,0,0);rot('finger1-2'+s,s,8*D2,0,0);rot('finger1-3'+s,s,8*D2,0,0);
+        return;
+      }
+      var Rdelta=rootQ.clone().multiply(side[s].Rinv);
+      var tipP=new V(0,.30,0).applyQuaternion(rootQ),tipG=new V(0,.153,0).applyQuaternion(rootQ);
+      var Tw=mapPt(new V(v[24],v[25],v[26]).add(tipP)).sub(tipG);
+      arm(s,Tw,Rdelta);
+      for(var f=0;f<4;f++){
+        var base='finger'+(f+2)+'-1'+s,b2='finger'+(f+2)+'-2'+s,b3='finger'+(f+2)+'-3'+s;
+        rot(base,s,v[f*3]*D2,0,mir*SPR[f]*v[12+f]*D2*-1);
+        rot(b2,s,v[f*3+1]*D2,0,0);rot(b3,s,v[f*3+2]*D2,0,0);
+      }
+      rot('finger1-1'+s,s,v[16]*D2,mir*v[17]*D2,mir*v[18]*D2);
+      rot('finger1-2'+s,s,v[19]*D2,0,0);rot('finger1-3'+s,s,v[20]*D2,0,0);
+    };
+    AVR.root=m;AVR.B=B;AVR.side=side;AVR.mapPt=mapPt;AVR.ready=true;signer.visible=false;
+    var _ah=applyHand;
+    applyHand=function(H,A,v){_ah(H,A,v);AVR.apply(H===HR?'R':'L',v,H.root.quaternion)};
+    apply(cur);
+    document.body.classList.add('av3d');
+  }).catch(function(e){signer.visible=true;console.warn('Avatar GLB: no se pudo cargar, queda el personaje original',e)});
+})();
+
 requestAnimationFrame(loop);
-window.__senas={spell:spell,L:L,REST:REST,setCur:function(v){cur=v;apply(v)},zoom:function(){setClose(!close)},full:enterFull,out:exitFull,snap:function(){camP.fromArray(goalView().p);camT.fromArray(goalView().t)}};
+window.__senas={AVR:AVR,spell:spell,L:L,REST:REST,setCur:function(v){cur=v;apply(v)},zoom:function(){setClose(!close)},full:enterFull,out:exitFull,snap:function(){camP.fromArray(goalView().p);camT.fromArray(goalView().t)}};
 
 })();
 </script>
-
-</body></html>
