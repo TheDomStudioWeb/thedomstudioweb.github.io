@@ -7,7 +7,7 @@
   var OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
   var VALHALLA = 'https://valhalla1.openstreetmap.de/route';
   var NOMINATIM = 'https://nominatim.openstreetmap.org/search';
-  var CACHE_KEY = 'bici_infra_v1', CACHE_DIAS = 14;
+  var CACHE_KEY = 'bici_infra_v2', CACHE_DIAS = 14; // v2: suma los tramos agregados a mano
   var COLOR = { sep: '#0E9F5A', carril: '#5CCB8C', comp: '#2F7DE1', calle: '#E8710A' };
 
   // ── Mapa ─────────────────────────────────────────────────────
@@ -58,6 +58,70 @@
       return { t: tipoDe(e.tags), p: e.geometry.map(function (g) { return [Math.round(g.lat * 1e5) / 1e5, Math.round(g.lon * 1e5) / 1e5]; }) };
     });
   }
+  // ── Tramos agregados a mano (reportes de usuarios que todavía no están en OpenStreetMap) ──
+  // Se describen por calle y esquinas; el teléfono busca las esquinas en OpenStreetMap y dibuja el tramo real de la calle.
+  // t: 'sep' ciclovía separada, 'carril' carril pintado, 'comp' bici compartida. Cuando el tramo ya esté en OpenStreetMap, se puede quitar de acá.
+  var TRAMOS_EXTRA = [
+    { calle: 'Estrada', desde: 'B[uú]ho', hasta: '25 de Mayo', t: 'carril', nota: 'Guaymallén · carril pintado a mano izquierda · reportado por un usuario (12/11/2026)' }
+  ];
+  function consultaTramo(x) {
+    var b = BBOX.join(',');
+    return '[out:json][timeout:30];' +
+      'way["highway"]["name"~"' + x.calle + '",i](' + b + ')->.e;node(w.e)->.ne;' +
+      'way["highway"]["name"~"' + x.desde + '",i](bn.ne)->.d;way["highway"]["name"~"' + x.hasta + '",i](bn.ne)->.h;' +
+      '.e out geom;.d out body;.h out body;';
+  }
+  // Camino más corto por la calle entre una esquina "desde" y una "hasta" (Dijkstra sobre los nodos de la calle).
+  function armarTramo(json, x) {
+    var el = json.elements || [], calle = new RegExp(x.calle, 'i'), rDesde = new RegExp(x.desde, 'i'), rHasta = new RegExp(x.hasta, 'i');
+    var pos = {}, ady = {}, nodosD = {}, nodosH = {};
+    el.forEach(function (w) {
+      if (w.type !== 'way' || !w.nodes) return;
+      var nom = (w.tags && w.tags.name) || '';
+      if (w.geometry && calle.test(nom)) {
+        w.nodes.forEach(function (id, k) {
+          var g = w.geometry[k]; if (!g) return; pos[id] = [g.lat, g.lon];
+          if (k) { var a = w.nodes[k - 1]; (ady[a] = ady[a] || []).push(id); (ady[id] = ady[id] || []).push(a); }
+        });
+      }
+      if (!calle.test(nom) && rDesde.test(nom)) w.nodes.forEach(function (id) { nodosD[id] = 1; });
+      if (!calle.test(nom) && rHasta.test(nom)) w.nodes.forEach(function (id) { nodosH[id] = 1; });
+    });
+    var desde = Object.keys(nodosD).filter(function (id) { return pos[id]; }), hasta = Object.keys(nodosH).filter(function (id) { return pos[id]; });
+    var mejor = null;
+    desde.forEach(function (o) {
+      var dist = {}, prev = {}, abiertos = [o]; dist[o] = 0;
+      while (abiertos.length) {
+        abiertos.sort(function (a, b) { return dist[a] - dist[b]; }); var u = abiertos.shift();
+        if (dist[u] > 3) break; // tope 3 km: evita unir esquinas que no corresponden
+        (ady[u] || []).forEach(function (v) {
+          var d = dist[u] + km(pos[u][0], pos[u][1], pos[v][0], pos[v][1]);
+          if (dist[v] === undefined || d < dist[v]) { if (dist[v] === undefined) abiertos.push(String(v)); dist[v] = d; prev[v] = u; }
+        });
+      }
+      hasta.forEach(function (h) {
+        if (dist[h] === undefined || dist[h] > 3 || (mejor && dist[h] >= mejor.d)) return;
+        var p = [], n = h; while (n !== undefined) { p.unshift(pos[n]); n = prev[n]; }
+        mejor = { d: dist[h], p: p };
+      });
+    });
+    return mejor && mejor.p.length > 1 ? { t: x.t, p: mejor.p.map(function (q) { return [Math.round(q[0] * 1e5) / 1e5, Math.round(q[1] * 1e5) / 1e5]; }), extra: x.nota } : null;
+  }
+  async function pedirExtras() {
+    var out = [];
+    for (var n = 0; n < TRAMOS_EXTRA.length; n++) {
+      for (var i = 0; i < OVERPASS.length; i++) {
+        try {
+          var r = await fetch(OVERPASS[i], { method: 'POST', body: 'data=' + encodeURIComponent(consultaTramo(TRAMOS_EXTRA[n])), headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
+          if (!r.ok) throw new Error('http ' + r.status);
+          var w = armarTramo(await r.json(), TRAMOS_EXTRA[n]); if (w) out.push(w); break;
+        } catch (e) { /* si falla, se sigue sin ese tramo */ }
+      }
+    }
+    return out;
+  }
+  window.__bici = { armarTramo: armarTramo, consultaTramo: consultaTramo, TRAMOS_EXTRA: TRAMOS_EXTRA };
+
   function leerCache() { try { var c = JSON.parse(localStorage.getItem(CACHE_KEY)); if (c && c.d && Date.now() - c.t < CACHE_DIAS * 864e5) return c.d; } catch (e) {} return null; }
   function guardarCache(d) { try { localStorage.setItem(CACHE_KEY, JSON.stringify({ t: Date.now(), d: d })); } catch (e) {} }
   async function pedirOverpass() {
@@ -67,7 +131,8 @@
         var c = new AbortController(), to = setTimeout(function () { c.abort(); }, 60000);
         var r = await fetch(OVERPASS[i], { method: 'POST', body: 'data=' + encodeURIComponent(consulta()), headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, signal: c.signal });
         clearTimeout(to); if (!r.ok) throw new Error('http ' + r.status);
-        return comprimir(await r.json());
+        var base = comprimir(await r.json());
+        try { return base.concat(await pedirExtras()); } catch (e) { return base; }
       } catch (e) { ultimo = e; }
     }
     throw ultimo || new Error('sin respuesta');
