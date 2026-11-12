@@ -33,7 +33,7 @@
 - Cuando un usuario avisa de una bicisenda que falta en OpenStreetMap, se puede agregar en la app mientras se carga en OpenStreetMap. Está en `app.js`, en la lista `TRAMOS_EXTRA`: calle, esquina desde, esquina hasta y tipo (ciclovía separada, carril pintado o bici compartida).
 - El teléfono busca esas dos esquinas en OpenStreetMap y dibuja el tramo real de la calle entre ellas. Cuenta para el nivel de seguridad del recorrido.
 - Límite: el cálculo del recorrido (Valhalla) no conoce estos tramos, así que no los busca a propósito. Solo los marca como seguros si el camino pasa por ahí. Para eso hay que cargarlos en OpenStreetMap.
-- Si una esquina no se encuentra (por ejemplo, la calle tiene otro nombre en el mapa), ese tramo no se dibuja.
-- Primer tramo: Juan Manuel Estrada, entre Búho y 25 de Mayo (Guaymallén), carril pintado a mano izquierda. Pendiente: cargarlo también en OpenStreetMap; cuando ya figure, se puede quitar de la lista.
+- Si una esquina no tiene nombre en OpenStreetMap (por ejemplo, una calle de barrio privado), se indica con coordenadas (`desdePunto` o `hastaPunto`). La app toma el punto de la calle más cercano, hasta 120 m. Si una esquina no se encuentra, ese tramo no se dibuja.
+- Primer tramo: Juan Manuel Estrada, entre Búho (barrio privado, sin nombre en el mapa: se usa la coordenada -32.91899, -68.81361) y 25 de Mayo (Guaymallén), carril pintado a mano izquierda. Pendiente: cargarlo también en OpenStreetMap; cuando ya figure, se puede quitar de la lista.
 
 **Para responder por voz:** "¿Cómo agrego una bicisenda que falta?" → Lo mejor es cargarla en OpenStreetMap, así la toma también el cálculo del recorrido. Mientras tanto, se agrega a la lista de tramos de la app con la calle y las dos esquinas.

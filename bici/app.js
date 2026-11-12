@@ -61,19 +61,22 @@
   // ── Tramos agregados a mano (reportes de usuarios que todavía no están en OpenStreetMap) ──
   // Se describen por calle y esquinas; el teléfono busca las esquinas en OpenStreetMap y dibuja el tramo real de la calle.
   // t: 'sep' ciclovía separada, 'carril' carril pintado, 'comp' bici compartida. Cuando el tramo ya esté en OpenStreetMap, se puede quitar de acá.
+  // Si una esquina no tiene nombre en OpenStreetMap (por ejemplo, una calle de barrio privado), se indica con coordenadas:
+  // desdePunto / hastaPunto: [lat, lon]. Se toma el punto de la calle más cercano (hasta 120 m).
   var TRAMOS_EXTRA = [
-    { calle: 'Estrada', desde: 'B[uú]ho', hasta: '25 de Mayo', t: 'carril', nota: 'Guaymallén · carril pintado a mano izquierda · reportado por un usuario (12/11/2026)' }
+    { calle: 'Estrada', desdePunto: [-32.91899, -68.81361], hasta: '25 de Mayo', t: 'carril', nota: 'Guaymallén · desde Búho (barrio privado, sin nombre en el mapa) hasta 25 de Mayo · carril pintado a mano izquierda · reportado por un usuario (12/11/2026)' }
   ];
+  var MAX_PUNTO_M = 120;
   function consultaTramo(x) {
     var b = BBOX.join(',');
     return '[out:json][timeout:30];' +
       'way["highway"]["name"~"' + x.calle + '",i](' + b + ')->.e;node(w.e)->.ne;' +
-      'way["highway"]["name"~"' + x.desde + '",i](bn.ne)->.d;way["highway"]["name"~"' + x.hasta + '",i](bn.ne)->.h;' +
-      '.e out geom;.d out body;.h out body;';
+      (x.desde ? 'way["highway"]["name"~"' + x.desde + '",i](bn.ne)->.d;' : '') + (x.hasta ? 'way["highway"]["name"~"' + x.hasta + '",i](bn.ne)->.h;' : '') +
+      '.e out geom;' + (x.desde ? '.d out body;' : '') + (x.hasta ? '.h out body;' : '');
   }
   // Camino más corto por la calle entre una esquina "desde" y una "hasta" (Dijkstra sobre los nodos de la calle).
   function armarTramo(json, x) {
-    var el = json.elements || [], calle = new RegExp(x.calle, 'i'), rDesde = new RegExp(x.desde, 'i'), rHasta = new RegExp(x.hasta, 'i');
+    var el = json.elements || [], calle = new RegExp(x.calle, 'i'), rDesde = x.desde ? new RegExp(x.desde, 'i') : null, rHasta = x.hasta ? new RegExp(x.hasta, 'i') : null;
     var pos = {}, ady = {}, nodosD = {}, nodosH = {};
     el.forEach(function (w) {
       if (w.type !== 'way' || !w.nodes) return;
@@ -84,9 +87,17 @@
           if (k) { var a = w.nodes[k - 1]; (ady[a] = ady[a] || []).push(id); (ady[id] = ady[id] || []).push(a); }
         });
       }
-      if (!calle.test(nom) && rDesde.test(nom)) w.nodes.forEach(function (id) { nodosD[id] = 1; });
-      if (!calle.test(nom) && rHasta.test(nom)) w.nodes.forEach(function (id) { nodosH[id] = 1; });
+      if (!calle.test(nom) && rDesde && rDesde.test(nom)) w.nodes.forEach(function (id) { nodosD[id] = 1; });
+      if (!calle.test(nom) && rHasta && rHasta.test(nom)) w.nodes.forEach(function (id) { nodosH[id] = 1; });
     });
+    // Esquina dada por coordenadas: el nodo de la calle más cercano
+    function cercano(pt, destino) {
+      var best = null, bd = MAX_PUNTO_M / 1000;
+      Object.keys(pos).forEach(function (id) { var d = km(pt[0], pt[1], pos[id][0], pos[id][1]); if (d <= bd) { bd = d; best = id; } });
+      if (best) destino[best] = 1;
+    }
+    if (x.desdePunto) cercano(x.desdePunto, nodosD);
+    if (x.hastaPunto) cercano(x.hastaPunto, nodosH);
     var desde = Object.keys(nodosD).filter(function (id) { return pos[id]; }), hasta = Object.keys(nodosH).filter(function (id) { return pos[id]; });
     var mejor = null;
     desde.forEach(function (o) {
