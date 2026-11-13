@@ -7,7 +7,7 @@
   var OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
   var VALHALLA = 'https://valhalla1.openstreetmap.de/route';
   var NOMINATIM = 'https://nominatim.openstreetmap.org/search';
-  var CACHE_KEY = 'bici_infra_v2', CACHE_DIAS = 14; // v2: suma los tramos agregados a mano
+  var CACHE_KEY = 'bici_infra_v3', CACHE_DIAS = 14; // solo lo de OpenStreetMap; los tramos agregados se guardan aparte
   var COLOR = { sep: '#0E9F5A', carril: '#5CCB8C', comp: '#2F7DE1', calle: '#E8710A' };
 
   // ── Mapa ─────────────────────────────────────────────────────
@@ -64,10 +64,15 @@
   // Si una esquina no tiene nombre en OpenStreetMap (por ejemplo, una calle de barrio privado), se indica con coordenadas:
   // desdePunto / hastaPunto: [lat, lon]. Se toma el punto de la calle más cercano (hasta 120 m).
   var TRAMOS_EXTRA = [
-    { calle: 'Estrada', desdePunto: [-32.91899, -68.81361], hasta: '25 de Mayo', t: 'carril', nota: 'Guaymallén · desde Búho (barrio privado, sin nombre en el mapa) hasta 25 de Mayo · carril pintado a mano izquierda · reportado por un usuario (12/11/2026)' }
+    { calle: 'Estrada', desdePunto: [-32.91899, -68.81361], hastaPunto: [-32.90133, -68.80440], t: 'carril', nota: 'Guaymallén · desde Búho (barrio privado, sin nombre en el mapa) hasta 25 de Mayo · carril pintado a mano izquierda · reportado por un usuario (12/11/2026)' }
   ];
   var MAX_PUNTO_M = 120;
+  function zonaDe(x) { // recuadro alrededor de las dos puntas, con 300 m de margen
+    var m = 0.003, a = x.desdePunto, c = x.hastaPunto;
+    return [Math.min(a[0], c[0]) - m, Math.min(a[1], c[1]) - m, Math.max(a[0], c[0]) + m, Math.max(a[1], c[1]) + m].map(function (v) { return v.toFixed(5); }).join(',');
+  }
   function consultaTramo(x) {
+    if (x.desdePunto && x.hastaPunto) return '[out:json][timeout:30];way["highway"~"^(primary|secondary|tertiary|unclassified|residential|living_street|service|primary_link|secondary_link|tertiary_link|cycleway|road)$"](' + zonaDe(x) + ');out geom;';
     var b = BBOX.join(',');
     return '[out:json][timeout:30];' +
       'way["highway"]["name"~"' + x.calle + '",i](' + b + ')->.e;node(w.e)->.ne;' +
@@ -77,15 +82,19 @@
   // Camino más corto por la calle entre una esquina "desde" y una "hasta" (Dijkstra sobre los nodos de la calle).
   function armarTramo(json, x) {
     var el = json.elements || [], calle = new RegExp(x.calle, 'i'), rDesde = x.desde ? new RegExp(x.desde, 'i') : null, rHasta = x.hasta ? new RegExp(x.hasta, 'i') : null;
-    var pos = {}, ady = {}, nodosD = {}, nodosH = {};
+    var pos = {}, ady = {}, nodosD = {}, nodosH = {}, enCalle = {};
     el.forEach(function (w) {
       if (w.type !== 'way' || !w.nodes) return;
       var nom = (w.tags && w.tags.name) || '';
-      if (w.geometry && calle.test(nom)) {
+      // Con dos puntas en coordenadas entran todas las calles de la zona; las que no son la calle indicada cuestan 4 veces más,
+      // así el camino sigue esa calle si está en el mapa y, si no tiene nombre, toma la más directa.
+      var entra = w.geometry && (calle.test(nom) || (x.desdePunto && x.hastaPunto)), peso = calle.test(nom) ? 1 : 4;
+      if (entra) {
         w.nodes.forEach(function (id, k) {
           var g = w.geometry[k]; if (!g) return; pos[id] = [g.lat, g.lon];
-          if (k) { var a = w.nodes[k - 1]; (ady[a] = ady[a] || []).push(id); (ady[id] = ady[id] || []).push(a); }
+          if (k) { var a = w.nodes[k - 1]; (ady[a] = ady[a] || []).push([id, peso]); (ady[id] = ady[id] || []).push([a, peso]); }
         });
+        if (calle.test(nom)) w.nodes.forEach(function (id) { enCalle[id] = 1; });
       }
       if (!calle.test(nom) && rDesde && rDesde.test(nom)) w.nodes.forEach(function (id) { nodosD[id] = 1; });
       if (!calle.test(nom) && rHasta && rHasta.test(nom)) w.nodes.forEach(function (id) { nodosH[id] = 1; });
@@ -93,7 +102,8 @@
     // Esquina dada por coordenadas: el nodo de la calle más cercano
     function cercano(pt, destino) {
       var best = null, bd = MAX_PUNTO_M / 1000;
-      Object.keys(pos).forEach(function (id) { var d = km(pt[0], pt[1], pos[id][0], pos[id][1]); if (d <= bd) { bd = d; best = id; } });
+      // primero un nodo de la calle indicada; si no hay ninguno cerca, el de cualquier calle
+      [true, false].forEach(function (soloCalle) { if (best) return; Object.keys(pos).forEach(function (id) { if (soloCalle && !enCalle[id]) return; var d = km(pt[0], pt[1], pos[id][0], pos[id][1]); if (d <= bd) { bd = d; best = id; } }); });
       if (best) destino[best] = 1;
     }
     if (x.desdePunto) cercano(x.desdePunto, nodosD);
@@ -104,20 +114,23 @@
       var dist = {}, prev = {}, abiertos = [o]; dist[o] = 0;
       while (abiertos.length) {
         abiertos.sort(function (a, b) { return dist[a] - dist[b]; }); var u = abiertos.shift();
-        if (dist[u] > 3) break; // tope 3 km: evita unir esquinas que no corresponden
-        (ady[u] || []).forEach(function (v) {
-          var d = dist[u] + km(pos[u][0], pos[u][1], pos[v][0], pos[v][1]);
+        if (dist[u] > 12) break; // tope: evita unir esquinas que no corresponden
+        (ady[u] || []).forEach(function (par) {
+          var v = par[0], d = dist[u] + par[1] * km(pos[u][0], pos[u][1], pos[v][0], pos[v][1]);
           if (dist[v] === undefined || d < dist[v]) { if (dist[v] === undefined) abiertos.push(String(v)); dist[v] = d; prev[v] = u; }
         });
       }
       hasta.forEach(function (h) {
-        if (dist[h] === undefined || dist[h] > 3 || (mejor && dist[h] >= mejor.d)) return;
+        if (dist[h] === undefined || dist[h] > 12 || (mejor && dist[h] >= mejor.d)) return;
         var p = [], n = h; while (n !== undefined) { p.unshift(pos[n]); n = prev[n]; }
         mejor = { d: dist[h], p: p };
       });
     });
     return mejor && mejor.p.length > 1 ? { t: x.t, p: mejor.p.map(function (q) { return [Math.round(q[0] * 1e5) / 1e5, Math.round(q[1] * 1e5) / 1e5]; }), extra: x.nota } : null;
   }
+  var EXTRA_KEY = 'bici_extra_' + JSON.stringify(TRAMOS_EXTRA).split('').reduce(function (h, c) { return (h * 31 + c.charCodeAt(0)) | 0; }, 7);
+  var extrasFaltan = 0;
+  function leerExtras() { try { var c = JSON.parse(localStorage.getItem(EXTRA_KEY)); if (c && c.d && c.d.length === TRAMOS_EXTRA.length && Date.now() - c.t < CACHE_DIAS * 864e5) return c.d; } catch (e) {} return null; }
   async function pedirExtras() {
     var out = [];
     for (var n = 0; n < TRAMOS_EXTRA.length; n++) {
@@ -129,6 +142,8 @@
         } catch (e) { /* si falla, se sigue sin ese tramo */ }
       }
     }
+    extrasFaltan = TRAMOS_EXTRA.length - out.length;
+    if (!extrasFaltan) try { localStorage.setItem(EXTRA_KEY, JSON.stringify({ t: Date.now(), d: out })); } catch (e) {}
     return out;
   }
   window.__bici = { armarTramo: armarTramo, consultaTramo: consultaTramo, TRAMOS_EXTRA: TRAMOS_EXTRA };
@@ -142,8 +157,7 @@
         var c = new AbortController(), to = setTimeout(function () { c.abort(); }, 60000);
         var r = await fetch(OVERPASS[i], { method: 'POST', body: 'data=' + encodeURIComponent(consulta()), headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, signal: c.signal });
         clearTimeout(to); if (!r.ok) throw new Error('http ' + r.status);
-        var base = comprimir(await r.json());
-        try { return base.concat(await pedirExtras()); } catch (e) { return base; }
+        return comprimir(await r.json());
       } catch (e) { ultimo = e; }
     }
     throw ultimo || new Error('sin respuesta');
@@ -184,7 +198,10 @@
   async function cargarInfra(forzar) {
     var d = forzar ? null : leerCache();
     if (!d) { estadoCapa('Bicisendas: descargando…'); try { d = await pedirOverpass(); guardarCache(d); } catch (e) { estadoCapa('Bicisendas: sin datos (tocar)'); aviso('No se pudieron descargar las bicisendas. Puede intentar de nuevo tocando el botón de arriba.', 'er'); return; } }
-    infra = d; indexar(); dibujarInfra(); estadoCapa('Bicisendas: ' + Math.round(totalKm()) + ' km');
+    var ex = forzar ? null : leerExtras();
+    if (!ex) { extrasFaltan = 0; try { ex = await pedirExtras(); } catch (e) { ex = []; } } else extrasFaltan = 0;
+    infra = d.concat(ex); indexar(); dibujarInfra();
+    estadoCapa('Bicisendas: ' + Math.round(totalKm()) + ' km' + (extrasFaltan ? ' · ' + extrasFaltan + ' tramo sin ubicar' : ''));
     if (pA && pB) calcular();
   }
   $('capa').onclick = function () {
