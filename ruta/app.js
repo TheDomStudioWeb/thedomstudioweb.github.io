@@ -118,6 +118,7 @@
   });
   map.addControl(new maplibregl.AttributionControl({ compact: true, customAttribution: '© OpenStreetMap · OpenFreeMap · Valhalla' }), 'bottom-left');
   map.touchZoomRotate.enableRotation();
+  window.DOMinoRuta = { map: map }; // para diagnóstico desde la consola
   setTimeout(function () { var a = document.querySelector('.maplibregl-ctrl-attrib'); if (a) a.classList.remove('maplibregl-compact-show', 'maplibregl-compact'); if (a) a.classList.add('maplibregl-compact'); }, 1500);
 
   function svgYo() { return '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="17" fill="#3D8BFF33"/><path d="M20 6 31 32 20 26 9 32Z" fill="#3D8BFF" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/></svg>'; }
@@ -194,21 +195,22 @@
   }
   async function edificios3D() {
     var fuentes = await buscarEdificios(); EDIF.fuentes = fuentes;
-    if (!map.isStyleLoaded()) return;
+    if (!map.getStyle()) return;
     var oscuro = pref.estilo !== 'claro';
-    fuentes.forEach(function (f, i) {
+    fuentes.forEach(function (f, i) { try {
       var id = 'edif-' + i;
       if (!map.getSource(id)) map.addSource(id, { type: 'vector', url: 'pmtiles://' + f.url, attribution: 'Edificios © Overture Maps (OSM, Google, Microsoft)' });
       if (!hayCapa(id)) map.addLayer({ id: id, type: 'fill-extrusion', source: id, 'source-layer': f.capa, minzoom: 14,
+        filter: ['!=', ['get', 'is_underground'], true],
         paint: {
-          'fill-extrusion-height': ['case', ['has', 'height'], ['to-number', ['get', 'height'], 6], ['has', 'num_floors'], ['*', ['to-number', ['get', 'num_floors'], 2], 3.2], 6],
+          'fill-extrusion-height': ['case', ['has', 'height'], ['to-number', ['get', 'height'], 6], ['has', 'num_floors'], ['*', ['to-number', ['get', 'num_floors'], 2], 3.2], ['match', ['get', 'class'], ['apartments', 'hotel', 'office'], 18, ['commercial', 'retail', 'hospital', 'university', 'school', 'church', 'civic', 'government'], 10, ['industrial', 'warehouse'], 8, 6]],
           'fill-extrusion-base': ['case', ['has', 'min_height'], ['to-number', ['get', 'min_height'], 0], 0],
-          'fill-extrusion-color': ['interpolate', ['linear'], ['case', ['has', 'height'], ['to-number', ['get', 'height'], 6], ['has', 'num_floors'], ['*', ['to-number', ['get', 'num_floors'], 2], 3.2], 6],
+          'fill-extrusion-color': ['interpolate', ['linear'], ['case', ['has', 'height'], ['to-number', ['get', 'height'], 6], ['has', 'num_floors'], ['*', ['to-number', ['get', 'num_floors'], 2], 3.2], ['match', ['get', 'class'], ['apartments', 'hotel', 'office'], 18, ['commercial', 'retail', 'hospital', 'university', 'school', 'church', 'civic', 'government'], 10, ['industrial', 'warehouse'], 8, 6]],
             0, oscuro ? '#30343c' : '#ddd6c6', 25, oscuro ? '#4a5263' : '#c9bfa8', 80, oscuro ? '#6d7891' : '#b3a68a'],
           'fill-extrusion-opacity': .92, 'fill-extrusion-vertical-gradient': true
         } }, hayCapa('ruta-alt') ? 'ruta-alt' : undefined);
-      try { map.setLayoutProperty(id, 'visibility', pref.d3 ? 'visible' : 'none'); } catch (e) {}
-    });
+      map.setLayoutProperty(id, 'visibility', pref.d3 ? 'visible' : 'none');
+    } catch (e) { console.warn('edificios', e); } });
     if (fuentes.length) (map.getStyle().layers || []).forEach(function (l) { // se apagan los edificios de OSM para que no se superpongan
       if (l.type === 'fill-extrusion' && !/^edif-/.test(l.id)) { try { map.setLayoutProperty(l.id, 'visibility', 'none'); } catch (e) {} }
     });
