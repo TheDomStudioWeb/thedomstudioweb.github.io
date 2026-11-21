@@ -1,0 +1,71 @@
+{
+ "fuente": "Overture Maps 2026-11-18.0",
+ "zonas": [
+  {
+   "nombre": "Gran Mendoza",
+   "archivo": "gran-mendoza.pmtiles",
+   "bbox": [
+    -69.02,
+    -33.16,
+    -68.62,
+    -32.76
+   ],
+   "mb": 34.6
+  },
+  {
+   "nombre": "San Rafael",
+   "archivo": "san-rafael.pmtiles",
+   "bbox": [
+    -68.42,
+    -34.7,
+    -68.26,
+    -34.55
+   ],
+   "mb": 5.3
+  },
+  {
+   "nombre": "Valle de Uco",
+   "archivo": "valle-de-uco.pmtiles",
+   "bbox": [
+    -69.3,
+    -33.78,
+    -69.0,
+    -33.3
+   ],
+   "mb": 6.1
+  },
+  {
+   "nombre": "Gran San Juan",
+   "archivo": "gran-san-juan.pmtiles",
+   "bbox": [
+    -68.66,
+    -31.64,
+    -68.4,
+    -31.44
+   ],
+   "mb": 27.6
+  },
+  {
+   "nombre": "San Luis",
+   "archivo": "san-luis.pmtiles",
+   "bbox": [
+    -66.42,
+    -33.37,
+    -66.26,
+    -33.24
+   ],
+   "mb": 7.6
+  },
+  {
+   "nombre": "Neuquén y Cipolletti",
+   "archivo": "neuquen.pmtiles",
+   "bbox": [
+    -68.26,
+    -39.01,
+    -67.9,
+    -38.87
+   ],
+   "mb": 15.7
+  }
+ ]
+}
