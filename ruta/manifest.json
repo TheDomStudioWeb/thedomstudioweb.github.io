@@ -1,0 +1,21 @@
+{
+  "name": "DOMino Ruta · Navegación 3D",
+  "short_name": "DOMino Ruta",
+  "description": "Navegación GPS en 3D con voz, radares y ruta del día. Se abre sola desde el Hub X5.",
+  "id": "./",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0A0A0A",
+  "theme_color": "#0A0A0A",
+  "lang": "es-AR",
+  "launch_handler": { "client_mode": "navigate-existing" },
+  "handle_links": "preferred",
+  "categories": ["navigation", "travel", "business"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

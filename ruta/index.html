@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>DOMino Ruta · Navegación 3D</title>
+<meta name="description" content="Navegación GPS en 3D con voz, radares y rutas del día. Hecha por The DOM Studio Web.">
+<meta name="theme-color" content="#0A0A0A">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DOMino Ruta">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="libs/maplibre-gl.css">
+<style>
+:root{--bg:#0A0A0A;--panel:#15171B;--panel2:#0F1114;--tx:#F4F1EA;--mut:#B9B4A8;--acc:#D4AF37;--on-acc:#0A0A0A;--gold:#D4AF37;--ok:#4CC38A;--warn:#E8A33D;--er:#FF6B61;--line:#2E2A1E;--ruta:#3D8BFF;
+  --serif:'Cinzel',Georgia,serif;--sans:'Montserrat',system-ui,-apple-system,'Segoe UI',sans-serif;--sheet:230px;
+  --st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px)}
+body.x5{--bg:#161618;--panel:#1E1E21;--panel2:#141416;--acc:#E3182D;--on-acc:#fff;--line:#3a2226}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{height:100%;background:var(--bg);color:var(--tx);font:400 15px/1.45 var(--sans);overflow:hidden;overscroll-behavior:none}
+#map{position:fixed;inset:0;background:#1b1d21}
+button{font:inherit;cursor:pointer;color:inherit;border:0;background:none}
+a{color:var(--acc)}
+
+/* ── Barra superior / búsqueda ── */
+.top{position:fixed;z-index:20;top:0;left:0;right:0;padding:calc(var(--st) + 10px) 12px 0;pointer-events:none}
+.top>*{pointer-events:auto}
+.buscador{display:flex;align-items:center;gap:8px;background:#0A0A0Ae6;border:1px solid var(--line);border-radius:14px;padding:4px 4px 4px 12px;box-shadow:0 6px 24px #0008;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.marca{font:600 .78rem var(--serif);letter-spacing:.14em;color:var(--acc);white-space:nowrap}
+.buscador input{flex:1;min-width:0;height:44px;background:transparent;border:0;color:var(--tx);font:500 .95rem var(--sans);outline:none}
+.buscador input::placeholder{color:#8f8a7f}
+.buscador input::-webkit-search-cancel-button{display:none;-webkit-appearance:none}
+.ib{flex:none;width:44px;height:44px;border-radius:10px;display:grid;place-items:center;color:var(--mut)}
+.ib:active{background:#ffffff14}
+.sug{margin-top:6px;background:#0A0A0Af2;border:1px solid var(--line);border-radius:12px;overflow:hidden;max-height:55vh;overflow-y:auto}
+.sug button{display:block;width:100%;text-align:left;padding:11px 14px;border-bottom:1px solid #ffffff0d;min-height:48px}
+.sug button b{display:block;font-weight:600;font-size:.9rem}
+.sug button small{color:var(--mut);font-size:.76rem}
+.chips{display:flex;gap:6px;margin-top:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;font:600 .72rem var(--sans);background:#0A0A0Ad9;border:1px solid var(--line);border-radius:999px;padding:8px 12px;color:var(--tx);min-height:36px;white-space:nowrap}
+.chip.on{border-color:var(--acc);color:var(--acc)}
+
+/* ── Botones flotantes ── */
+.fabs{position:fixed;z-index:15;right:12px;bottom:calc(var(--sheet) + 14px);display:flex;flex-direction:column;gap:8px;transition:bottom .25s}
+.fab{width:48px;height:48px;border-radius:14px;background:#0A0A0Ae6;border:1px solid var(--line);display:grid;place-items:center;color:var(--tx);font:700 .7rem var(--sans);box-shadow:0 4px 16px #0007}
+.fab.on{color:var(--acc);border-color:var(--acc)}
+.fab svg{width:22px;height:22px}
+.capas{position:fixed;z-index:25;right:68px;bottom:calc(var(--sheet) + 14px);background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:8px;display:grid;gap:6px;min-width:170px;box-shadow:0 8px 30px #000a}
+.capas button{text-align:left;padding:10px 12px;border-radius:10px;background:var(--panel2);font-weight:600;font-size:.84rem;min-height:44px}
+.capas button.on{outline:2px solid var(--acc)}
+
+/* ── Hoja inferior ── */
+.sheet{position:fixed;z-index:30;left:0;right:0;bottom:0;max-height:72vh;background:var(--panel);border-top:1px solid var(--acc);border-radius:18px 18px 0 0;padding:6px 16px calc(var(--sb) + 14px);box-shadow:0 -10px 40px #0009;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.grip{width:44px;height:4px;border-radius:2px;background:#4a463a;margin:4px auto 10px}
+h2{font:700 1.08rem var(--sans);margin-bottom:2px}
+.mut{color:var(--mut);font-size:.82rem}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:0 18px;border-radius:12px;background:var(--acc);color:var(--on-acc);font:800 .78rem var(--sans);letter-spacing:.08em;text-transform:uppercase;text-decoration:none;border:1px solid var(--acc)}
+.btn.line{background:transparent;color:var(--acc)}
+.btn.wsp{background:#1FAF55;border-color:#1FAF55;color:#fff}
+.btn.gris{background:var(--panel2);border-color:#3a372c;color:var(--tx)}
+.btn.sm{min-height:42px;padding:0 12px;font-size:.7rem}
+.btn:disabled{opacity:.45}
+.acc{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.acc .btn{flex:1 1 auto}
+.datos{display:flex;gap:18px;align-items:baseline;margin:6px 0}
+.datos b{font:800 1.55rem var(--sans)}
+.datos span{color:var(--mut);font-size:.8rem}
+.alts{display:flex;gap:6px;margin-top:8px;overflow-x:auto}
+.alt{flex:none;padding:8px 12px;border-radius:10px;background:var(--panel2);border:1px solid #3a372c;font-size:.76rem;font-weight:600}
+.alt.on{border-color:var(--ruta);color:#8db9ff}
+.paradas{list-style:none;margin-top:10px;display:grid;gap:6px}
+.parada{display:flex;gap:10px;align-items:center;padding:10px;border-radius:12px;background:var(--panel2);border:1px solid #2c2a24}
+.parada.hecha{opacity:.55}
+.parada.actual{border-color:var(--acc)}
+.num{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--acc);color:var(--on-acc);font:800 .8rem var(--sans)}
+.parada .tx{flex:1;min-width:0}
+.parada .tx b{display:block;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.parada .tx small{display:block;color:var(--mut);font-size:.74rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.firma{font-size:.66rem;color:#8E897E;text-align:center;margin-top:14px;line-height:1.6}
+.firma a{color:var(--gold);text-decoration:none}
+.firma b{font-family:var(--serif);color:var(--gold);letter-spacing:.1em;font-weight:600}
+.msg{font-size:.84rem;margin-top:8px;color:var(--mut)}.msg.er{color:var(--er)}
+
+/* ── Navegación ── */
+.giro{position:fixed;z-index:20;top:calc(var(--st) + 10px);left:10px;right:10px;background:#0d3b2a;border:1px solid #1f6e50;border-radius:16px;padding:12px 14px;display:flex;gap:12px;align-items:center;box-shadow:0 8px 30px #000b}
+body.x5 .giro{background:#3a0d14;border-color:#7a1f2c}
+.giro .ico{flex:none;width:58px;height:58px;display:grid;place-items:center}
+.giro .ico svg{width:54px;height:54px}
+.giro .d{font:800 1.7rem var(--sans);line-height:1}
+.giro .i{font:600 .95rem var(--sans);margin-top:4px;line-height:1.25}
+.luego{position:fixed;z-index:19;top:calc(var(--st) + 104px);left:18px;background:#0A0A0Ae6;border:1px solid #1f6e50;border-top:0;border-radius:0 0 12px 12px;padding:6px 12px;font-size:.78rem;color:var(--mut)}
+.vel{position:fixed;z-index:20;left:12px;bottom:calc(var(--sheet) + 14px);width:70px;height:70px;border-radius:50%;background:#0A0A0Ae6;border:3px solid #ffffff33;display:grid;place-items:center;text-align:center;line-height:1;transition:bottom .25s}
+.vel b{font:800 1.5rem var(--sans);display:block}.vel small{font-size:.6rem;color:var(--mut)}
+.vel.rapido{border-color:var(--er)}.vel.rapido b{color:var(--er)}
+.limite{position:fixed;z-index:20;left:88px;bottom:calc(var(--sheet) + 24px);width:50px;height:50px;border-radius:50%;background:#fff;border:5px solid #d32020;color:#111;font:800 1.05rem var(--sans);display:grid;place-items:center;transition:bottom .25s}
+.alerta{position:fixed;z-index:40;left:50%;top:calc(var(--st) + 130px);transform:translateX(-50%);background:var(--er);color:#fff;font:800 .9rem var(--sans);padding:12px 18px;border-radius:14px;box-shadow:0 8px 30px #000b;display:flex;gap:10px;align-items:center;max-width:92vw}
+.toast{position:fixed;z-index:50;left:50%;bottom:calc(var(--sheet) + 80px);transform:translateX(-50%);background:#000e;border:1px solid var(--line);color:var(--tx);font-size:.84rem;padding:10px 16px;border-radius:12px;max-width:90vw;text-align:center}
+.navbar{display:flex;align-items:center;gap:10px}
+.navbar .eta{flex:1}
+.navbar .eta b{font:800 1.35rem var(--sans);color:var(--ok)}
+.navbar .eta span{display:block;color:var(--mut);font-size:.8rem}
+.yo{width:34px;height:34px}
+.yo svg{width:34px;height:34px;filter:drop-shadow(0 2px 4px #0009)}
+.pinp{width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--acc);border:2px solid #fff;display:grid;place-items:center;box-shadow:0 2px 8px #0009}
+.pinp span{transform:rotate(45deg);font:800 .76rem var(--sans);color:var(--on-acc)}
+.radar-pin{width:26px;height:26px;border-radius:50%;background:#fff;border:3px solid #d32020;display:grid;place-items:center;font:800 .62rem var(--sans);color:#111}
+.maplibregl-ctrl-attrib{font-size:10px}
+.maplibregl-ctrl-bottom-left,.maplibregl-ctrl-bottom-right{bottom:calc(var(--sheet) - 2px);transition:bottom .25s}
+body.nav .top,body.nav .chips{display:none}
+</style>
+</head>
+<body>
+<div id="map" aria-label="Mapa"></div>
+
+<!-- Búsqueda -->
+<div class="top" id="top">
+  <div class="buscador">
+    <span class="marca" id="marca">DOMino Ruta</span>
+    <input id="q" type="search" placeholder="¿A dónde vamos?" autocomplete="off" enterkeyhint="search" aria-label="Buscar dirección o lugar">
+    <button class="ib" id="btn-limpiar" aria-label="Borrar" hidden>✕</button>
+    <button class="ib" id="btn-voz-buscar" aria-label="Buscar por voz"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+  </div>
+  <div class="sug" id="sug" hidden></div>
+  <div class="chips" id="chips">
+    <button class="chip" data-cerca="estación de servicio">⛽ Nafta</button>
+    <button class="chip" data-cerca="cajero automático">🏧 Cajero</button>
+    <button class="chip" data-cerca="farmacia">💊 Farmacia</button>
+    <button class="chip" data-cerca="café">☕ Café</button>
+    <button class="chip" data-cerca="gomería">🛞 Gomería</button>
+    <button class="chip" data-cerca="estacionamiento">🅿️ Estacionar</button>
+  </div>
+</div>
+
+<!-- Navegación: indicación de giro -->
+<div class="giro" id="giro" hidden><div class="ico" id="giro-ico"></div><div><div class="d" id="giro-d"></div><div class="i" id="giro-i"></div></div></div>
+<div class="luego" id="luego" hidden></div>
+<div class="vel" id="vel" hidden><div><b id="vel-n">0</b><small>km/h</small></div></div>
+<div class="limite" id="limite" hidden></div>
+<div class="alerta" id="alerta" hidden></div>
+
+<!-- Botones flotantes -->
+<div class="fabs" id="fabs">
+  <button class="fab" id="btn-capas" aria-label="Capas del mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3 9 5-9 5-9-5 9-5z"/><path d="m3 13 9 5 9-5"/></svg></button>
+  <button class="fab on" id="btn-3d" aria-label="Vista 3D">3D</button>
+  <button class="fab on" id="btn-radar" aria-label="Radares"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M5 12a7 7 0 0 1 7-7M2 12A10 10 0 0 1 12 2"/></svg></button>
+  <button class="fab" id="btn-yo" aria-label="Mi ubicación"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
+</div>
+<div class="capas" id="capas" hidden>
+  <button data-estilo="claro">🗺️ Mapa claro</button>
+  <button data-estilo="oscuro">🌙 Mapa oscuro</button>
+  <button data-estilo="satelite">🛰️ Satélite</button>
+  <button data-capa="trafico" id="cap-relieve">⛰️ Relieve de montaña</button>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<!-- Hoja inferior -->
+<section class="sheet" id="sheet" aria-live="polite">
+  <div class="grip"></div>
+
+  <!-- Inicio -->
+  <div id="v-inicio">
+    <h2 id="saludo">¿A dónde vamos?</h2>
+    <p class="mut">Buscá una dirección arriba, tocá un lugar o mantené apretado el mapa para ir ahí.</p>
+    <div id="recientes"></div>
+    <div class="firma">Hecho por <b>THE DOM STUDIO WEB</b> · <a href="https://wa.me/5492613431216" target="_blank" rel="noopener">WhatsApp</a> · <a href="https://thedomstudioweb.github.io/" target="_blank" rel="noopener">Web</a></div>
+  </div>
+
+  <!-- Ruta del día -->
+  <div id="v-dia" hidden>
+    <h2>Ruta del día</h2>
+    <p class="mut" id="dia-info"></p>
+    <ol class="paradas" id="dia-lista"></ol>
+    <div class="acc">
+      <button class="btn" id="dia-ir">Ir a la próxima</button>
+      <button class="btn line" id="dia-opt">Ordenar por cercanía</button>
+    </div>
+    <div class="acc" id="dia-volver-w" hidden><a class="btn gris sm" id="dia-volver" href="#">← Volver al Hub</a></div>
+    <p class="msg" id="dia-msg"></p>
+    <div class="firma">Hecho por <b>THE DOM STUDIO WEB</b> · <a href="https://wa.me/5492613431216" target="_blank" rel="noopener">WhatsApp</a></div>
+  </div>
+
+  <!-- Vista previa del recorrido -->
+  <div id="v-ruta" hidden>
+    <h2 id="r-titulo"></h2>
+    <p class="mut" id="r-sub"></p>
+    <div class="datos"><div><b id="r-min"></b> <span>min</span></div><div><b id="r-km" style="font-size:1.1rem"></b> <span>km</span></div><div><span>Llegada</span> <b id="r-eta" style="font-size:1.1rem"></b></div></div>
+    <div class="alts" id="r-alts"></div>
+    <p class="msg" id="r-radares"></p>
+    <div class="acc">
+      <button class="btn" id="r-iniciar">▶ Iniciar</button>
+      <a class="btn wsp" id="r-camino" hidden target="_blank" rel="noopener">Voy en camino</a>
+    </div>
+    <div class="acc">
+      <button class="btn gris sm" id="r-cancelar">Cancelar</button>
+      <a class="btn gris sm" id="r-gmaps" target="_blank" rel="noopener">Abrir en Google Maps</a>
+    </div>
+    <p class="msg" id="r-msg"></p>
+  </div>
+
+  <!-- Navegando -->
+  <div id="v-nav" hidden>
+    <div class="navbar">
+      <div class="eta"><b id="n-eta">--:--</b><span id="n-rest"></span></div>
+      <button class="fab" id="n-voz" aria-label="Silenciar voz">🔊</button>
+      <button class="fab" id="n-vista" aria-label="Ver recorrido completo">⤢</button>
+      <button class="btn gris sm" id="n-salir">Salir</button>
+    </div>
+    <div class="acc" id="n-cliente" hidden>
+      <a class="btn wsp sm" id="n-camino" target="_blank" rel="noopener">Voy en camino</a>
+      <button class="btn line sm" id="n-llegue">📍 Llegué</button>
+    </div>
+  </div>
+
+  <!-- Llegada -->
+  <div id="v-llegada" hidden>
+    <h2>Llegaste a destino</h2>
+    <p class="mut" id="l-dest"></p>
+    <div class="acc" id="l-acc">
+      <button class="btn" id="l-llegue">📍 Registrar llegada</button>
+      <button class="btn line" id="l-sig" hidden>Siguiente parada →</button>
+    </div>
+    <div class="acc"><a class="btn gris sm" id="l-volver" href="#" hidden>← Volver al Hub</a><button class="btn gris sm" id="l-cerrar">Cerrar</button></div>
+    <p class="msg" id="l-msg"></p>
+  </div>
+</section>
+
+<script src="libs/maplibre-gl.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
