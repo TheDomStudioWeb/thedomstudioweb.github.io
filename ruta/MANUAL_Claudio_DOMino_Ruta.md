@@ -9,8 +9,8 @@ DOMino Ruta es una app de navegación GPS en 3D, hecha por The DOM Studio Web. F
 - Se inspira en MapXplorer (Goldlab Pro), pero es liviana (pesa menos de 1 MB contra unos 450 MB), habla en voseo y no tiene publicidad ni suscripciones.
 
 ## Qué hace
-1. **Mapa 3D**: edificios en 3D, relieve de montaña y vista inclinada. Tiene tres estilos: oscuro (el que viene por defecto), claro y satélite.
-2. **Búsqueda**: busca direcciones y lugares de Mendoza, San Juan, San Luis y Neuquén. Se puede buscar por voz con el micrófono.
+1. **Mapa 3D**: edificios en 3D (aparecen al acercarse, desde el zoom de calle), relieve de montaña y vista inclinada. Tiene tres estilos: oscuro (el que viene por defecto), claro y satélite. Las siluetas de los edificios salen de Overture Maps, que junta OpenStreetMap, Google y Microsoft. Si el edificio tiene altura o pisos cargados, se dibuja con su altura real; si no, con 6 m (una casa).
+2. **Búsqueda**: busca solo en Argentina y muestra primero lo más cercano a donde estás (como Google Maps). Los resultados a más de 60 km aparecen al final. Se puede buscar por voz con el micrófono.
 3. **Lugares cercanos**: botones rápidos para nafta, cajero, farmacia, café, gomería y estacionamiento.
 4. **Marcar un punto**: si mantenés apretado el mapa, te arma un recorrido hasta ese punto.
 5. **Recorrido**: muestra el más rápido y hasta 2 alternativas, con minutos, kilómetros y hora de llegada.
@@ -34,6 +34,12 @@ DOMino Ruta es una app de navegación GPS en 3D, hecha por The DOM Studio Web. F
 - Como PWA, con la pantalla apagada deja de seguir el GPS. Por eso mantiene la pantalla encendida mientras navega: se usa con el teléfono en el soporte.
 - Los servicios son públicos y gratuitos (Valhalla, Photon, Nominatim, Overpass, OpenFreeMap). Alcanzan para el equipo de X5, pero si se volviera masiva habría que pasar a un servidor propio.
 - Los radares dependen de OpenStreetMap. Si falta alguno, se puede cargar en openstreetmap.org como «highway=speed_camera».
+
+## Edificios 3D: tarea automática
+- En el repo del sitio hay una tarea de GitHub Actions llamada «Edificios 3D (DOMino Ruta)». Corre el día 8 de cada mes y también se puede correr a mano desde Actions → Run workflow.
+- Baja los edificios de Gran Mendoza, San Rafael, Valle de Uco, Gran San Juan, San Luis y Neuquén/Cipolletti, y los guarda en `ruta/edificios/`, así la app no depende de los servidores de Overture.
+- Mientras esa carpeta no exista, la app los toma directo de Overture.
+- Para sumar otra ciudad, se agrega una línea en `.github/scripts/edificios.py` con su nombre y sus coordenadas.
 
 ## Archivos (repo thedomstudioweb.github.io, carpeta /ruta)
 - `index.html`: pantallas y estilos.

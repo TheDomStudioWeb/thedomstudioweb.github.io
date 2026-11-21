@@ -1,9 +1,10 @@
 /* DOMino Ruta · service worker. Subir VERSION al publicar cambios. */
-var VERSION = 'ruta-v1';
+var VERSION = 'ruta-v2';
 var TESELAS = 'ruta-teselas-v1';
 var MAX_TESELAS = 2500;
-var ARCHIVOS = ['./', 'index.html', 'app.js', 'manifest.json', 'libs/maplibre-gl.js', 'libs/maplibre-gl.css', 'icon-192.png', 'icon-512.png'];
+var ARCHIVOS = ['./', 'index.html', 'app.js', 'manifest.json', 'libs/maplibre-gl.js', 'libs/maplibre-gl.css', 'libs/pmtiles.js', 'icon-192.png', 'icon-512.png'];
 var HOSTS_MAPA = ['tiles.openfreemap.org', 's3.amazonaws.com', 'server.arcgisonline.com'];
+var SIN_CACHE = /\.pmtiles$|catalog\.json$/; // archivos grandes con pedidos parciales: van directo a la red
 self.addEventListener('install', function (e) { e.waitUntil(caches.open(VERSION).then(function (c) { return c.addAll(ARCHIVOS); }).then(function () { return self.skipWaiting(); })); });
 self.addEventListener('activate', function (e) {
   e.waitUntil(caches.keys().then(function (ks) { return Promise.all(ks.filter(function (k) { return k !== VERSION && k !== TESELAS; }).map(function (k) { return caches.delete(k); })); }).then(function () { return self.clients.claim(); }));
@@ -13,6 +14,7 @@ var cuenta = 0;
 self.addEventListener('fetch', function (e) {
   var r = e.request; if (r.method !== 'GET') return;
   var u = new URL(r.url);
+  if (r.headers.has('range') || SIN_CACHE.test(u.pathname)) return;
   // Mapas y relieve: primero lo guardado (sirve sin señal en zonas ya vistas), si no, de la red.
   if (HOSTS_MAPA.indexOf(u.hostname) > -1) {
     e.respondWith(caches.open(TESELAS).then(function (c) {

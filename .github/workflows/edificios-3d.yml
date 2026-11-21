@@ -1,0 +1,30 @@
+# Edificios 3D para DOMino Ruta: baja las siluetas de Overture Maps de Cuyo y Neuquén
+# y las publica en ruta/edificios/. Corre el día 8 de cada mes o a mano (Actions → Run workflow).
+name: Edificios 3D (DOMino Ruta)
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 7 8 * *"
+permissions:
+  contents: write
+jobs:
+  edificios:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Instalar pmtiles
+        run: |
+          curl -fsSL https://github.com/protomaps/go-pmtiles/releases/download/v1.31.2/go-pmtiles_1.31.2_Linux_x86_64.tar.gz | tar xz pmtiles \
+            || (go install github.com/protomaps/go-pmtiles@latest && cp "$(go env GOPATH)/bin/go-pmtiles" ./pmtiles)
+          ./pmtiles version || true
+      - name: Extraer edificios
+        run: python3 .github/scripts/edificios.py
+      - name: Publicar
+        run: |
+          git config user.name "The DOM Studio Web (bot)"
+          git config user.email "thedomstudioweb@gmail.com"
+          git add ruta/edificios
+          git diff --cached --quiet && echo "Sin cambios" && exit 0
+          git commit -m "Edificios 3D: actualización mensual de Overture Maps"
+          git push

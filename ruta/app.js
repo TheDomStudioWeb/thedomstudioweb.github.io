@@ -147,9 +147,72 @@
     if (!hayCapa('ruta-borde')) map.addLayer({ id: 'ruta-borde', type: 'line', source: 'ruta', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#0b2a5c', 'line-width': 11 } });
     if (!hayCapa('ruta')) map.addLayer({ id: 'ruta', type: 'line', source: 'ruta', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#3D8BFF', 'line-width': 7 } });
     if (ruta) pintarRuta();
+    edificios3D();
     try { if (map.setSky) map.setSky({ 'sky-color': pref.estilo === 'claro' ? '#9cc4ef' : '#0b1020', 'horizon-color': pref.estilo === 'claro' ? '#e6eef8' : '#1c2233', 'fog-color': pref.estilo === 'claro' ? '#e6eef8' : '#10131a', 'sky-horizon-blend': .5, 'horizon-fog-blend': .6, 'fog-ground-blend': .4 }); } catch (e) {}
   }
   function vacio() { return { type: 'FeatureCollection', features: [] }; }
+
+  /* ── Edificios 3D ──────────────────────────────────────────────
+     OpenStreetMap tiene pocos edificios dibujados en Cuyo. Por eso se suman las siluetas
+     de Overture Maps (OSM + Google Open Buildings + Microsoft), que cubren casi todo:
+       1) copias propias en /ruta/edificios/ (las genera una tarea automática mensual), o
+       2) directo desde los archivos públicos de Overture (última versión). */
+  var protocolo = new pmtiles.Protocol(); maplibregl.addProtocol('pmtiles', protocolo.tile);
+  var EDIF = { fuentes: null, promesa: null };
+  async function probarPMTiles(url) {
+    try { var r = await fetch(url, { headers: { Range: 'bytes=0-6' } }); if (!r.ok && r.status !== 206) return false; return (await r.text()).indexOf('PMTiles') === 0; } catch (e) { return false; }
+  }
+  async function capaDe(url) {
+    var p = new pmtiles.PMTiles(url); protocolo.add(p);
+    var md = {}; try { md = await p.getMetadata(); } catch (e) {}
+    var capas = (md.vector_layers || []).map(function (l) { return l.id; });
+    return { url: url, capa: capas.find(function (c) { return /^buildings?$/i.test(c); }) || capas.find(function (c) { return /build/i.test(c) && !/part/i.test(c); }) || 'building' };
+  }
+  function buscarEdificios() {
+    if (EDIF.promesa) return EDIF.promesa;
+    EDIF.promesa = (async function () {
+      try { // 1) copias propias
+        var idx = await fetchJSON('edificios/indice.json?v=' + Math.floor(Date.now() / 864e5), null, 8000);
+        if (idx && idx.zonas && idx.zonas.length) return Promise.all(idx.zonas.map(function (z) { return capaDe(new URL('edificios/' + z.archivo, location.href).href); }));
+      } catch (e) {}
+      try { // 2) Overture directo
+        var guardado = store.get('ruta_overture', null), rel = null;
+        try { rel = (await fetchJSON('https://stac.overturemaps.org/catalog.json', null, 8000)).latest; } catch (e) {}
+        if (guardado && (!rel || guardado.rel === rel)) return [await capaDe(guardado.url)];
+        if (rel) {
+          var corto = String(rel).replace(/\.\d+$/, '');
+          var cands = ['https://overturemaps-extras-us-west-2.s3.us-west-2.amazonaws.com/tiles/' + rel + '/buildings.pmtiles',
+            'https://overturemaps-extras-us-west-2.s3.us-west-2.amazonaws.com/tiles/' + corto + '/buildings.pmtiles',
+            'https://overturemaps-tiles-us-west-2-beta.s3.amazonaws.com/' + corto + '/buildings.pmtiles'];
+          for (var i = 0; i < cands.length; i++) if (await probarPMTiles(cands[i])) { store.set('ruta_overture', { rel: rel, url: cands[i] }); return [await capaDe(cands[i])]; }
+        }
+        if (guardado) return [await capaDe(guardado.url)];
+      } catch (e) {}
+      return [];
+    })();
+    return EDIF.promesa;
+  }
+  async function edificios3D() {
+    var fuentes = await buscarEdificios(); EDIF.fuentes = fuentes;
+    if (!map.isStyleLoaded()) return;
+    var oscuro = pref.estilo !== 'claro';
+    fuentes.forEach(function (f, i) {
+      var id = 'edif-' + i;
+      if (!map.getSource(id)) map.addSource(id, { type: 'vector', url: 'pmtiles://' + f.url, attribution: 'Edificios © Overture Maps (OSM, Google, Microsoft)' });
+      if (!hayCapa(id)) map.addLayer({ id: id, type: 'fill-extrusion', source: id, 'source-layer': f.capa, minzoom: 14,
+        paint: {
+          'fill-extrusion-height': ['case', ['has', 'height'], ['to-number', ['get', 'height'], 6], ['has', 'num_floors'], ['*', ['to-number', ['get', 'num_floors'], 2], 3.2], 6],
+          'fill-extrusion-base': ['case', ['has', 'min_height'], ['to-number', ['get', 'min_height'], 0], 0],
+          'fill-extrusion-color': ['interpolate', ['linear'], ['case', ['has', 'height'], ['to-number', ['get', 'height'], 6], ['has', 'num_floors'], ['*', ['to-number', ['get', 'num_floors'], 2], 3.2], 6],
+            0, oscuro ? '#30343c' : '#ddd6c6', 25, oscuro ? '#4a5263' : '#c9bfa8', 80, oscuro ? '#6d7891' : '#b3a68a'],
+          'fill-extrusion-opacity': .92, 'fill-extrusion-vertical-gradient': true
+        } }, hayCapa('ruta-alt') ? 'ruta-alt' : undefined);
+      try { map.setLayoutProperty(id, 'visibility', pref.d3 ? 'visible' : 'none'); } catch (e) {}
+    });
+    if (fuentes.length) (map.getStyle().layers || []).forEach(function (l) { // se apagan los edificios de OSM para que no se superpongan
+      if (l.type === 'fill-extrusion' && !/^edif-/.test(l.id)) { try { map.setLayoutProperty(l.id, 'visibility', 'none'); } catch (e) {} }
+    });
+  }
   map.on('style.load', overlays);
   map.on('error', function (e) { if (e && e.error && /dem|terrarium/i.test(String(e.error.message || ''))) return; });
 
@@ -220,21 +283,25 @@
     var linea2 = [p.name && p.street ? [p.street, p.housenumber].filter(Boolean).join(' ') : '', p.district || p.locality, p.city || p.county, p.state].filter(Boolean).join(', ');
     return { t: linea1, s: linea2 };
   }
+  function referencia() { return yo ? yo.p : map.getCenter().toArray(); }
   async function sugerir(v, cerca) {
-    var n = ++qN, c = yo ? yo.p : map.getCenter().toArray();
-    var url = PHOTON + '?q=' + encodeURIComponent(v) + '&limit=7&lat=' + c[1].toFixed(4) + '&lon=' + c[0].toFixed(4) + '&bbox=' + REGION.join(',') + (cerca ? '&location_bias_scale=0.9&zoom=15' : '');
+    var n = ++qN, c = referencia();
+    // location_bias_scale bajo = pesa más la cercanía que la "fama" del lugar (como Google Maps)
+    var url = PHOTON + '?q=' + encodeURIComponent(v) + '&limit=15&lat=' + c[1].toFixed(4) + '&lon=' + c[0].toFixed(4) + '&zoom=13&location_bias_scale=' + (cerca ? '0.05' : '0.2');
     try {
       var j = await fetchJSON(url, null, 9000); if (n !== qN) return;
-      var fs = (j.features || []).filter(function (f) { return f.geometry && f.geometry.coordinates; });
-      if (cerca && yo) fs.sort(function (a, b) { return dist(yo.p, a.geometry.coordinates) - dist(yo.p, b.geometry.coordinates); });
-      mostrarSug(fs.map(function (f) { var e = etiquetaPhoton(f); return { t: e.t, s: e.s, pos: f.geometry.coordinates }; }));
+      var fs = (j.features || []).filter(function (f) { return f.geometry && f.geometry.coordinates && String((f.properties || {}).countrycode || 'AR').toUpperCase() === 'AR'; });
+      var items = fs.map(function (f, i) { var e = etiquetaPhoton(f); return { t: e.t, s: e.s, pos: f.geometry.coordinates, d: dist(c, f.geometry.coordinates), i: i }; });
+      // Primero lo cercano (menos de 60 km), en orden de distancia; después el resto del país.
+      items.sort(function (a, b) { var la = a.d > 60000, lb = b.d > 60000; if (la !== lb) return la ? 1 : -1; return a.d - b.d; });
+      mostrarSug(items.slice(0, 7));
     } catch (e) { if (n === qN) mostrarSug([], 'No se pudo buscar. Revisá la conexión.'); }
   }
   function mostrarSug(items, err) {
     var s = $('sug');
     if (!items.length) { s.innerHTML = '<button disabled><small>' + esc(err || 'Sin resultados. Probá con calle y número, y la localidad.') + '</small></button>'; s.hidden = false; return; }
     s.innerHTML = items.map(function (it, i) {
-      var km = yo ? ' · ' + fmtDist(dist(yo.p, it.pos)) : '';
+      var km = ' · ' + fmtDist(dist(referencia(), it.pos));
       return '<button data-i="' + i + '"><b>' + esc(it.t) + '</b><small>' + esc(it.s) + km + '</small></button>';
     }).join('');
     s.hidden = false;
@@ -250,14 +317,16 @@
     if (m) return { pos: [parseFloat(m[2]), parseFloat(m[1])], titulo: texto };
     var limpio = String(texto).replace(/^https?:\/\/\S+$/, '');
     if (!limpio) return null;
-    var base = NOMINATIM + '?format=jsonv2&limit=1&accept-language=es&countrycodes=ar&q=';
-    var intentos = [base + encodeURIComponent(limpio) + '&viewbox=' + REGION.join(',') + '&bounded=1', base + encodeURIComponent(limpio)];
+    var base = NOMINATIM + '?format=jsonv2&limit=1&accept-language=es&countrycodes=ar&q=', c = referencia();
+    var cerca = [c[0] - .6, c[1] - .5, c[0] + .6, c[1] + .5].map(function (x) { return x.toFixed(3); }).join(',');
+    var intentos = [base + encodeURIComponent(limpio) + '&viewbox=' + cerca + '&bounded=1', base + encodeURIComponent(limpio) + '&viewbox=' + REGION.join(',') + '&bounded=1', base + encodeURIComponent(limpio)];
     for (var i = 0; i < intentos.length; i++) {
       try { var j = await fetchJSON(intentos[i], null, 12000); if (j && j[0]) return { pos: [parseFloat(j[0].lon), parseFloat(j[0].lat)], titulo: limpio, sub: j[0].display_name }; } catch (e) {}
       await new Promise(function (r) { setTimeout(r, 1100); }); // Nominatim pide 1 consulta por segundo
     }
     try { // último recurso: Photon
-      var p = await fetchJSON(PHOTON + '?limit=1&q=' + encodeURIComponent(limpio) + '&bbox=' + REGION.join(','), null, 9000);
+      var p = await fetchJSON(PHOTON + '?limit=5&q=' + encodeURIComponent(limpio) + '&lat=' + c[1] + '&lon=' + c[0] + '&location_bias_scale=0.2', null, 9000);
+      p.features = (p.features || []).filter(function (f) { return String((f.properties || {}).countrycode || 'AR').toUpperCase() === 'AR'; });
       if (p.features && p.features[0]) return { pos: p.features[0].geometry.coordinates, titulo: limpio, sub: etiquetaPhoton(p.features[0]).s };
     } catch (e) {}
     return null;
