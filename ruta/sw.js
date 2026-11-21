@@ -1,5 +1,5 @@
 /* DOMino Ruta · service worker. Subir VERSION al publicar cambios. */
-var VERSION = 'ruta-v3';
+var VERSION = 'ruta-v4';
 var TESELAS = 'ruta-teselas-v1';
 var MAX_TESELAS = 2500;
 var ARCHIVOS = ['./', 'index.html', 'app.js', 'manifest.json', 'libs/maplibre-gl.js', 'libs/maplibre-gl.css', 'libs/pmtiles.js', 'icon-192.png', 'icon-512.png'];

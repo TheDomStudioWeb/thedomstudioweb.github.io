@@ -13,6 +13,7 @@
   var VALHALLA = 'https://valhalla1.openstreetmap.de';
   var PHOTON = 'https://photon.komoot.io/api/';
   var NOMINATIM = 'https://nominatim.openstreetmap.org/search';
+  var GEOREF = 'https://apis.datos.gob.ar/georef/api/v2.0'; // Servicio Georef – argentina.gob.ar/georef
   var OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
   var REGION = [-71.8, -41.6, -64.2, -27.5]; // Cuyo + Neuquén (oeste, sur, este, norte)
   var CENTRO = [-68.8458, -32.8895];         // Ciudad de Mendoza
@@ -113,10 +114,10 @@
   /* ── Mapa ──────────────────────────────────────────────────────── */
   var pref = store.get('ruta_pref', { estilo: 'oscuro', d3: true, relieve: true, radares: true, voz: true });
   var map = new maplibregl.Map({
-    container: 'map', style: ESTILOS[pref.estilo] || ESTILOS.oscuro, center: CENTRO, zoom: 13, pitch: pref.d3 ? 55 : 0, maxPitch: 75,
+    container: 'map', style: ESTILOS[pref.estilo] || ESTILOS.oscuro, center: store.get('ruta_ultima', null) || CENTRO, zoom: 13, pitch: pref.d3 ? 55 : 0, maxPitch: 75,
     attributionControl: false, hash: false, dragRotate: true, cooperativeGestures: false
   });
-  map.addControl(new maplibregl.AttributionControl({ compact: true, customAttribution: '© OpenStreetMap · OpenFreeMap · Valhalla' }), 'bottom-left');
+  map.addControl(new maplibregl.AttributionControl({ compact: true, customAttribution: '© OpenStreetMap · OpenFreeMap · Valhalla · Direcciones: Servicio Georef – argentina.gob.ar/georef' }), 'bottom-left');
   map.touchZoomRotate.enableRotation();
   window.DOMinoRuta = { map: map }; // para diagnóstico desde la consola
   setTimeout(function () { var a = document.querySelector('.maplibregl-ctrl-attrib'); if (a) a.classList.remove('maplibregl-compact-show', 'maplibregl-compact'); if (a) a.classList.add('maplibregl-compact'); }, 1500);
@@ -237,7 +238,7 @@
   $('btn-radar').onclick = function () { pref.radares = !pref.radares; guardarPref(); marcarCapas(); pintarRadares(); toast(pref.radares ? 'Avisos de radares activados' : 'Avisos de radares apagados'); };
 
   /* ── Ubicación ─────────────────────────────────────────────────── */
-  var yo = null, yoRumbo = 0, yoVel = 0, watchId = null, primeraVez = true;
+  var ultGuardado = 0, yo = null, yoRumbo = 0, yoVel = 0, watchId = null, primeraVez = true;
   function iniciarGPS() {
     if (!('geolocation' in navigator) || watchId != null) return;
     watchId = navigator.geolocation.watchPosition(onPos, function (err) {
@@ -252,6 +253,7 @@
     if (p.coords.heading != null && !isNaN(p.coords.heading) && vel > 1.5) yoRumbo = p.coords.heading;
     else if (yo && dist(yo.p, nuevo) > 6) yoRumbo = rumbo(yo.p, nuevo);
     yoVel = vel; yo = { p: nuevo, t: p.timestamp, acc: p.coords.accuracy };
+    if (Date.now() - ultGuardado > 60000) { store.set('ruta_ultima', nuevo); ultGuardado = Date.now(); }
     mkYo.setLngLat(nuevo).setRotation(yoRumbo); if (!mkYo._map) mkYo.addTo(map);
     if (primeraVez) { primeraVez = false; if (!paradas.length && !ruta) map.easeTo({ center: nuevo, zoom: 15, duration: 900 }); }
     if (nav.on) pasoNav();
@@ -285,27 +287,79 @@
     var linea2 = [p.name && p.street ? [p.street, p.housenumber].filter(Boolean).join(' ') : '', p.district || p.locality, p.city || p.county, p.state].filter(Boolean).join(', ');
     return { t: linea1, s: linea2 };
   }
-  function referencia() { return yo ? yo.p : map.getCenter().toArray(); }
+  /* Punto de referencia de la búsqueda: el GPS; si todavía no llegó, la última ubicación conocida. */
+  function referencia() { return yo ? yo.p : (store.get('ruta_ultima', null) || map.getCenter().toArray()); }
+  // Dónde estoy (provincia y departamento oficiales), para buscar direcciones como lo haría alguien del lugar.
+  var zona = store.get('ruta_zona', null), zonaPend = null;
+  async function miZona() {
+    var c = referencia();
+    if (zona && dist(c, zona.p) < 4000) return zona;
+    if (zonaPend) return zonaPend;
+    zonaPend = (async function () {
+      try {
+        var j = await fetchJSON(GEOREF + '/ubicacion?lat=' + c[1].toFixed(5) + '&lon=' + c[0].toFixed(5), null, 6000), u = j.ubicacion || {};
+        if (u.provincia && u.provincia.nombre) { zona = { p: c, prov: u.provincia.nombre, depto: (u.departamento || {}).nombre || '', muni: (u.municipio || {}).nombre || '' }; store.set('ruta_zona', zona); }
+      } catch (e) {}
+      zonaPend = null; return zona;
+    })();
+    return zonaPend;
+  }
+  var titulo = function (t) { return String(t || '').toLowerCase().replace(/(^|[\s(.\/-])([a-záéíóúñü])/g, function (m, a, b) { return a + b.toUpperCase(); }).replace(/\b(De|Del|La|Las|Los|Y|E)\b/g, function (m) { return m.toLowerCase(); }); };
+  // Direcciones con altura: servicio oficial Georef (INDEC/IGN), que conoce la numeración de cada cuadra.
+  async function georefDirecciones(v) {
+    if (!/\d/.test(v)) return [];
+    var partes = v.split(','), dir = partes[0].trim(), resto = partes.slice(1).join(',').trim();
+    var z = await miZona(), pedidos = [];
+    var base = GEOREF + '/direcciones?max=5&campos=completo&direccion=' + encodeURIComponent(dir);
+    if (resto) pedidos.push(base + '&localidad_censal=' + encodeURIComponent(resto), base + '&departamento=' + encodeURIComponent(resto));
+    else if (z) { if (z.depto) pedidos.push(base + '&provincia=' + encodeURIComponent(z.prov) + '&departamento=' + encodeURIComponent(z.depto)); pedidos.push(base + '&provincia=' + encodeURIComponent(z.prov)); }
+    else pedidos.push(base);
+    for (var i = 0; i < pedidos.length; i++) {
+      try {
+        var j = await fetchJSON(pedidos[i], null, 7000);
+        var r = (j.direcciones || []).filter(function (d) { return d.ubicacion && d.ubicacion.lat != null; }).map(function (d) {
+          var loc = (d.localidad_censal || {}).nombre || (d.departamento || {}).nombre || '';
+          return { t: titulo((d.calle || {}).nombre) + ' ' + (((d.altura || {}).valor) || ''), s: [titulo(loc), titulo((d.departamento || {}).nombre) !== titulo(loc) ? titulo((d.departamento || {}).nombre) : '', (d.provincia || {}).nombre].filter(Boolean).join(', '), pos: [d.ubicacion.lon, d.ubicacion.lat], oficial: true };
+        });
+        if (r.length) return r;
+      } catch (e) {}
+    }
+    return [];
+  }
+  function photonItems(j, c) {
+    return (j.features || []).filter(function (f) { return f.geometry && f.geometry.coordinates && String((f.properties || {}).countrycode || 'AR').toUpperCase() === 'AR'; })
+      .map(function (f) { var e = etiquetaPhoton(f); return { t: e.t, s: e.s, pos: f.geometry.coordinates, d: dist(c, f.geometry.coordinates) }; });
+  }
   async function sugerir(v, cerca) {
-    var n = ++qN, c = referencia();
-    // location_bias_scale bajo = pesa más la cercanía que la "fama" del lugar (como Google Maps)
-    var url = PHOTON + '?q=' + encodeURIComponent(v) + '&limit=15&lat=' + c[1].toFixed(4) + '&lon=' + c[0].toFixed(4) + '&zoom=13&location_bias_scale=' + (cerca ? '0.05' : '0.2');
+    var n = ++qN;
+    if (!yo) await esperarUbicacion(2500); // si el GPS recién arranca, se espera un instante
+    if (n !== qN) return;
+    var c = referencia(), R = cerca ? .12 : .35; // radio local en grados (~13 km / ~38 km)
+    var caja = [c[0] - R, c[1] - R, c[0] + R, c[1] + R].map(function (x) { return x.toFixed(4); }).join(',');
+    var q = PHOTON + '?q=' + encodeURIComponent(v) + '&limit=12&lat=' + c[1].toFixed(4) + '&lon=' + c[0].toFixed(4) + '&location_bias_scale=0.1&zoom=14';
     try {
-      var j = await fetchJSON(url, null, 9000); if (n !== qN) return;
-      var fs = (j.features || []).filter(function (f) { return f.geometry && f.geometry.coordinates && String((f.properties || {}).countrycode || 'AR').toUpperCase() === 'AR'; });
-      var items = fs.map(function (f, i) { var e = etiquetaPhoton(f); return { t: e.t, s: e.s, pos: f.geometry.coordinates, d: dist(c, f.geometry.coordinates), i: i }; });
-      // Primero lo cercano (menos de 60 km), en orden de distancia; después el resto del país.
-      items.sort(function (a, b) { var la = a.d > 60000, lb = b.d > 60000; if (la !== lb) return la ? 1 : -1; return a.d - b.d; });
-      mostrarSug(items.slice(0, 7));
+      // 1) dirección oficial con altura, 2) lugares y calles de la zona, 3) solo si falta, el resto del país
+      var res = await Promise.all([georefDirecciones(v).catch(function () { return []; }), fetchJSON(q + '&bbox=' + caja, null, 9000).catch(function () { return {}; })]);
+      if (n !== qN) return;
+      var oficiales = res[0].map(function (it) { it.d = dist(c, it.pos); return it; });
+      var locales = photonItems(res[1], c).sort(function (a, b) { return a.d - b.d; });
+      var lejos = [];
+      if (oficiales.length + locales.length < 3 && !cerca) {
+        try { lejos = photonItems(await fetchJSON(q, null, 9000), c).filter(function (it) { return it.d > R * 100000; }); } catch (e) {}
+        if (n !== qN) return;
+        lejos.sort(function (a, b) { return a.d - b.d; });
+      }
+      var vistos = {}, items = oficiales.concat(locales, lejos).filter(function (it) { var k = it.t.toLowerCase() + '|' + Math.round(it.pos[0] * 2000) + '|' + Math.round(it.pos[1] * 2000); if (vistos[k]) return false; vistos[k] = 1; return true; });
+      mostrarSug(items.slice(0, 7), null, lejos.length && !locales.length && !oficiales.length);
     } catch (e) { if (n === qN) mostrarSug([], 'No se pudo buscar. Revisá la conexión.'); }
   }
-  function mostrarSug(items, err) {
+  function mostrarSug(items, err, soloLejos) {
     var s = $('sug');
     if (!items.length) { s.innerHTML = '<button disabled><small>' + esc(err || 'Sin resultados. Probá con calle y número, y la localidad.') + '</small></button>'; s.hidden = false; return; }
     s.innerHTML = items.map(function (it, i) {
       var km = ' · ' + fmtDist(dist(referencia(), it.pos));
       return '<button data-i="' + i + '"><b>' + esc(it.t) + '</b><small>' + esc(it.s) + km + '</small></button>';
-    }).join('');
+    }).join('') + (soloLejos ? '<button disabled><small>No encontré nada cerca tuyo: estos resultados son de otras zonas.</small></button>' : '');
     s.hidden = false;
     s.querySelectorAll('button[data-i]').forEach(function (b) {
       b.onclick = function () { var it = items[+b.dataset.i]; s.hidden = true; $('q').value = it.t; $('q').blur(); irA({ pos: it.pos, titulo: it.t, sub: it.s }); };
@@ -319,8 +373,9 @@
     if (m) return { pos: [parseFloat(m[2]), parseFloat(m[1])], titulo: texto };
     var limpio = String(texto).replace(/^https?:\/\/\S+$/, '');
     if (!limpio) return null;
+    try { var of = await georefDirecciones(limpio.replace(/,\s*(argentina|mendoza|san juan|san luis|neuqu[eé]n)\s*$/gi, '').replace(/,\s*(argentina)\s*$/i, '')); if (of[0]) return { pos: of[0].pos, titulo: limpio, sub: of[0].t + ' · ' + of[0].s }; } catch (e) {}
     var base = NOMINATIM + '?format=jsonv2&limit=1&accept-language=es&countrycodes=ar&q=', c = referencia();
-    var cerca = [c[0] - .6, c[1] - .5, c[0] + .6, c[1] + .5].map(function (x) { return x.toFixed(3); }).join(',');
+    var cerca = [c[0] - .3, c[1] - .3, c[0] + .3, c[1] + .3].map(function (x) { return x.toFixed(3); }).join(',');
     var intentos = [base + encodeURIComponent(limpio) + '&viewbox=' + cerca + '&bounded=1', base + encodeURIComponent(limpio) + '&viewbox=' + REGION.join(',') + '&bounded=1', base + encodeURIComponent(limpio)];
     for (var i = 0; i < intentos.length; i++) {
       try { var j = await fetchJSON(intentos[i], null, 12000); if (j && j[0]) return { pos: [parseFloat(j[0].lon), parseFloat(j[0].lat)], titulo: limpio, sub: j[0].display_name }; } catch (e) {}

@@ -10,7 +10,7 @@ DOMino Ruta es una app de navegación GPS en 3D, hecha por The DOM Studio Web. F
 
 ## Qué hace
 1. **Mapa 3D**: edificios en 3D (aparecen al acercarse, desde el zoom de calle), relieve de montaña y vista inclinada. Tiene tres estilos: oscuro (el que viene por defecto), claro y satélite. Las siluetas de los edificios salen de Overture Maps, que junta OpenStreetMap, Google y Microsoft. Si el edificio tiene altura o pisos cargados, se dibuja con su altura real; si no, con 6 m (una casa).
-2. **Búsqueda**: busca solo en Argentina y muestra primero lo más cercano a donde estás (como Google Maps). Los resultados a más de 60 km aparecen al final. Se puede buscar por voz con el micrófono.
+2. **Búsqueda**: busca como alguien del lugar. Primero detecta en qué provincia y departamento estás (por ejemplo, San Rafael) y busca ahí. Las direcciones con número ("San Martín 500") se buscan en el servicio oficial Georef del Estado (INDEC/IGN), que conoce la numeración de cada cuadra. Después vienen lugares y calles a menos de unos 40 km, ordenados por distancia, y recién si no hay nada cerca aparecen otras zonas, con un aviso. Para buscar en otra ciudad, escribila después de una coma: "San Martín 500, Godoy Cruz". Funciona solo en Argentina. Se puede buscar por voz con el micrófono.
 3. **Lugares cercanos**: botones rápidos para nafta, cajero, farmacia, café, gomería y estacionamiento.
 4. **Marcar un punto**: si mantenés apretado el mapa, te arma un recorrido hasta ese punto.
 5. **Recorrido**: muestra el más rápido y hasta 2 alternativas, con minutos, kilómetros y hora de llegada.
